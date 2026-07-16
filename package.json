@@ -1,0 +1,26 @@
+{
+  "name": "imba-finance-command-center",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3910",
+    "build": "next build",
+    "start": "next start -p 3910",
+    "typecheck": "tsc --noEmit --incremental false",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "15.5.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.5.12",
+    "typescript": "^5.7.0"
+  }
+}
