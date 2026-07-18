@@ -91,6 +91,7 @@ import type { ImbaCollaborationView } from "@/lib/imba-collaboration-data";
 import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
 import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
+import { ImbaSectionHero } from "@/components/imba/ImbaSectionHero";
 import {
   ImbaAlertsDrawer,
   ImbaInsightStrip,
@@ -1593,6 +1594,10 @@ export function ImbaCeoCockpit() {
   }, [alerts, filters, intelligenceHydrated, role, savedViews, subscriptions]);
 
   const visibleNavSections = useMemo(() => navSectionsForRole(role), [role]);
+  // Section hero shows only on the section's landing (first role-allowed) view,
+  // so subsections stay distinct.
+  const landingSection = visibleNavSections.find((s) => s.items.some((item) => item.id === view));
+  const isSectionLanding = Boolean(landingSection) && landingSection?.items[0]?.id === view;
   const regions = useMemo(
     () => Array.from(new Set(imbaProjects.map((project) => project.region))),
     [],
@@ -2008,8 +2013,36 @@ export function ImbaCeoCockpit() {
           </div>
         </header>
 
+        <div className="shrink-0 border-b border-white/[0.07] bg-[#0a1513]/85 px-4 py-3 sm:px-6 xl:px-8">
+          <div className="mx-auto max-w-[1580px]">
+            <ImbaIntelligenceBar
+              role={role}
+              filters={filters}
+              regions={regions}
+              phases={phases}
+              projects={projectNames}
+              resultSummary={`${filteredProjects.length} of ${imbaProjects.length} projects · ${money(projectTotals.contract)} selected contract value`}
+              savedViews={savedViews}
+              activeAlertCount={
+                alerts.filter(
+                  (alert) => alert.enabled && alert.state !== "normal",
+                ).length
+              }
+              onRoleChange={changeRole}
+              onFilterChange={(patch) =>
+                setFilters((current) => ({ ...current, ...patch }))
+              }
+              onSaveView={saveCurrentView}
+              onApplySavedView={applySavedView}
+              onOpenAlerts={() => setAlertsOpen(true)}
+              onResetFilters={() => setFilters(initialImbaFilters)}
+            />
+          </div>
+        </div>
+
         <main className="min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
+            {isSectionLanding ? <ImbaSectionHero section={activeSectionLabel} /> : null}
             {isScenarioAware ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
@@ -2065,29 +2098,6 @@ export function ImbaCeoCockpit() {
                 </button>
               </div>
             ) : null}
-
-            <ImbaIntelligenceBar
-              role={role}
-              filters={filters}
-              regions={regions}
-              phases={phases}
-              projects={projectNames}
-              resultSummary={`${filteredProjects.length} of ${imbaProjects.length} projects · ${money(projectTotals.contract)} selected contract value`}
-              savedViews={savedViews}
-              activeAlertCount={
-                alerts.filter(
-                  (alert) => alert.enabled && alert.state !== "normal",
-                ).length
-              }
-              onRoleChange={changeRole}
-              onFilterChange={(patch) =>
-                setFilters((current) => ({ ...current, ...patch }))
-              }
-              onSaveView={saveCurrentView}
-              onApplySavedView={applySavedView}
-              onOpenAlerts={() => setAlertsOpen(true)}
-              onResetFilters={() => setFilters(initialImbaFilters)}
-            />
 
             <ImbaInsightStrip
               insights={intelligenceInsights}

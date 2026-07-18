@@ -87,22 +87,8 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
 };
 
 export function ImbaFinanceWorkspace({ view, onNavigate }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void }) {
-  const meta = viewMeta[view];
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-[rgb(var(--sa)/0.20)] bg-[linear-gradient(120deg,rgb(var(--sa)/.09),rgba(255,255,255,.018))] p-6">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div className="max-w-3xl">
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[rgb(var(--sa-soft)/0.70)]">{meta.eyebrow}</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{meta.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{meta.description}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3">
-            <p className="text-[9px] font-black uppercase tracking-wider text-amber-100">Demo operating data</p>
-            <p className="mt-1 text-[10px] text-[#9caaa6]">Structure is production-minded; current-period values are illustrative.</p>
-          </div>
-        </div>
-      </section>
       {view === 'finance-snapshot' ? <Snapshot onNavigate={onNavigate} /> : null}
       {view === 'finance-calendar' ? <FinanceCalendar /> : null}
       {view === 'finance-coa' ? <ChartOfAccounts /> : null}

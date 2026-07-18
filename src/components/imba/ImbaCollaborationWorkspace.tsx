@@ -403,30 +403,6 @@ export function ImbaCollaborationWorkspace({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-indigo-300/20 bg-[linear-gradient(120deg,rgba(129,140,248,.1),rgba(255,255,255,.015))] p-6">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div className="max-w-3xl">
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-indigo-100/70">
-              {meta.eyebrow}
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">
-              {meta.title}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">
-              {meta.description}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-indigo-300/15 bg-indigo-300/[0.05] px-4 py-3">
-            <p className="text-[9px] font-black uppercase text-indigo-100">
-              {imbaRoleProfiles[role].label}
-            </p>
-            <p className="mt-1 text-[10px] text-[#9caaa6]">
-              {accessibleRooms.length} authorized rooms · role-aware prototype
-            </p>
-          </div>
-        </div>
-      </section>
-
       {notice ? (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] px-4 py-3 text-[9px] text-[rgb(var(--sa-soft))]">
           <span className="flex items-center gap-2">

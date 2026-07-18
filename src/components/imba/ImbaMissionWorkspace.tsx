@@ -509,20 +509,6 @@ export function ImbaMissionWorkspace({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-blue-400/20 bg-[linear-gradient(120deg,rgba(96,165,250,.09),rgba(255,255,255,.018))] p-6">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div className="max-w-3xl">
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-blue-100/70">{config.eyebrow}</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{config.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{config.description}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3">
-            <p className="text-[9px] font-black uppercase text-amber-100">Public baseline + prototype records</p>
-            <p className="mt-1 max-w-[250px] text-[10px] leading-4 text-[#9caaa6]">Public metrics anchor the model; operating records remain illustrative until validated with IMBA.</p>
-          </div>
-        </div>
-      </section>
-
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {config.metrics.map((metric) => <MetricCard key={metric.label} {...metric} />)}
       </div>

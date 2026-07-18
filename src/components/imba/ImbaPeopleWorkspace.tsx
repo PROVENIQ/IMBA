@@ -72,12 +72,8 @@ const peopleDocuments = [
 ];
 
 export function ImbaPeopleWorkspace({ view, onNavigate }: { view: ImbaPeopleView; onNavigate: (view: ImbaOsView) => void }) {
-  const meta = peopleMeta[view];
   return (
     <div className="space-y-5">
-      <section className="rounded-[24px] border border-cyan-400/20 bg-[linear-gradient(120deg,rgba(34,211,238,.08),rgba(255,255,255,.018))] p-6">
-        <div className="flex flex-wrap items-start justify-between gap-5"><div className="max-w-3xl"><p className="text-[9px] font-black uppercase tracking-[0.24em] text-cyan-100/70">People · distributed workforce system</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{meta.title}</h2><p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{meta.description}</p></div><div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3"><p className="text-[9px] font-black uppercase tracking-wider text-amber-100">Demo workforce data</p><p className="mt-1 text-[10px] text-[#9caaa6]">Illustrates the control model; no IMBA personnel records are represented.</p></div></div>
-      </section>
       {view === 'people' ? <PeopleHome onNavigate={onNavigate} /> : null}
       {view === 'people-directory' ? <DirectoryIntegrated /> : null}
       {view === 'people-payroll' ? <Payroll onNavigate={onNavigate} /> : null}
