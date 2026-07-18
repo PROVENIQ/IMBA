@@ -26,6 +26,7 @@ import {
 import type { ImbaOsView } from '@/lib/imba-os-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
 import { ImbaPayables } from '@/components/imba/ImbaPayables';
+import { ImbaStatements } from '@/components/imba/ImbaStatements';
 
 export type ImbaFinanceView =
   | 'finance-snapshot'
@@ -109,7 +110,7 @@ export function ImbaFinanceWorkspace({ view, onNavigate }: { view: ImbaFinanceVi
       {view === 'finance-grants' ? <GrantsIntegrated onNavigate={onNavigate} /> : null}
       {view === 'finance-payables' ? <ImbaPayables /> : null}
       {view === 'finance-ap-ar' ? <ApAr /> : null}
-      {view === 'finance-reports' ? <Reports /> : null}
+      {view === 'finance-reports' ? <ImbaStatements /> : null}
       {view === 'finance-transactions' ? <TransactionsIntegrated onNavigate={onNavigate} /> : null}
     </div>
   );
