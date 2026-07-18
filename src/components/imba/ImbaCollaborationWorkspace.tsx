@@ -176,7 +176,7 @@ function Kpi({
 }) {
   const color =
     tone === "lime"
-      ? "text-[#dff7a8]"
+      ? "text-[rgb(var(--sa-soft))]"
       : tone === "amber"
         ? "text-amber-100"
         : tone === "rose"
@@ -428,7 +428,7 @@ export function ImbaCollaborationWorkspace({
       </section>
 
       {notice ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-[#b7e35b]/15 bg-[#b7e35b]/[0.045] px-4 py-3 text-[9px] text-[#dff7a8]">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] px-4 py-3 text-[9px] text-[rgb(var(--sa-soft))]">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {notice}
@@ -819,10 +819,10 @@ function CollaborationInbox({
                 <button
                   type="button"
                   onClick={() => onToggleTask(room.id, task.id)}
-                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-white/[0.14] text-[#102016] hover:border-[#b7e35b]"
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-white/[0.14] text-[rgb(var(--sa-ink))] hover:border-[rgb(var(--sa))]"
                 >
                   {task.status === "Done" ? (
-                    <Check className="h-3.5 w-3.5 bg-[#b7e35b]" />
+                    <Check className="h-3.5 w-3.5 bg-[rgb(var(--sa))]" />
                   ) : null}
                 </button>
                 <div className="min-w-0 flex-1">
@@ -926,7 +926,7 @@ function TeamWorkspaces({
               <p className="text-[8px] font-black uppercase text-[#718981]">
                 Financial context
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[#dff7a8]">
+              <p className="mt-1 text-[10px] font-semibold text-[rgb(var(--sa-soft))]">
                 {selectedRoom.financialContext}
               </p>
             </div>
@@ -1055,7 +1055,7 @@ function TeamWorkspaces({
                   <button
                     type="button"
                     onClick={() => onToggleTask(selectedRoom.id, task.id)}
-                    className={`flex h-6 w-6 items-center justify-center rounded-md border ${task.status === "Done" ? "border-[#b7e35b] bg-[#b7e35b] text-[#102016]" : "border-white/[0.14]"}`}
+                    className={`flex h-6 w-6 items-center justify-center rounded-md border ${task.status === "Done" ? "border-[rgb(var(--sa))] bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]" : "border-white/[0.14]"}`}
                   >
                     {task.status === "Done" ? (
                       <Check className="h-3.5 w-3.5" />
@@ -1131,7 +1131,7 @@ function TeamWorkspaces({
                         {decision.rationale}
                       </p>
                     </div>
-                    <span className="rounded-full bg-[#b7e35b]/10 px-2 py-1 text-[8px] font-black uppercase text-[#dff7a8]">
+                    <span className="rounded-full bg-[rgb(var(--sa)/0.10)] px-2 py-1 text-[8px] font-black uppercase text-[rgb(var(--sa-soft))]">
                       {decision.status}
                     </span>
                   </div>
@@ -1572,7 +1572,7 @@ function StakeholderInbox({
               <p className="text-[8px] font-black uppercase text-[#718981]">
                 Financial / governance effect
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[#dff7a8]">
+              <p className="mt-1 text-[10px] font-semibold text-[rgb(var(--sa-soft))]">
                 {selected.financialEffect}
               </p>
             </div>

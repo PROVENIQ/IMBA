@@ -149,7 +149,7 @@ const pillClass: Record<BillStatus, string> = {
   Coded: 'bg-cyan-300/10 text-cyan-100',
   'In review': 'bg-amber-300/10 text-amber-100',
   'On hold': 'bg-cyan-300/10 text-cyan-100',
-  Paid: 'bg-[#b7e35b]/15 text-[#dff7a8]',
+  Paid: 'bg-[rgb(var(--sa)/0.15)] text-[rgb(var(--sa-soft))]',
   Rejected: 'bg-rose-300/10 text-rose-100',
 };
 
@@ -163,7 +163,7 @@ function isOverdue(bill: Bill): boolean {
 }
 
 function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose' }) {
-  const toneClass = tone === 'lime' ? 'text-[#dff7a8]' : tone === 'teal' ? 'text-[#9fd6cc]' : tone === 'amber' ? 'text-amber-200' : 'text-rose-200';
+  const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[#9fd6cc]' : tone === 'amber' ? 'text-amber-200' : 'text-rose-200';
   return (
     <div className="rounded-[18px] border border-white/[0.08] bg-[#142321] p-4">
       <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718981]">{label}</p>
@@ -219,10 +219,10 @@ export function ImbaPayables() {
                 type="button"
                 onClick={() => dispatch({ type: 'setUser', id: user.id })}
                 className={`flex items-center gap-2 rounded-xl border px-3 py-2 transition ${
-                  user.id === state.actingUserId ? 'border-[#b7e35b]/40 bg-[#b7e35b]/[0.06]' : 'border-white/[0.08] hover:border-white/[0.15]'
+                  user.id === state.actingUserId ? 'border-[rgb(var(--sa)/0.40)] bg-[rgb(var(--sa))]/[0.06]' : 'border-white/[0.08] hover:border-white/[0.15]'
                 }`}
               >
-                <span className={`flex h-6 w-6 items-center justify-center rounded-lg font-mono text-[8px] font-black ${user.id === state.actingUserId ? 'bg-[#b7e35b] text-[#102016]' : 'bg-white/10 text-white'}`}>{user.initials}</span>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-lg font-mono text-[8px] font-black ${user.id === state.actingUserId ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'bg-white/10 text-white'}`}>{user.initials}</span>
                 <span className="text-left"><span className="block text-[10px] font-semibold text-white">{user.name}</span><span className="block text-[8px] text-[#718981]">{user.role}</span></span>
               </button>
             ))}
@@ -265,7 +265,7 @@ export function ImbaPayables() {
                 const step = currentStep(bill);
                 const awaiting = bill.status === 'In review' && step ? step.role : bill.status === 'On hold' ? 'Release' : '—';
                 return (
-                  <tr key={bill.id} className={`border-b border-white/[0.055] last:border-0 ${state.selectedId === bill.id ? 'bg-emerald-300/[0.035]' : 'hover:bg-white/[0.02]'}`}>
+                  <tr key={bill.id} className={`border-b border-white/[0.055] last:border-0 ${state.selectedId === bill.id ? 'bg-[rgb(var(--sa)/0.035)]' : 'hover:bg-white/[0.02]'}`}>
                     <td className="px-5 py-3.5"><p className="text-xs font-semibold text-white">{bill.vendor}</p><p className="mt-1 text-[9px] text-[#718981]">{bill.invoiceNumber} · {bill.id}</p></td>
                     <td className="px-3 py-3.5"><p className="text-[11px] font-semibold text-[#cdd8d4]">{bill.program}</p><p className="mt-0.5 text-[9px] text-[#718981]">{bill.glAccount}</p></td>
                     <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-white">{moneyFull(billAmount(bill))}</td>
@@ -300,7 +300,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
   const closeNote = () => { setMode('idle'); setNote(''); };
 
   const label9 = 'text-[9px] font-black uppercase tracking-wider text-[#718981]';
-  const primaryBtn = 'inline-flex items-center gap-1.5 rounded-xl bg-[#b7e35b] px-4 py-2.5 text-[10px] font-black uppercase text-[#102016]';
+  const primaryBtn = 'inline-flex items-center gap-1.5 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-[10px] font-black uppercase text-[rgb(var(--sa-ink))]';
   const ghostBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-white/[0.12] px-4 py-2.5 text-[10px] font-black uppercase text-white hover:bg-white/[0.05]';
   const dangerBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-rose-300/25 px-4 py-2.5 text-[10px] font-black uppercase text-rose-200 hover:bg-rose-300/[0.06]';
 
@@ -364,8 +364,8 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                 {bill.approvals.map((step, i) => {
                   const done = step.status === 'approved';
                   return (
-                    <div key={i} className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 ${done ? 'border-[#b7e35b]/20 bg-[#b7e35b]/[0.05]' : 'border-white/[0.08]'}`}>
-                      {done ? <CheckCircle2 className="h-4 w-4 text-[#b7e35b]" /> : <PauseCircle className="h-4 w-4 text-amber-200" />}
+                    <div key={i} className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 ${done ? 'border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa))]/[0.05]' : 'border-white/[0.08]'}`}>
+                      {done ? <CheckCircle2 className="h-4 w-4 text-[rgb(var(--sa))]" /> : <PauseCircle className="h-4 w-4 text-amber-200" />}
                       <div><p className="text-[11px] font-semibold text-white">{step.role}</p><p className="text-[9px] text-[#82978f]">{done && step.approverId ? `${userById(step.approverId).name} · ${step.actedAt ? formatDate(step.actedAt) : ''}` : 'Pending'}</p></div>
                     </div>
                   );
@@ -377,7 +377,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
               <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#718981]">History</p>
               <ul className="space-y-2">
                 {bill.events.map((e, i) => (
-                  <li key={i} className="flex gap-2.5"><span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${i === bill.events.length - 1 ? 'bg-[#b7e35b]' : 'bg-white/25'}`} /><div><p className="text-[11px] font-semibold text-white">{e.action}</p>{e.detail ? <p className="text-[10px] text-[#82978f]">{e.detail}</p> : null}<p className="text-[9px] text-[#5f736c]">{e.actor} · {formatDateTime(e.at)}</p></div></li>
+                  <li key={i} className="flex gap-2.5"><span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${i === bill.events.length - 1 ? 'bg-[rgb(var(--sa))]' : 'bg-white/25'}`} /><div><p className="text-[11px] font-semibold text-white">{e.action}</p>{e.detail ? <p className="text-[10px] text-[#82978f]">{e.detail}</p> : null}<p className="text-[9px] text-[#5f736c]">{e.actor} · {formatDateTime(e.at)}</p></div></li>
                 ))}
               </ul>
             </div>
@@ -390,7 +390,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
 
               {bill.status === 'In review' && check.ok && mode === 'idle' ? (
                 <>
-                  <p className="flex items-center gap-2 rounded-xl bg-[#b7e35b]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[#dff7a8]"><CheckCircle2 className="h-3.5 w-3.5" /> {final ? 'Final approval — you decide pay or hold.' : check.reason}</p>
+                  <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><CheckCircle2 className="h-3.5 w-3.5" /> {final ? 'Final approval — you decide pay or hold.' : check.reason}</p>
                   {final ? (
                     <>
                       <div className="flex flex-wrap gap-2">
@@ -417,7 +417,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
               {mode !== 'idle' ? (
                 <div className="space-y-2">
                   <label className={label9} htmlFor="ap-note">{mode === 'reject' ? 'Reason for rejection' : 'What needs to change?'}</label>
-                  <textarea id="ap-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full rounded-xl border border-white/[0.1] bg-[#14201e] px-3 py-2.5 text-xs text-white outline-none focus:border-emerald-300/35" placeholder={mode === 'reject' ? 'e.g. Duplicate of BILL-1998' : 'e.g. Reallocate to 6420 · Construction Materials'} />
+                  <textarea id="ap-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full rounded-xl border border-white/[0.1] bg-[#14201e] px-3 py-2.5 text-xs text-white outline-none focus:border-[rgb(var(--sa)/0.35)]" placeholder={mode === 'reject' ? 'e.g. Duplicate of BILL-1998' : 'e.g. Reallocate to 6420 · Construction Materials'} />
                   <div className="flex gap-2">
                     <button type="button" className={mode === 'reject' ? dangerBtn : primaryBtn} onClick={() => { act({ type: mode === 'reject' ? 'reject' : 'requestChanges', id: bill.id, note }); closeNote(); }}>Confirm {mode === 'reject' ? 'rejection' : 'change request'}</button>
                     <button type="button" className={ghostBtn} onClick={closeNote}>Cancel</button>
@@ -428,7 +428,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
               {bill.status === 'On hold' ? (
                 release.ok ? (
                   <>
-                    <p className="flex items-center gap-2 rounded-xl bg-[#b7e35b]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[#dff7a8]"><PauseCircle className="h-3.5 w-3.5" /> Approved and held. Release when ready to pay.</p>
+                    <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><PauseCircle className="h-3.5 w-3.5" /> Approved and held. Release when ready to pay.</p>
                     <button type="button" className={primaryBtn} onClick={() => act({ type: 'release', id: bill.id })}><CreditCard className="h-3.5 w-3.5" /> Release payment to Bill.com</button>
                   </>
                 ) : (
@@ -436,7 +436,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                 )
               ) : null}
 
-              {bill.status === 'Paid' ? <p className="flex items-center gap-2 rounded-xl bg-[#b7e35b]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[#dff7a8]"><CheckCircle2 className="h-3.5 w-3.5" /> Paid via Bill.com. Settlement synced back to IMBA-OS.</p> : null}
+              {bill.status === 'Paid' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><CheckCircle2 className="h-3.5 w-3.5" /> Paid via Bill.com. Settlement synced back to IMBA-OS.</p> : null}
               {bill.status === 'Rejected' ? <p className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2.5 text-[11px] text-[#c2b3a0]"><Ban className="h-3.5 w-3.5" /> Rejected. Return to the vendor or AP for correction.</p> : null}
             </div>
           </div>

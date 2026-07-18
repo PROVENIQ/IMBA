@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Per-section accent (RGB channels). The cockpit overrides these on the content
+   container per active section; these defaults (Money emerald) are the fallback. */
+:root {
+  --sa: 183 227 91;
+  --sa-soft: 223 247 168;
+  --sa-ink: 16 32 22;
+}
+
 :root {
   --ink: #17252d;
   --ink-soft: #4f626b;

@@ -632,6 +632,26 @@ const imbaNavSections: ImbaNavSection[] = [
 
 const allNavItems = imbaNavSections.flatMap((section) => section.items);
 
+// Per-section accent, matching each section's sidebar color. Values are RGB
+// channels so opacity modifiers keep working: rgb(var(--sa)/0.1). Applied as
+// CSS variables on the content container; workspace accent tokens read them.
+const sectionAccents: Record<string, { sa: string; soft: string; ink: string }> = {
+  Mission: { sa: '96 165 250', soft: '191 219 254', ink: '8 20 35' },
+  Money: { sa: '183 227 91', soft: '223 247 168', ink: '16 32 22' },
+  People: { sa: '34 211 238', soft: '165 243 252', ink: '6 26 31' },
+  Development: { sa: '251 191 36', soft: '253 230 138', ink: '38 27 6' },
+  Platform: { sa: '167 139 250', soft: '221 214 254', ink: '24 16 42' },
+  Governance: { sa: '251 113 133', soft: '254 205 211', ink: '42 12 18' },
+  Collaboration: { sa: '129 140 248', soft: '199 210 254', ink: '16 18 42' },
+  System: { sa: '148 163 184', soft: '226 232 240', ink: '15 20 28' },
+  Management: { sa: '163 230 53', soft: '217 249 157', ink: '20 30 6' },
+};
+
+function accentForView(view: string): { sa: string; soft: string; ink: string } {
+  const section = imbaNavSections.find((s) => s.items.some((item) => item.id === view));
+  return sectionAccents[section?.label ?? ''] ?? sectionAccents.Money;
+}
+
 function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const profile = imbaRoleProfiles[role];
   return imbaNavSections
@@ -808,7 +828,7 @@ function MetricCard({
 }) {
   const toneClass =
     tone === "positive"
-      ? "text-[#b7e35b] bg-[#b7e35b]/10 border-[#b7e35b]/20"
+      ? "text-[rgb(var(--sa))] bg-[rgb(var(--sa)/0.10)] border-[rgb(var(--sa)/0.20)]"
       : tone === "warning"
         ? "text-amber-200 bg-amber-300/10 border-amber-300/20"
         : "text-[#9fd6cc] bg-[#68b9aa]/10 border-[#68b9aa]/20";
@@ -842,7 +862,7 @@ function MetricCard({
           <span className="font-mono text-[28px] font-semibold leading-none tracking-[-0.05em] text-white">
             {value}
           </span>
-          <span className="inline-flex items-center gap-1 pb-0.5 text-[8px] font-black uppercase tracking-wider text-[#7f9a91] transition group-hover:text-[#dff7a8]">
+          <span className="inline-flex items-center gap-1 pb-0.5 text-[8px] font-black uppercase tracking-wider text-[#7f9a91] transition group-hover:text-[rgb(var(--sa-soft))]">
             Explain <ArrowRight className="h-3 w-3" />
           </span>
         </button>
@@ -857,7 +877,7 @@ function MetricCard({
           className={
             tone === "warning"
               ? "font-semibold text-amber-200"
-              : "font-semibold text-[#b7e35b]"
+              : "font-semibold text-[rgb(var(--sa))]"
           }
         >
           {delta}
@@ -900,8 +920,8 @@ function CashRunwayChart({ series }: { series: number[] }) {
       >
         <defs>
           <linearGradient id="cashArea" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#b7e35b" stopOpacity="0.24" />
-            <stop offset="100%" stopColor="#b7e35b" stopOpacity="0" />
+            <stop offset="0%" stopColor="rgb(var(--sa))" stopOpacity="0.24" />
+            <stop offset="100%" stopColor="rgb(var(--sa))" stopOpacity="0" />
           </linearGradient>
         </defs>
         {[0.2, 0.5, 0.8].map((position) => (
@@ -919,7 +939,7 @@ function CashRunwayChart({ series }: { series: number[] }) {
         <path
           d={line}
           fill="none"
-          stroke="#b7e35b"
+          stroke="rgb(var(--sa))"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -988,7 +1008,7 @@ function DecisionCard({
           </p>
         </div>
         {status ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#b7e35b]/25 bg-[#b7e35b]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#d9f59c]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#d9f59c]">
             <Check className="h-3.5 w-3.5" /> {status}
           </span>
         ) : null}
@@ -1019,7 +1039,7 @@ function DecisionCard({
           <button
             type="button"
             onClick={() => onSetStatus("approved")}
-            className="rounded-xl bg-[#b7e35b] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#102016] transition hover:bg-[#c9ef79]"
+            className="rounded-xl bg-[rgb(var(--sa))] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
           >
             Approve path
           </button>
@@ -1077,7 +1097,7 @@ function PortfolioTable({
                   <button
                     type="button"
                     onClick={() => onSelectProject(project.name)}
-                    className="text-xs font-semibold text-white hover:text-[#dff7a8]"
+                    className="text-xs font-semibold text-white hover:text-[rgb(var(--sa-soft))]"
                   >
                     {project.name}
                   </button>
@@ -1226,7 +1246,7 @@ function ImbaOsSectionView({
             {section.modules.map((module) => {
               const stageClass =
                 module.stage === "Demonstrated"
-                  ? "border-[#b7e35b]/20 bg-[#b7e35b]/10 text-[#dff7a8]"
+                  ? "border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]"
                   : module.stage === "Designed"
                     ? "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[#9fd6cc]"
                     : "border-white/[0.09] bg-white/[0.04] text-[#91a49e]";
@@ -1268,7 +1288,7 @@ function ImbaOsSectionView({
                 key={priority}
                 className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#b7e35b]/10 font-mono text-[9px] font-bold text-[#dff7a8]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[9px] font-bold text-[rgb(var(--sa-soft))]">
                   0{index + 1}
                 </span>
                 <p className="pt-1 text-xs leading-5 text-[#afc0bb]">
@@ -1282,7 +1302,7 @@ function ImbaOsSectionView({
               <button
                 type="button"
                 onClick={() => onNavigate(linkedView[section.id]!)}
-                className="flex w-full items-center justify-between rounded-xl bg-[#b7e35b] px-4 py-3 text-xs font-black text-[#102016] transition hover:bg-[#c9ef79]"
+                className="flex w-full items-center justify-between rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-xs font-black text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
               >
                 Open working prototype <ArrowRight className="h-4 w-4" />
               </button>
@@ -1331,7 +1351,7 @@ function ImbaOsSectionView({
                 className="relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
               >
                 <div className="flex items-center justify-between">
-                  <StepIcon className="h-4 w-4 text-[#b7e35b]" />
+                  <StepIcon className="h-4 w-4 text-[rgb(var(--sa))]" />
                   <span className="font-mono text-[8px] text-[#526a63]">
                     0{index + 1}
                   </span>
@@ -1376,13 +1396,13 @@ function ImbaRoadmapView({
           <button
             type="button"
             onClick={() => onNavigate("whatif")}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#b7e35b] px-4 py-3 text-xs font-black text-[#102016] hover:bg-[#c9ef79]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-xs font-black text-[rgb(var(--sa-ink))] hover:bg-[#c9ef79]"
           >
             <SlidersHorizontal className="h-4 w-4" /> Open Day-180 WHAT_IF Lab
           </button>
         </div>
       </section>
-      <div className="relative space-y-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-gradient-to-b before:from-[#b7e35b] before:via-[#68b9aa] before:to-transparent sm:before:left-[83px]">
+      <div className="relative space-y-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-gradient-to-b before:from-[rgb(var(--sa))] before:via-[#68b9aa] before:to-transparent sm:before:left-[83px]">
         {imbaFirstYearRoadmap.map((step, index) => (
           <article
             key={step.milestone}
@@ -1390,7 +1410,7 @@ function ImbaRoadmapView({
           >
             <div className="relative z-10 flex items-start sm:justify-center">
               <span
-                className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-wider ${index < 2 ? "border-[#b7e35b]/25 bg-[#b7e35b]/10 text-[#dff7a8]" : "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[#9fd6cc]"}`}
+                className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-wider ${index < 2 ? "border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]" : "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[#9fd6cc]"}`}
               >
                 {step.milestone}
               </span>
@@ -1405,7 +1425,7 @@ function ImbaRoadmapView({
                     key={item}
                     className="flex items-start gap-2 rounded-xl bg-white/[0.025] px-3 py-2.5"
                   >
-                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b7e35b]" />
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--sa))]" />
                     <span className="text-[11px] leading-5 text-[#99aca6]">
                       {item}
                     </span>
@@ -1446,6 +1466,12 @@ export function ImbaCeoCockpit() {
   const currentView =
     allNavItems.find((item) => item.id === view) ?? allNavItems[0];
   const activeOsSection = imbaOsSections.find((section) => section.id === view);
+  const accent = accentForView(view);
+  const accentStyle = {
+    '--sa': accent.sa,
+    '--sa-soft': accent.soft,
+    '--sa-ink': accent.ink,
+  } as React.CSSProperties;
   const isScenarioAware = [
     "brief",
     "portfolio",
@@ -1661,7 +1687,7 @@ export function ImbaCeoCockpit() {
       >
         <div className="flex h-[86px] items-center justify-between border-b border-white/[0.08] px-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#b7e35b] text-[#0b2118] shadow-[0_0_30px_rgba(183,227,91,0.16)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--sa))] text-[#0b2118] shadow-[0_0_30px_rgba(183,227,91,0.16)]">
               <Mountain className="h-6 w-6" />
             </div>
             <div>
@@ -1737,7 +1763,7 @@ export function ImbaCeoCockpit() {
                             className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${active ? "bg-white/[0.08] text-white" : "text-[#8ea29c] hover:bg-white/[0.04] hover:text-white"}`}
                           >
                             <Icon
-                              className={`h-3.5 w-3.5 shrink-0 ${active ? "text-[#b7e35b]" : "text-current/60"}`}
+                              className={`h-3.5 w-3.5 shrink-0 ${active ? "text-[rgb(var(--sa))]" : "text-current/60"}`}
                             />
                             <span className="min-w-0 flex-1">
                               <span className="block text-[10px] font-semibold">
@@ -1748,7 +1774,7 @@ export function ImbaCeoCockpit() {
                               </span>
                             </span>
                             {active ? (
-                              <ArrowRight className="h-3 w-3 text-[#b7e35b]" />
+                              <ArrowRight className="h-3 w-3 text-[rgb(var(--sa))]" />
                             ) : null}
                           </button>
                         );
@@ -1763,7 +1789,7 @@ export function ImbaCeoCockpit() {
 
         <div className="shrink-0 border-t border-white/[0.07] p-3">
           <div className="rounded-2xl border border-white/[0.08] bg-[#101e1b] p-3">
-            <div className="flex items-center gap-2 text-[#b7e35b]">
+            <div className="flex items-center gap-2 text-[rgb(var(--sa))]">
               <ShieldCheck className="h-4 w-4" />
               <span className="text-[9px] font-black uppercase tracking-[0.18em]">
                 Pitch-safe data
@@ -1790,7 +1816,7 @@ export function ImbaCeoCockpit() {
         />
       ) : null}
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden" style={accentStyle}>
         <header className="flex h-[86px] shrink-0 items-center justify-between border-b border-white/[0.08] bg-[#0a1513]/85 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -1871,7 +1897,7 @@ export function ImbaCeoCockpit() {
                       setScenarioKey(event.target.value as ImbaScenarioKey)
                     }
                     aria-label="Select financial scenario"
-                    className="appearance-none rounded-xl border border-white/[0.1] bg-[#14201e] py-2.5 pl-3 pr-9 text-[10px] font-bold text-white outline-none ring-[#b7e35b]/40 focus:ring-2"
+                    className="appearance-none rounded-xl border border-white/[0.1] bg-[#14201e] py-2.5 pl-3 pr-9 text-[10px] font-bold text-white outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
                   >
                     {Object.entries(imbaScenarios).map(([key, item]) => (
                       <option key={key} value={key}>
@@ -1890,7 +1916,7 @@ export function ImbaCeoCockpit() {
               </div>
             ) : null}
             <div
-              className="hidden h-9 w-9 items-center justify-center rounded-full border border-[#b7e35b]/20 bg-[#b7e35b]/10 text-[10px] font-black text-[#dff7a8] sm:flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[10px] font-black text-[rgb(var(--sa-soft))] sm:flex"
               title={imbaRoleProfiles[role].label}
             >
               {imbaRoleProfiles[role].initials}
@@ -1903,7 +1929,7 @@ export function ImbaCeoCockpit() {
             {isScenarioAware ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#b7e35b]" />
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa))]" />
                   <div>
                     <p className="text-xs font-semibold text-[#dbe8e4]">
                       {scenario.label}: {scenario.description}
@@ -1926,13 +1952,13 @@ export function ImbaCeoCockpit() {
                     ).length
                   }{" "}
                   open decisions{" "}
-                  <ArrowRight className="h-3.5 w-3.5 text-[#b7e35b]" />
+                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />
                 </button>
               </div>
             ) : activeOsSection ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
-                  <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-[#b7e35b]" />
+                  <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa))]" />
                   <div>
                     <p className="text-xs font-semibold text-[#dbe8e4]">
                       {activeOsSection.label} is one layer of a shared nonprofit
@@ -1951,7 +1977,7 @@ export function ImbaCeoCockpit() {
                   className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-[10px] font-bold text-white hover:bg-white/[0.08]"
                 >
                   See implementation sequence{" "}
-                  <ArrowRight className="h-3.5 w-3.5 text-[#b7e35b]" />
+                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />
                 </button>
               </div>
             ) : null}
@@ -2083,7 +2109,7 @@ export function ImbaCeoCockpit() {
                         <button
                           type="button"
                           onClick={() => setCurrentView("liquidity")}
-                          className="text-[10px] font-bold text-[#b7e35b] hover:text-[#d9f59c]"
+                          className="text-[10px] font-bold text-[rgb(var(--sa))] hover:text-[#d9f59c]"
                         >
                           Open liquidity →
                         </button>
@@ -2149,7 +2175,7 @@ export function ImbaCeoCockpit() {
                               {decision.financialEffect}
                             </p>
                           </div>
-                          <ArrowRight className="mt-1 h-3.5 w-3.5 text-[#526a63] transition group-hover:translate-x-0.5 group-hover:text-[#b7e35b]" />
+                          <ArrowRight className="mt-1 h-3.5 w-3.5 text-[#526a63] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--sa))]" />
                         </button>
                       ))}
                     </div>
@@ -2164,7 +2190,7 @@ export function ImbaCeoCockpit() {
                       <button
                         type="button"
                         onClick={() => setCurrentView("portfolio")}
-                        className="text-[10px] font-bold text-[#b7e35b] hover:text-[#d9f59c]"
+                        className="text-[10px] font-bold text-[rgb(var(--sa))] hover:text-[#d9f59c]"
                       >
                         All engagements →
                       </button>
@@ -2328,7 +2354,7 @@ export function ImbaCeoCockpit() {
                           label: "Signed backlog",
                           value: scenario.backlog,
                           width: 100,
-                          tone: "bg-[#b7e35b]",
+                          tone: "bg-[rgb(var(--sa))]",
                         },
                         {
                           label: "90%+ likely",
@@ -2384,7 +2410,7 @@ export function ImbaCeoCockpit() {
                           key={control}
                           className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
                         >
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#b7e35b]/10 font-mono text-[10px] font-bold text-[#d7f49a]">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[10px] font-bold text-[#d7f49a]">
                             0{index + 1}
                           </span>
                           <span className="text-xs font-medium text-[#c8d5d1]">
@@ -2502,7 +2528,7 @@ export function ImbaCeoCockpit() {
                           </div>
                         );
                       })}
-                      <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#b7e35b]/20 bg-[#b7e35b]/[0.07] p-4">
+                      <div className="mt-4 flex items-center justify-between rounded-2xl border border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa))]/[0.07] p-4">
                         <div>
                           <p className="text-[9px] font-black uppercase tracking-wider text-[#9fbd65]">
                             Deployable
@@ -2551,7 +2577,7 @@ export function ImbaCeoCockpit() {
                           className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
                         >
                           <div className="flex items-center justify-between">
-                            <Icon className="h-4 w-4 text-[#b7e35b]" />
+                            <Icon className="h-4 w-4 text-[rgb(var(--sa))]" />
                             <span className="font-mono text-sm font-semibold text-white">
                               {action.value}
                             </span>
@@ -2646,7 +2672,7 @@ export function ImbaCeoCockpit() {
                             Base
                           </span>
                           <span className="flex items-center gap-1.5">
-                            <i className="h-2 w-2 rounded-full bg-[#b7e35b]" />
+                            <i className="h-2 w-2 rounded-full bg-[rgb(var(--sa))]" />
                             Expansion
                           </span>
                         </div>
@@ -2675,7 +2701,7 @@ export function ImbaCeoCockpit() {
                             </div>
                             <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
                               <div
-                                className={`h-full rounded-full ${row.expansion > 100 ? "bg-rose-300" : "bg-[#b7e35b]"}`}
+                                className={`h-full rounded-full ${row.expansion > 100 ? "bg-rose-300" : "bg-[rgb(var(--sa))]"}`}
                                 style={{
                                   width: `${Math.min(row.expansion, 100)}%`,
                                 }}
@@ -2704,7 +2730,7 @@ export function ImbaCeoCockpit() {
                       title="Contract before commitment"
                     />
                     <div className="p-5">
-                      <div className="rounded-2xl border border-[#b7e35b]/18 bg-[#b7e35b]/[0.06] p-4">
+                      <div className="rounded-2xl border border-[rgb(var(--sa)/0.18)] bg-[rgb(var(--sa))]/[0.06] p-4">
                         <p className="text-[9px] font-black uppercase tracking-widest text-[#9cb85f]">
                           Trigger
                         </p>
@@ -2777,7 +2803,7 @@ export function ImbaCeoCockpit() {
                           className="relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
                         >
                           <div className="flex items-center justify-between">
-                            <Icon className="h-4 w-4 text-[#b7e35b]" />
+                            <Icon className="h-4 w-4 text-[rgb(var(--sa))]" />
                             <span className="font-mono text-[9px] text-[#526a63]">
                               0{index + 1}
                             </span>
@@ -2821,7 +2847,7 @@ export function ImbaCeoCockpit() {
                       Capacity threshold approaching
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-[#b7e35b]/15 bg-[#b7e35b]/[0.05] p-4">
+                  <div className="rounded-2xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.05] p-4">
                     <p className="text-[9px] font-black uppercase tracking-widest text-[#d1ef8b]">
                       Potential protected cash
                     </p>
@@ -2883,7 +2909,7 @@ export function ImbaCeoCockpit() {
                         {Object.entries(imbaScenarios).map(([key, item]) => (
                           <tr
                             key={key}
-                            className={`border-b border-white/[0.05] last:border-0 ${key === scenarioKey ? "bg-[#b7e35b]/[0.045]" : ""}`}
+                            className={`border-b border-white/[0.05] last:border-0 ${key === scenarioKey ? "bg-[rgb(var(--sa))]/[0.045]" : ""}`}
                           >
                             <td className="px-5 py-4">
                               <button
@@ -2894,7 +2920,7 @@ export function ImbaCeoCockpit() {
                                 className="flex items-center gap-2 text-xs font-semibold text-white"
                               >
                                 <span
-                                  className={`h-2 w-2 rounded-full ${key === scenarioKey ? "bg-[#b7e35b]" : "bg-[#466059]"}`}
+                                  className={`h-2 w-2 rounded-full ${key === scenarioKey ? "bg-[rgb(var(--sa))]" : "bg-[#466059]"}`}
                                 />
                                 {item.label}
                               </button>

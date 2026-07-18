@@ -598,10 +598,10 @@ export function ImbaMissionWorkspace({
               <div className="mt-3 flex flex-wrap gap-2">{selected.relationships.map((item) => <span key={item} className="rounded-full border border-blue-300/10 bg-blue-300/[0.04] px-2.5 py-1 text-[9px] text-blue-100">{item}</span>)}</div>
             </div>
             <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-              <div className="flex items-center gap-2"><Database className="h-3.5 w-3.5 text-[#dff7a8]" /><p className="text-[9px] font-black uppercase tracking-wider text-[#718981]">Connected touchpoints</p></div>
-              <div className="mt-3 space-y-2">{selected.touchpoints.map((item) => <div key={item} className="flex items-center gap-2 text-[9px] text-[#a9bbb5]"><ShieldCheck className="h-3.5 w-3.5 text-[#b7e35b]" />{item}</div>)}</div>
+              <div className="flex items-center gap-2"><Database className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /><p className="text-[9px] font-black uppercase tracking-wider text-[#718981]">Connected touchpoints</p></div>
+              <div className="mt-3 space-y-2">{selected.touchpoints.map((item) => <div key={item} className="flex items-center gap-2 text-[9px] text-[#a9bbb5]"><ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />{item}</div>)}</div>
             </div>
-            <button type="button" onClick={() => onNavigate(selected.linkedView)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-3 text-[9px] font-black uppercase text-[#102016]">
+            <button type="button" onClick={() => onNavigate(selected.linkedView)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-3 text-[9px] font-black uppercase text-[rgb(var(--sa-ink))]">
               Open linked work <ArrowRight className="h-3.5 w-3.5" />
             </button>
             <div className="flex items-center gap-2 text-[9px] text-[#718981]"><MapPin className="h-3.5 w-3.5" />Relationships and activity roll up to the community record.</div>

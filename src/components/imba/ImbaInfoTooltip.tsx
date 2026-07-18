@@ -28,7 +28,7 @@ export function ImbaInfoTooltip({
         type="button"
         aria-label={`About ${label}`}
         aria-describedby={tooltipId}
-        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[#718981] transition hover:bg-white/[0.07] hover:text-[#dff7a8] focus-visible:bg-white/[0.07] focus-visible:text-[#dff7a8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b7e35b]/45"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[#718981] transition hover:bg-white/[0.07] hover:text-[rgb(var(--sa-soft))] focus-visible:bg-white/[0.07] focus-visible:text-[rgb(var(--sa-soft))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--sa)/0.45)]"
       >
         <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
