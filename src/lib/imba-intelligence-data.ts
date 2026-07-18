@@ -81,6 +81,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Management",
     ],
     sectionViews: {
+      Mission: ["operations", "trail-solutions", "impact-research"],
       Money: [
         "finance-snapshot",
         "finance-grants",
@@ -90,6 +91,12 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-ap-ar",
         "liquidity",
       ],
+      People: ["people", "capacity"],
+      Development: ["development", "development-campaigns"],
+      Platform: ["platform", "platform-health"],
+      Governance: ["governance", "governance-board"],
+      Collaboration: ["collaboration", "collaboration-inbox"],
+      System: ["system", "system-activity"],
     },
   },
   finance: {
@@ -106,6 +113,21 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Governance",
       "Management",
     ],
+    sectionViews: {
+      Mission: ["operations", "trail-solutions", "project-board"],
+      People: ["people-payroll", "people-compliance"],
+      Development: ["development-grant-pipeline"],
+      Platform: [
+        "integration-control",
+        "integration-qbo",
+        "integration-adp",
+        "integration-mappings",
+        "integration-sync",
+        "integration-audit",
+      ],
+      Governance: ["governance-compliance", "governance-board"],
+      Management: ["brief", "roadmap"],
+    },
   },
   "trail-solutions": {
     label: "Trail Solutions",
@@ -120,6 +142,14 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Collaboration",
     ],
     sectionViews: {
+      Mission: [
+        "operations",
+        "trail-solutions",
+        "project-board",
+        "chapter-network",
+        "chapter-standards",
+        "trail-assets",
+      ],
       Money: [
         "finance-snapshot",
         "finance-budget",
@@ -127,6 +157,9 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-payables",
         "finance-ap-ar",
       ],
+      People: ["people", "capacity", "people-directory"],
+      Platform: ["platform"],
+      Collaboration: ["collaboration", "collaboration-inbox", "collaboration-workspaces"],
     },
   },
   development: {
@@ -146,6 +179,13 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-budget",
         "finance-reports",
       ],
+      Collaboration: [
+        "collaboration",
+        "collaboration-inbox",
+        "collaboration-workspaces",
+        "communications-inbox",
+        "communications-templates",
+      ],
     },
   },
   board: {
@@ -161,6 +201,8 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-reports",
         "liquidity",
       ],
+      Governance: ["governance", "governance-board", "governance-compliance"],
+      Management: ["brief", "decisions", "roadmap"],
     },
   },
 };
