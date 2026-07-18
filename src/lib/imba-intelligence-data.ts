@@ -1,7 +1,7 @@
 import type { ImbaOsView } from "@/lib/imba-os-data";
 
 export type ImbaRoleKey =
-  "executive" | "finance" | "trail-solutions" | "development" | "board";
+  "executive" | "finance" | "hr" | "trail-solutions" | "development" | "board";
 
 export interface ImbaRoleProfile {
   label: string;
@@ -126,6 +126,27 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "integration-audit",
       ],
       Governance: ["governance-compliance", "governance-board"],
+      Management: ["brief", "roadmap"],
+    },
+  },
+  hr: {
+    label: "People / HR",
+    initials: "HR",
+    purpose: "Workforce, payroll, hiring, onboarding, and compliance",
+    home: "people",
+    sections: [
+      "People",
+      "Money",
+      "Platform",
+      "Governance",
+      "Collaboration",
+      "Management",
+    ],
+    sectionViews: {
+      Money: ["finance-snapshot", "finance-calendar", "finance-budget"],
+      Platform: ["integration-control", "integration-adp", "integration-audit"],
+      Governance: ["governance-compliance", "governance-vault"],
+      Collaboration: ["collaboration", "collaboration-inbox", "communications-templates"],
       Management: ["brief", "roadmap"],
     },
   },
