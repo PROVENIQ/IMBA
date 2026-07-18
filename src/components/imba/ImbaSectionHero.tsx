@@ -61,28 +61,24 @@ export function ImbaSectionHero({ section, onClose }: { section: string; onClose
   const meta = sectionHeroMeta[section];
   if (!meta) return null;
   return (
-    <section className="rounded-[24px] border border-[rgb(var(--sa)/0.2)] bg-[linear-gradient(120deg,rgb(var(--sa)/0.09),rgba(255,255,255,.018))] p-6">
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div className="max-w-3xl">
-          <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[rgb(var(--sa-soft))]">{section}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{meta.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{meta.description}</p>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3">
-            <p className="text-[9px] font-black uppercase tracking-wider text-amber-100">Demo · illustrative</p>
-            <p className="mt-1 text-[10px] text-[#9caaa6]">Structure is production-minded; current values are illustrative.</p>
-          </div>
-          {onClose ? (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Dismiss section overview"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/[0.1] text-[#9aafa8] transition hover:bg-white/[0.06] hover:text-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          ) : null}
+    <section className="relative rounded-[24px] border border-[rgb(var(--sa)/0.2)] bg-[linear-gradient(120deg,rgb(var(--sa)/0.09),rgba(255,255,255,.018))] p-6">
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Dismiss section overview"
+          className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg border border-white/[0.1] text-[#9aafa8] transition hover:bg-white/[0.06] hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      ) : null}
+      <div className="max-w-3xl pr-10">
+        <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[rgb(var(--sa-soft))]">{section}</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{meta.title}</h2>
+        <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{meta.description}</p>
+        <div className="mt-4 inline-block rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3">
+          <p className="text-[9px] font-black uppercase tracking-wider text-amber-100">Demo · illustrative</p>
+          <p className="mt-1 text-[10px] text-[#9caaa6]">Structure is production-minded; current values are illustrative.</p>
         </div>
       </div>
     </section>
