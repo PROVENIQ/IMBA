@@ -81,7 +81,7 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
   'finance-budget': { eyebrow: 'Money · planning', title: 'Budget + forecast', description: 'Plan, actual, variance, and expected year-end result by IMBA revenue engine and cost center.' },
   'finance-grants': { eyebrow: 'Money · restricted funds', title: 'Grant tracking', description: 'Award-to-close lifecycle: restrictions, allowable spend, draws, deadlines, and remaining capacity.' },
   'finance-payables': { eyebrow: 'Money · approve & pay', title: 'Accounts payable', description: 'View the invoice, route by threshold, and Approve & Pay / Hold / Reject — the payment executes in Bill.com via API.' },
-  'finance-ap-ar': { eyebrow: 'Money · cash conversion', title: 'AP / AR ledger', description: 'Collections, unbilled milestones, approvals, payment timing, and chapter obligations.' },
+  'finance-ap-ar': { eyebrow: 'Money · collections', title: 'Accounts receivable', description: 'Open invoices, unbilled milestones, aging, and collection follow-ups. Vendor bills and approvals live in Accounts payable.' },
   'finance-reports': { eyebrow: 'Money · reporting library', title: 'Reports', description: 'A governed catalog for leadership, Board, project accounting, treasury, grants, and compliance.' },
   'finance-transactions': { eyebrow: 'Money · transaction control', title: 'Bills + invoices', description: 'Controlled entry for vendor bills, client invoices, chapter obligations, project milestones, and coding evidence.' },
 };
@@ -287,28 +287,17 @@ function ApAr() {
   type ReceivableRecord = (typeof imbaReceivables)[number] & {
     followUpQueued?: boolean;
   };
-  type PayableRecord = (typeof imbaPayables)[number] & {
-    reviewed?: boolean;
-    approvalState?: string;
-  };
 
   const { getEditedRecord, updateRecord } = useImbaOsState();
-  const [mode, setMode] = useState<'ar' | 'ap'>('ar');
-  const [selected, setSelected] = useState<{ type: 'ar' | 'ap'; ref: string } | null>(null);
+  const [selectedRef, setSelectedRef] = useState<string | null>(null);
   const receivables = imbaReceivables.map((row) =>
     getEditedRecord<ReceivableRecord>('receivable', row.ref, row),
   );
-  const payables = imbaPayables.map((row) =>
-    getEditedRecord<PayableRecord>('payable', row.ref, row),
-  );
   const arTotal = imbaReceivables.reduce((sum, row) => sum + row.amount, 0);
-  const apTotal = imbaPayables.reduce((sum, row) => sum + row.amount, 0);
   const overdue = imbaReceivables.filter((row) => row.age > 30).reduce((sum, row) => sum + row.amount, 0);
-  const selectedReceivable = selected?.type === 'ar'
-    ? receivables.find((row) => row.ref === selected.ref)
-    : undefined;
-  const selectedPayable = selected?.type === 'ap'
-    ? payables.find((row) => row.ref === selected.ref)
+  const current = arTotal - overdue;
+  const selectedReceivable = selectedRef
+    ? receivables.find((row) => row.ref === selectedRef)
     : undefined;
 
   const queueFollowUp = (row: ReceivableRecord) => {
@@ -323,92 +312,34 @@ function ApAr() {
     );
   };
 
-  const markPayableReviewed = (row: PayableRecord) => {
-    updateRecord(
-      'payable',
-      row.ref,
-      { reviewed: true },
-      {
-        actor: 'Finance reviewer',
-        detail: `Reviewed ${row.ref}; no approval or payment was posted.`,
-      },
-    );
-  };
-
-  const stagePayableApproval = (row: PayableRecord) => {
-    updateRecord(
-      'payable',
-      row.ref,
-      { reviewed: true, approvalState: 'Awaiting approval' },
-      {
-        actor: 'Finance reviewer',
-        detail: `Staged ${row.ref} for approval by ${row.approval}.`,
-        queue: {
-          system: 'qbo',
-          action: 'update',
-          recordType: 'Payable approval',
-          recordId: row.ref,
-          summary: `${row.vendor} / ${money(row.amount)} / approval by ${row.approval}`,
-          requiresApproval: true,
-        },
-      },
-    );
-  };
-
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Receivables + unbilled" value={money(arTotal)} note="Invoices plus earned milestone work" /><Kpi label="Over 30 days" value={money(overdue)} note="Two customer balances" tone="amber" /><Kpi label="Payables + obligations" value={money(apTotal)} note="Scheduled, pending, and ring-fenced" tone="teal" /><Kpi label="Net working capital" value={money(arTotal - apTotal)} note="Before collection and payment timing" tone={arTotal - apTotal >= 0 ? 'lime' : 'rose'} /></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Receivables + unbilled" value={money(arTotal)} note="Invoices plus earned milestone work" /><Kpi label="Over 30 days" value={money(overdue)} note="Aged collection risk" tone="amber" /><Kpi label="Current" value={money(current)} note="Within terms" tone="teal" /><Kpi label="Open items" value={String(receivables.length)} note="Receivable + unbilled records" tone="lime" /></div>
       <ShellCard>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-4">
-          <div><p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#718981]">Cash conversion workflow</p><h2 className="mt-1 text-base font-semibold text-white">{mode === 'ar' ? 'Accounts receivable + unbilled work' : 'Accounts payable + obligations'}</h2></div>
-          <div className="rounded-xl border border-white/[0.08] bg-black/10 p-1">
-            <button type="button" onClick={() => { setMode('ar'); setSelected(null); }} className={`rounded-lg px-4 py-2 text-[9px] font-black uppercase ${mode === 'ar' ? 'bg-[#b7e35b] text-[#102016]' : 'text-[#81978f]'}`}>Receivable</button>
-            <button type="button" onClick={() => { setMode('ap'); setSelected(null); }} className={`rounded-lg px-4 py-2 text-[9px] font-black uppercase ${mode === 'ap' ? 'bg-[#b7e35b] text-[#102016]' : 'text-[#81978f]'}`}>Payable</button>
-          </div>
+          <div><p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#718981]">Cash conversion · collections</p><h2 className="mt-1 text-base font-semibold text-white">Accounts receivable + unbilled work</h2></div>
+          <p className="text-[9px] text-[#718981]">Vendor bills live in <span className="text-[#dff7a8]">Money → Accounts payable</span></p>
         </div>
         <div className="overflow-x-auto">
-          {mode === 'ar' ? (
-            <table className="w-full min-w-[980px] text-left">
-              <thead><tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.16em] text-[#6f8981]"><th className="px-5 py-3">Customer / project</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3 text-right">Amount</th><th className="px-3 py-3 text-right">Age</th><th className="px-3 py-3">Due</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
-              <tbody>{receivables.map((row) => (
-                <tr key={row.ref} className={`border-b border-white/[0.055] last:border-0 ${selectedReceivable?.ref === row.ref ? 'bg-emerald-300/[0.035]' : ''}`}>
-                  <td className="px-5 py-3.5"><p className="text-xs font-semibold text-white">{row.customer}</p><p className="mt-1 text-[9px] text-[#718981]">{row.project}</p></td>
-                  <td className="px-3 py-3.5 font-mono text-[10px] text-[#94aaa3]">{row.ref}</td>
-                  <td className="px-3 py-3.5 text-right font-mono text-xs text-white">{money(row.amount)}</td>
-                  <td className={`px-3 py-3.5 text-right font-mono text-xs ${row.age > 45 ? 'text-rose-200' : row.age > 30 ? 'text-amber-200' : 'text-[#dff7a8]'}`}>{row.age ? `${row.age}d` : '—'}</td>
-                  <td className="px-3 py-3.5 text-[10px] text-[#a9bbb5]">{row.due}</td>
-                  <td className="px-5 py-3.5"><div className="flex justify-end gap-2"><button type="button" onClick={() => setSelected({ type: 'ar', ref: row.ref })} className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3 py-2 text-[9px] font-bold text-white hover:bg-white/[0.05]"><Eye className="h-3 w-3" /> View</button>{row.status !== 'Current' ? <button type="button" disabled={row.followUpQueued} onClick={() => queueFollowUp(row)} className="rounded-lg bg-[#b7e35b] px-3 py-2 text-[9px] font-black text-[#102016] disabled:cursor-default disabled:bg-[#b7e35b]/10 disabled:text-[#dff7a8]">{row.followUpQueued ? 'Follow-up queued' : 'Queue follow-up'}</button> : null}</div></td>
-                </tr>
-              ))}</tbody>
-            </table>
-          ) : (
-            <table className="w-full min-w-[900px] text-left">
-              <thead><tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.16em] text-[#6f8981]"><th className="px-5 py-3">Vendor / category</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3 text-right">Amount</th><th className="px-3 py-3">Due</th><th className="px-3 py-3">Approval</th><th className="px-5 py-3 text-right">Action</th></tr></thead>
-              <tbody>{payables.map((row) => (
-                <tr key={row.ref} className={`border-b border-white/[0.055] last:border-0 ${selectedPayable?.ref === row.ref ? 'bg-emerald-300/[0.035]' : ''}`}>
-                  <td className="px-5 py-3.5"><p className="text-xs font-semibold text-white">{row.vendor}</p><p className="mt-1 text-[9px] text-[#718981]">{row.category} · {row.approvalState ?? row.status}</p></td>
-                  <td className="px-3 py-3.5 font-mono text-[10px] text-[#94aaa3]">{row.ref}</td>
-                  <td className="px-3 py-3.5 text-right font-mono text-xs text-white">{money(row.amount)}</td>
-                  <td className="px-3 py-3.5 text-[10px] text-[#a9bbb5]">{row.due}</td>
-                  <td className="px-3 py-3.5 text-[10px] text-[#a9bbb5]">{row.approval}</td>
-                  <td className="px-5 py-3.5 text-right"><button type="button" onClick={() => setSelected({ type: 'ap', ref: row.ref })} className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3 py-2 text-[9px] font-bold text-white hover:bg-white/[0.05]"><Eye className="h-3 w-3" /> View</button></td>
-                </tr>
-              ))}</tbody>
-            </table>
-          )}
+          <table className="w-full min-w-[980px] text-left">
+            <thead><tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.16em] text-[#6f8981]"><th className="px-5 py-3">Customer / project</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3 text-right">Amount</th><th className="px-3 py-3 text-right">Age</th><th className="px-3 py-3">Due</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
+            <tbody>{receivables.map((row) => (
+              <tr key={row.ref} className={`border-b border-white/[0.055] last:border-0 ${selectedReceivable?.ref === row.ref ? 'bg-emerald-300/[0.035]' : ''}`}>
+                <td className="px-5 py-3.5"><p className="text-xs font-semibold text-white">{row.customer}</p><p className="mt-1 text-[9px] text-[#718981]">{row.project}</p></td>
+                <td className="px-3 py-3.5 font-mono text-[10px] text-[#94aaa3]">{row.ref}</td>
+                <td className="px-3 py-3.5 text-right font-mono text-xs text-white">{money(row.amount)}</td>
+                <td className={`px-3 py-3.5 text-right font-mono text-xs ${row.age > 45 ? 'text-rose-200' : row.age > 30 ? 'text-amber-200' : 'text-[#dff7a8]'}`}>{row.age ? `${row.age}d` : '—'}</td>
+                <td className="px-3 py-3.5 text-[10px] text-[#a9bbb5]">{row.due}</td>
+                <td className="px-5 py-3.5"><div className="flex justify-end gap-2"><button type="button" onClick={() => setSelectedRef(row.ref)} className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3 py-2 text-[9px] font-bold text-white hover:bg-white/[0.05]"><Eye className="h-3 w-3" /> View</button>{row.status !== 'Current' ? <button type="button" disabled={row.followUpQueued} onClick={() => queueFollowUp(row)} className="rounded-lg bg-[#b7e35b] px-3 py-2 text-[9px] font-black text-[#102016] disabled:cursor-default disabled:bg-[#b7e35b]/10 disabled:text-[#dff7a8]">{row.followUpQueued ? 'Follow-up queued' : 'Queue follow-up'}</button> : null}</div></td>
+              </tr>
+            ))}</tbody>
+          </table>
         </div>
         {selectedReceivable ? (
           <div className="grid gap-4 border-t border-emerald-300/15 bg-emerald-300/[0.025] p-5 lg:grid-cols-[1.4fr_1fr_auto]">
             <div><p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200">Receivable detail / {selectedReceivable.ref}</p><h3 className="mt-1 text-base font-semibold text-white">{selectedReceivable.customer}</h3><p className="mt-2 text-[10px] leading-5 text-[#9fb2ac]">{selectedReceivable.project} · {selectedReceivable.status}. Viewing this record does not change its workflow state.</p></div>
             <div className="grid grid-cols-3 gap-2"><Kpi label="Amount" value={money(selectedReceivable.amount)} note="Open balance" /><Kpi label="Age" value={selectedReceivable.age ? `${selectedReceivable.age}d` : 'Unbilled'} note="As of demo date" tone={selectedReceivable.age > 30 ? 'amber' : 'teal'} /><Kpi label="Due" value={selectedReceivable.due} note="Collection milestone" tone="teal" /></div>
-            <div className="flex items-start gap-2"><button type="button" disabled={selectedReceivable.followUpQueued} onClick={() => queueFollowUp(selectedReceivable)} className="rounded-xl bg-[#b7e35b] px-4 py-3 text-[9px] font-black uppercase text-[#102016] disabled:bg-[#b7e35b]/10 disabled:text-[#dff7a8]">{selectedReceivable.followUpQueued ? 'Follow-up queued' : 'Queue follow-up'}</button><button type="button" aria-label="Close receivable detail" onClick={() => setSelected(null)} className="rounded-xl border border-white/[0.1] p-3 text-[#94aaa3]"><X className="h-4 w-4" /></button></div>
-          </div>
-        ) : null}
-        {selectedPayable ? (
-          <div className="grid gap-4 border-t border-emerald-300/15 bg-emerald-300/[0.025] p-5 lg:grid-cols-[1.4fr_1fr_auto]">
-            <div><p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200">Payable detail / {selectedPayable.ref}</p><h3 className="mt-1 text-base font-semibold text-white">{selectedPayable.vendor}</h3><p className="mt-2 text-[10px] leading-5 text-[#9fb2ac]">{selectedPayable.category} · owner: {selectedPayable.approval}. Review and approval are separate actions.</p></div>
-            <div className="grid grid-cols-2 gap-2"><Kpi label="Amount" value={money(selectedPayable.amount)} note="Obligation" /><Kpi label="State" value={selectedPayable.approvalState ?? (selectedPayable.reviewed ? 'Reviewed' : selectedPayable.status)} note={`Due ${selectedPayable.due}`} tone={selectedPayable.approvalState ? 'amber' : 'teal'} /></div>
-            <div className="flex flex-wrap items-start justify-end gap-2"><button type="button" disabled={selectedPayable.reviewed} onClick={() => markPayableReviewed(selectedPayable)} className="rounded-xl border border-white/[0.1] px-4 py-3 text-[9px] font-black uppercase text-white disabled:text-[#718981]">{selectedPayable.reviewed ? 'Reviewed' : 'Mark reviewed'}</button><button type="button" disabled={selectedPayable.approvalState === 'Awaiting approval'} onClick={() => stagePayableApproval(selectedPayable)} className="rounded-xl bg-[#b7e35b] px-4 py-3 text-[9px] font-black uppercase text-[#102016] disabled:bg-[#b7e35b]/10 disabled:text-[#dff7a8]">{selectedPayable.approvalState === 'Awaiting approval' ? 'Approval staged' : 'Stage approval'}</button><button type="button" aria-label="Close payable detail" onClick={() => setSelected(null)} className="rounded-xl border border-white/[0.1] p-3 text-[#94aaa3]"><X className="h-4 w-4" /></button></div>
+            <div className="flex items-start gap-2"><button type="button" disabled={selectedReceivable.followUpQueued} onClick={() => queueFollowUp(selectedReceivable)} className="rounded-xl bg-[#b7e35b] px-4 py-3 text-[9px] font-black uppercase text-[#102016] disabled:bg-[#b7e35b]/10 disabled:text-[#dff7a8]">{selectedReceivable.followUpQueued ? 'Follow-up queued' : 'Queue follow-up'}</button><button type="button" aria-label="Close receivable detail" onClick={() => setSelectedRef(null)} className="rounded-xl border border-white/[0.1] p-3 text-[#94aaa3]"><X className="h-4 w-4" /></button></div>
           </div>
         ) : null}
       </ShellCard>

@@ -1622,10 +1622,21 @@ tbody tr:last-child td {
   margin: 0 auto;
   padding: clamp(26px, 3.5vw, 46px) clamp(22px, 3.5vw, 48px);
   background: #fff;
+  color: var(--ink);
   border: 1px solid var(--line);
   border-radius: 14px;
   box-shadow: var(--shadow);
 }
+
+/* Statement figures must stay high-contrast dark on the white paper even when
+   the paper is embedded in the dark IMBA-OS cockpit (which sets light text). */
+.report-paper .report-table td,
+.report-paper .report-drill-cell {
+  color: var(--ink);
+}
+.report-paper .report-table td.is-pct { color: var(--ink-soft); }
+.report-paper .report-table td.is-neg { color: var(--red); }
+.report-paper .report-table td.is-pending { color: var(--ink-soft); }
 
 .report-head {
   padding-bottom: 20px;

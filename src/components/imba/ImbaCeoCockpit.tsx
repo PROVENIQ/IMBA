@@ -303,8 +303,8 @@ const imbaNavSections: ImbaNavSection[] = [
       },
       {
         id: "finance-ap-ar",
-        label: "AP / AR ledger",
-        description: "Collections + obligations",
+        label: "Accounts receivable",
+        description: "Collections + aging",
         icon: CircleDollarSign,
       },
       {
