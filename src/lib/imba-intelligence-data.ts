@@ -141,8 +141,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Development",
       "Money",
       "Collaboration",
-      "Governance",
-      "Management",
     ],
     sectionViews: {
       Money: [
