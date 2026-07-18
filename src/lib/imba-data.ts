@@ -148,3 +148,24 @@ export function money(value: number, digits = 1): string {
 export function percent(value: number): string {
   return `${Math.round(value)}%`;
 }
+
+/**
+ * Accounting-style currency formatting for financial statements.
+ * Full precision, thousands separators, negatives in parentheses, and an
+ * optional leading currency symbol (QuickBooks shows `$` on the first account
+ * of a section and on subtotal / total rows).
+ *   accounting(7203961)                 -> "7,203,961"
+ *   accounting(-557594, { symbol: true })-> "($557,594)"
+ */
+export function accounting(value: number, opts: { symbol?: boolean } = {}): string {
+  const rounded = Math.round(value);
+  const negative = rounded < 0;
+  const body = Math.abs(rounded).toLocaleString('en-US');
+  const symbol = opts.symbol ? '$' : '';
+  return negative ? `(${symbol}${body})` : `${symbol}${body}`;
+}
+
+/** Percent with one decimal, statement style: `56.5%`, `-7.7%`. */
+export function pct(value: number, digits = 1): string {
+  return `${value.toFixed(digits)}%`;
+}

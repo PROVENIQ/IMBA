@@ -9,14 +9,18 @@ import {
   ChevronRight,
   Compass,
   Droplets,
+  FileSpreadsheet,
   LayoutDashboard,
   Menu,
   Mountain,
+  Receipt,
   X,
 } from 'lucide-react';
 
 const navigation = [
   { href: '/', label: 'Executive overview', icon: LayoutDashboard },
+  { href: '/payables', label: 'Accounts payable', icon: Receipt },
+  { href: '/reports', label: 'Financial reports', icon: FileSpreadsheet },
   { href: '/projects', label: 'Trail Solutions', icon: BriefcaseBusiness },
   { href: '/forecast', label: 'Forecast & scenarios', icon: BarChart3 },
   { href: '/liquidity', label: 'Deployable cash', icon: Droplets },
@@ -54,7 +58,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <nav aria-label="Primary navigation">
           {navigation.map((item) => {
-            const active = pathname === item.href;
+            const active =
+              pathname === item.href ||
+              (item.href !== '/' && pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             return (
               <Link
