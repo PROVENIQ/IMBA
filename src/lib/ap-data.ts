@@ -26,7 +26,7 @@ export type ApUser = {
 export const apUsers: ApUser[] = [
   { id: 'u-dana', name: 'Dana Reyes', role: 'AP Specialist', approvalLimit: 0, initials: 'DR' },
   { id: 'u-terry', name: 'Terry Holliday', role: 'Finance Director', approvalLimit: 25_000, initials: 'TH' },
-  { id: 'u-kent', name: 'Kent', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'K' },
+  { id: 'u-kent', name: 'Kent McNeill', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'KM' },
 ];
 
 export const userById = (id: string): ApUser =>
