@@ -104,8 +104,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Development",
       "Platform",
       "Governance",
-      "Collaboration",
-      "System",
       "Management",
     ],
   },
@@ -120,7 +118,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "People",
       "Platform",
       "Collaboration",
-      "Management",
     ],
     sectionViews: {
       Money: [
