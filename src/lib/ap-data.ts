@@ -4,7 +4,7 @@ import { accounting } from './imba-data';
  * Accounts Payable domain model.
  *
  * A bill moves through a state machine (see BillStatus). Approval is a
- * threshold-routed chain: everything needs a Finance Manager; $5,000+ or any
+ * threshold-routed chain: everything needs a Finance Director; $5,000+ or any
  * donor-restricted bill also needs an Executive. Approvers are gated by role,
  * personal approval limit, and segregation of duties (you cannot approve a bill
  * you entered). Money never moves here — an approved bill is *handed to* the
@@ -13,7 +13,7 @@ import { accounting } from './imba-data';
 
 // --- People & roles --------------------------------------------------------
 
-export type Role = 'AP Specialist' | 'Finance Manager' | 'Executive';
+export type Role = 'AP Specialist' | 'Finance Director' | 'Executive';
 
 export type ApUser = {
   id: string;
@@ -25,8 +25,8 @@ export type ApUser = {
 
 export const apUsers: ApUser[] = [
   { id: 'u-dana', name: 'Dana Reyes', role: 'AP Specialist', approvalLimit: 0, initials: 'DR' },
-  { id: 'u-marcus', name: 'Marcus Lee', role: 'Finance Manager', approvalLimit: 25_000, initials: 'ML' },
-  { id: 'u-kent', name: 'Kent Whitaker', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'KW' },
+  { id: 'u-terry', name: 'Terry Holliday', role: 'Finance Director', approvalLimit: 25_000, initials: 'TH' },
+  { id: 'u-kent', name: 'Kent', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'K' },
 ];
 
 export const userById = (id: string): ApUser =>
@@ -36,7 +36,7 @@ export const userById = (id: string): ApUser =>
 
 export type BillStatus = 'Draft' | 'Coded' | 'In review' | 'On hold' | 'Paid' | 'Rejected';
 
-export type ApprovalRole = 'Finance Manager' | 'Executive';
+export type ApprovalRole = 'Finance Director' | 'Executive';
 
 export type ApprovalStep = {
   role: ApprovalRole;
@@ -85,7 +85,7 @@ export function billAmount(bill: Bill): number {
 
 /** Threshold routing: who must approve a bill of this size / restriction. */
 export function requiredChain(amount: number, restricted: boolean): ApprovalRole[] {
-  const chain: ApprovalRole[] = ['Finance Manager'];
+  const chain: ApprovalRole[] = ['Finance Director'];
   if (amount >= 5_000 || restricted) chain.push('Executive');
   return chain;
 }
@@ -154,7 +154,7 @@ function chain(amount: number, restricted: boolean, approvedRoles: ApprovalRole[
       ? {
           role,
           status: 'approved' as const,
-          approverId: role === 'Finance Manager' ? 'u-marcus' : 'u-kent',
+          approverId: role === 'Finance Director' ? 'u-terry' : 'u-kent',
           actedAt: '2026-07-14T15:10:00',
         }
       : { role, status: 'pending' as const };
@@ -207,12 +207,12 @@ export const seedBills: Bill[] = [
       { description: 'Routed trailhead signs, cedar', quantity: 25, unitPrice: 310 },
       { description: 'Mounting hardware kits', quantity: 25, unitPrice: 40 },
     ],
-    approvals: chain(8750, false, ['Finance Manager']),
+    approvals: chain(8750, false, ['Finance Director']),
     events: [
       { at: '2026-07-03T10:05:00', actor: 'Dana Reyes', action: 'Invoice captured' },
       { at: '2026-07-03T10:12:00', actor: 'Dana Reyes', action: 'Coded', detail: '6410 · Education' },
       { at: '2026-07-03T10:13:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-07-14T15:10:00', actor: 'Marcus Lee', action: 'Approved (Finance Manager)', detail: 'Within threshold; routed to Executive' },
+      { at: '2026-07-14T15:10:00', actor: 'Terry Holliday', action: 'Approved (Finance Director)', detail: 'Within threshold; routed to Executive' },
     ],
   },
   {
@@ -278,12 +278,12 @@ export const seedBills: Bill[] = [
       { description: 'CRM platform — annual', quantity: 1, unitPrice: 5400 },
       { description: 'Managed hosting — annual', quantity: 1, unitPrice: 1500 },
     ],
-    approvals: chain(6900, false, ['Finance Manager']),
+    approvals: chain(6900, false, ['Finance Director']),
     events: [
       { at: '2026-06-26T13:00:00', actor: 'Dana Reyes', action: 'Invoice captured' },
       { at: '2026-06-26T13:10:00', actor: 'Dana Reyes', action: 'Coded', detail: '6500 · Administration' },
       { at: '2026-06-26T13:11:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-07-10T09:30:00', actor: 'Marcus Lee', action: 'Approved (Finance Manager)', detail: 'Routed to Kent for pay/hold decision' },
+      { at: '2026-07-10T09:30:00', actor: 'Terry Holliday', action: 'Approved (Finance Director)', detail: 'Routed to Kent for pay/hold decision' },
     ],
   },
   {
@@ -300,11 +300,11 @@ export const seedBills: Bill[] = [
     restricted: false,
     enteredById: 'u-dana',
     lineItems: [{ description: '2025 annual report — print run of 2,000', quantity: 1, unitPrice: 4100 }],
-    approvals: chain(4100, false, ['Finance Manager']),
+    approvals: chain(4100, false, ['Finance Director']),
     events: [
       { at: '2026-06-19T09:00:00', actor: 'Dana Reyes', action: 'Invoice captured' },
       { at: '2026-06-19T09:08:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-30T10:00:00', actor: 'Marcus Lee', action: 'Approved & held (Finance Manager)', detail: 'Holding payment until the print run ships' },
+      { at: '2026-06-30T10:00:00', actor: 'Terry Holliday', action: 'Approved & held (Finance Director)', detail: 'Holding payment until the print run ships' },
     ],
   },
   {
@@ -322,10 +322,10 @@ export const seedBills: Bill[] = [
     enteredById: 'u-dana',
     syncedToBillPay: true,
     lineItems: [{ description: 'Crew fuel & transport — June', quantity: 1, unitPrice: 1890 }],
-    approvals: chain(1890, false, ['Finance Manager']),
+    approvals: chain(1890, false, ['Finance Director']),
     events: [
       { at: '2026-06-06T09:00:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-10T11:00:00', actor: 'Marcus Lee', action: 'Approved & paid (Finance Manager)', detail: 'Payment initiated via Bill.com API' },
+      { at: '2026-06-10T11:00:00', actor: 'Terry Holliday', action: 'Approved & paid (Finance Director)', detail: 'Payment initiated via Bill.com API' },
       { at: '2026-06-18T02:00:00', actor: 'Bill.com', action: 'Payment cleared', detail: 'ACH settled — synced back to IMBA-OS' },
     ],
   },
@@ -346,7 +346,7 @@ export const seedBills: Bill[] = [
     approvals: chain(12000, false),
     events: [
       { at: '2026-06-02T10:00:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-09T14:30:00', actor: 'Marcus Lee', action: 'Rejected', detail: 'Duplicate of BILL-1998 — already paid' },
+      { at: '2026-06-09T14:30:00', actor: 'Terry Holliday', action: 'Rejected', detail: 'Duplicate of BILL-1998 — already paid' },
     ],
   },
 ];
