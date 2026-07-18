@@ -90,6 +90,7 @@ import { ImbaCollaborationWorkspace } from "@/components/imba/ImbaCollaborationW
 import type { ImbaCollaborationView } from "@/lib/imba-collaboration-data";
 import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
+import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
 import {
   ImbaAlertsDrawer,
   ImbaInsightStrip,
@@ -650,6 +651,80 @@ const sectionAccents: Record<string, { sa: string; soft: string; ink: string }> 
 function accentForView(view: string): { sa: string; soft: string; ink: string } {
   const section = imbaNavSections.find((s) => s.items.some((item) => item.id === view));
   return sectionAccents[section?.label ?? ''] ?? sectionAccents.Money;
+}
+
+// Per-section data-provenance info, surfaced via the header (i) affordance.
+const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
+  Mission: {
+    sources: [
+      'Trail Solutions project system — engagements, phases, outcomes',
+      'Community & chapter program reporting',
+      'Public impact and advocacy records',
+    ],
+    note: 'Illustrative until program systems are connected. Public figures trace to IMBA’s Form 990.',
+  },
+  Money: {
+    sources: [
+      'QuickBooks Online — accounting / general ledger',
+      'ADP (via PEO) — payroll and labor allocation',
+      'Bill.com — vendor bill payment',
+      'Bank feeds — cash positions',
+      'Public figures re-derived from IMBA Form 990 (EIN 47-1254119)',
+    ],
+    note: 'Structure is production-minded; current-period values are illustrative until the GL and connectors are live. Money never moves inside IMBA-OS — payment executes in Bill.com.',
+  },
+  People: {
+    sources: [
+      'ADP Workforce Now / PEO — workers, departments, timecards, payroll',
+      'Internal HR and onboarding records',
+    ],
+    note: 'Labor and time must map reliably to projects, grants, and organizational functions.',
+  },
+  Development: {
+    sources: [
+      'Donor CRM / fundraising system — gifts, pledges, grants',
+      'Grant contracts and restriction schedules',
+    ],
+    note: 'Restricted funding is tracked award-to-close; restrictions carry through to the Money pillar.',
+  },
+  Platform: {
+    sources: [
+      'IMBA-OS integration control plane — connector status and field mappings',
+      'Outbound sync jobs across QuickBooks, ADP, and other systems',
+    ],
+    note: 'Writes are staged and require approval before they post to a system of record.',
+  },
+  Governance: {
+    sources: [
+      'Board packages, policies, and committee records',
+      'Audit, management letters, and Form 990 readiness',
+      'Compliance and restriction registers',
+    ],
+    note: 'Backed by an append-only decision and evidence trail.',
+  },
+  Collaboration: {
+    sources: [
+      'Cross-team workspace — messages, shared documents, and tasks',
+      'Coordination across finance, program, and chapters',
+    ],
+  },
+  System: {
+    sources: [
+      'IMBA-OS itself — access, quality, and continuity controls',
+      'Runbooks and the append-only operating / audit trail',
+    ],
+  },
+  Management: {
+    sources: [
+      'Aggregated from every pillar above',
+      'Executive brief, decisions, and the first-year roadmap',
+    ],
+    note: 'A synthesis layer — it reflects the other sections rather than a system of its own.',
+  },
+};
+
+function sectionForView(view: string): string {
+  return imbaNavSections.find((s) => s.items.some((item) => item.id === view))?.label ?? 'Management';
 }
 
 function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
@@ -1472,6 +1547,8 @@ export function ImbaCeoCockpit() {
     '--sa-soft': accent.soft,
     '--sa-ink': accent.ink,
   } as React.CSSProperties;
+  const activeSectionLabel = sectionForView(view);
+  const activeSectionInfo = sectionInfo[activeSectionLabel];
   const isScenarioAware = [
     "brief",
     "portfolio",
@@ -1832,6 +1909,13 @@ export function ImbaCeoCockpit() {
                 <p className="truncate text-lg font-semibold tracking-tight text-white">
                   {currentView.label}
                 </p>
+                {activeSectionInfo ? (
+                  <ImbaSectionInfo
+                    section={activeSectionLabel}
+                    sources={activeSectionInfo.sources}
+                    note={activeSectionInfo.note}
+                  />
+                ) : null}
                 <span className="hidden rounded-full border border-[#68b9aa]/20 bg-[#68b9aa]/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-[#9fd6cc] sm:inline-flex">
                   Illustrative
                 </span>
