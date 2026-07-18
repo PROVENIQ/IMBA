@@ -1594,6 +1594,7 @@ export function ImbaCeoCockpit() {
   }, [alerts, filters, intelligenceHydrated, role, savedViews, subscriptions]);
 
   const visibleNavSections = useMemo(() => navSectionsForRole(role), [role]);
+  const [dismissedHeroes, setDismissedHeroes] = useState<Set<string>>(() => new Set());
   // Section hero shows only on the section's landing (first role-allowed) view,
   // so subsections stay distinct.
   const landingSection = visibleNavSections.find((s) => s.items.some((item) => item.id === view));
@@ -2054,7 +2055,14 @@ export function ImbaCeoCockpit() {
 
         <main className="min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
-            {isSectionLanding ? <ImbaSectionHero section={activeSectionLabel} /> : null}
+            {isSectionLanding && !dismissedHeroes.has(activeSectionLabel) ? (
+              <ImbaSectionHero
+                section={activeSectionLabel}
+                onClose={() =>
+                  setDismissedHeroes((prev) => new Set(prev).add(activeSectionLabel))
+                }
+              />
+            ) : null}
             {isScenarioAware ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
