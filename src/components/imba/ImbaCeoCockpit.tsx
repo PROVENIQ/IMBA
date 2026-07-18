@@ -1773,9 +1773,6 @@ export function ImbaCeoCockpit() {
               <Mountain className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.23em] text-[#7f978f]">
-                IMBA
-              </p>
               <h1 className="text-sm font-semibold tracking-tight text-white">
                 IMBA-OS
               </h1>
