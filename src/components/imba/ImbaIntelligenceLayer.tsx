@@ -78,7 +78,6 @@ export function ImbaIntelligenceBar({
   resultSummary,
   savedViews,
   activeAlertCount,
-  onRoleChange,
   onFilterChange,
   onSaveView,
   onApplySavedView,
@@ -108,7 +107,6 @@ export function ImbaIntelligenceBar({
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-300/10 text-violet-100"><Filter className="h-4 w-4" /></span>
           <div><p className="text-[8px] font-black uppercase tracking-[0.18em] text-violet-100/65">Intelligence context</p><p className="mt-0.5 text-[9px] text-[#93a8a1]">{resultSummary}</p></div>
         </div>
-        <SelectControl label="Role" value={role} options={Object.keys(imbaRoleProfiles)} formatOption={(value) => imbaRoleProfiles[value as ImbaRoleKey].label} onChange={(value) => onRoleChange(value as ImbaRoleKey)} />
         <SelectControl label="Region" value={filters.region} options={['All regions', ...regions]} onChange={(region) => onFilterChange({ region, project: 'All projects' })} />
         <SelectControl label="Phase" value={filters.phase} options={['All phases', ...phases]} onChange={(phase) => onFilterChange({ phase, project: 'All projects' })} />
         <SelectControl label="Signal" value={filters.status} options={['All signals', 'Healthy', 'Watch', 'At risk']} onChange={(status) => onFilterChange({ status, project: 'All projects' })} />

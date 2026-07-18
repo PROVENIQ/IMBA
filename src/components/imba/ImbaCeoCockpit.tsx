@@ -1957,6 +1957,21 @@ export function ImbaCeoCockpit() {
                 </span>
               ) : null}
             </button>
+            <div className="relative hidden md:block">
+              <select
+                value={role}
+                onChange={(event) => changeRole(event.target.value as ImbaRoleKey)}
+                aria-label="Select role"
+                className="appearance-none rounded-xl border border-white/[0.1] bg-[#14201e] py-2.5 pl-3 pr-9 text-[10px] font-bold text-white outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
+              >
+                {Object.keys(imbaRoleProfiles).map((key) => (
+                  <option key={key} value={key}>
+                    {imbaRoleProfiles[key as ImbaRoleKey].label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#789087]" />
+            </div>
             <div className="hidden items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 md:flex">
               {isScenarioAware ? (
                 <CalendarDays className="h-3.5 w-3.5 text-[#7fa39a]" />
