@@ -296,8 +296,14 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: FileText,
       },
       {
+        id: "finance-payables",
+        label: "Accounts payable",
+        description: "Approve & pay bills → Bill.com",
+        icon: FileText,
+      },
+      {
         id: "finance-ap-ar",
-        label: "AP / AR",
+        label: "AP / AR ledger",
         description: "Collections + obligations",
         icon: CircleDollarSign,
       },
@@ -649,6 +655,7 @@ const financeViews: ImbaFinanceView[] = [
   "finance-coa",
   "finance-budget",
   "finance-grants",
+  "finance-payables",
   "finance-ap-ar",
   "finance-reports",
   "finance-transactions",

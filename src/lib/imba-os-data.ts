@@ -30,6 +30,7 @@ export type ImbaOsView =
   | "finance-coa"
   | "finance-budget"
   | "finance-grants"
+  | "finance-payables"
   | "finance-ap-ar"
   | "finance-reports"
   | "finance-transactions"
