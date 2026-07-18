@@ -1,3 +1,9 @@
+/* Tailwind — powers the IMBA-OS cockpit. The finance styles below use explicit
+   class selectors and override preflight where needed. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --ink: #17252d;
   --ink-soft: #4f626b;
@@ -108,9 +114,30 @@ select {
   text-transform: uppercase;
 }
 
+.os-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  padding: 7px 11px;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: 140ms ease;
+}
+
+.os-backlink:hover {
+  color: #fff;
+  background: rgba(237, 107, 45, 0.14);
+  border-color: rgba(237, 107, 45, 0.28);
+}
+
 .prototype-label {
   width: fit-content;
-  margin: 24px 0 20px;
+  margin: 16px 0 20px;
   padding: 6px 9px;
   color: #ffd9c6;
   background: rgba(237, 107, 45, 0.12);

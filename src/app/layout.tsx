@@ -1,18 +1,15 @@
 import type { Metadata } from 'next';
-import { AppShell } from '@/components/app-shell';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'IMBA Finance Command Center',
-  description: 'Executive finance and Trail Solutions decision support prototype for IMBA.',
+  title: 'IMBA-OS',
+  description: 'A nonprofit operating system and executive decision cockpit for IMBA.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
-        <AppShell>{children}</AppShell>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

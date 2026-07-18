@@ -6,6 +6,7 @@ import { useState } from 'react';
 import {
   BarChart3,
   BriefcaseBusiness,
+  ChevronLeft,
   ChevronRight,
   Compass,
   Droplets,
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { href: '/', label: 'Executive overview', icon: LayoutDashboard },
+  { href: '/finance', label: 'Executive overview', icon: LayoutDashboard },
   { href: '/payables', label: 'Accounts payable', icon: Receipt },
   { href: '/reports', label: 'Financial reports', icon: FileSpreadsheet },
   { href: '/projects', label: 'Trail Solutions', icon: BriefcaseBusiness },
@@ -54,7 +55,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="prototype-label">Working prototype</div>
+        <Link href="/" className="os-backlink" onClick={() => setOpen(false)}>
+          <ChevronLeft size={15} /> IMBA-OS cockpit
+        </Link>
+
+        <div className="prototype-label">Finance workspace</div>
 
         <nav aria-label="Primary navigation">
           {navigation.map((item) => {
