@@ -851,9 +851,9 @@ const roleInsightDefinitions: Record<ImbaRoleKey, RoleInsightDefinition> = {
 function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const profile = imbaRoleProfiles[role];
   const sidebarOrder = [
+    "Management",
     "Mission",
     "Money",
-    "Management",
     "Governance",
     "People",
     "Development",
