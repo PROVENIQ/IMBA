@@ -1830,8 +1830,10 @@ function ImbaRoadmapView({
             className="relative grid gap-4 sm:grid-cols-[120px_1fr]"
           >
             <div className="relative z-10 flex items-start sm:justify-center">
+              {/* Opaque base (--app-bg) under the tint so the pill masks the
+                  vertical rail behind it instead of letting it show through. */}
               <span
-                className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-wider ${index < 2 ? "border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]" : "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[rgb(var(--info))]"}`}
+                className={`inline-flex min-w-[72px] justify-center rounded-full border bg-[rgb(var(--app-bg))] px-3 py-2 text-[11px] font-black uppercase tracking-wider ${index < 2 ? "border-[rgb(var(--sa)/0.25)] bg-[linear-gradient(rgb(var(--sa)/0.12),rgb(var(--sa)/0.12))] text-[rgb(var(--sa-soft))]" : "border-[#68b9aa]/20 bg-[linear-gradient(rgb(104_185_170/0.12),rgb(104_185_170/0.12))] text-[rgb(var(--info))]"}`}
               >
                 {step.milestone}
               </span>
