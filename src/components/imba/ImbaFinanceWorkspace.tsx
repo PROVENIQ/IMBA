@@ -11,7 +11,9 @@ import {
   Eye,
   FileBarChart,
   Landmark,
+  Minus,
   PieChart,
+  Plus,
   Receipt,
   Search,
   ShieldCheck,
@@ -24,7 +26,7 @@ import {
   imbaReceivables,
   imbaReports,
 } from '@/lib/imba-detail-data';
-import { financialHistory } from '@/lib/imba-data';
+import { accounting, financialHistory, publicFinancialFacts } from '@/lib/imba-data';
 import type { ImbaOsView } from '@/lib/imba-os-data';
 import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
@@ -105,6 +107,7 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
       {view === 'finance-ap-ar' ? <ApAr /> : null}
       {view === 'finance-reports' ? (
         <div className="space-y-5">
+          <ProgramFullCostPanel />
           <ImbaStatements />
           <Reports />
         </div>
@@ -222,6 +225,251 @@ function Prov({ kind }: { kind: 'filed' | 'derived' | 'illustrative' | 'unknown'
   } as const;
   const [label, cls] = map[kind];
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${cls}`}>{label}</span>;
+}
+
+type ProgramAllocationBasis = 'direct-expense' | 'revenue' | 'headcount';
+
+function ProgramFullCostPanel() {
+  const [basis, setBasis] = useState<ProgramAllocationBasis>('direct-expense');
+  const [allocationPercent, setAllocationPercent] = useState(100);
+  const [headcounts, setHeadcounts] = useState<Record<string, number>>({
+    'Trail Building': 24,
+    'Chapters & Programs': 16,
+    'Conservation & Advocacy': 4,
+  });
+  const programs = publicFinancialFacts.programLines2024;
+  const supportPool =
+    publicFinancialFacts.managementAndGeneral2024 +
+    publicFinancialFacts.fundraisingExpense2024;
+  const allocatedPool = Math.round(supportPool * (allocationPercent / 100));
+  const resultProvenance = basis === 'headcount' ? 'illustrative' : 'derived';
+
+  const rows = useMemo(() => {
+    const weightFor = (program: (typeof programs)[number]) => {
+      if (basis === 'revenue') return program.revenue;
+      if (basis === 'headcount') return headcounts[program.name] ?? 1;
+      return program.directExpense;
+    };
+    const totalWeight = programs.reduce(
+      (sum, program) => sum + weightFor(program),
+      0,
+    );
+    let assignedSupport = 0;
+    return programs.map((program, index) => {
+      const allocatedSupport =
+        index === programs.length - 1
+          ? allocatedPool - assignedSupport
+          : Math.round(allocatedPool * (weightFor(program) / totalWeight));
+      assignedSupport += allocatedSupport;
+      const directSpread = program.revenue - program.directExpense;
+      return {
+        ...program,
+        directSpread,
+        allocatedSupport,
+        fullyLoadedResult: directSpread - allocatedSupport,
+      };
+    });
+  }, [allocatedPool, basis, headcounts, programs]);
+
+  const totals = rows.reduce(
+    (sum, row) => ({
+      revenue: sum.revenue + row.revenue,
+      directExpense: sum.directExpense + row.directExpense,
+      directSpread: sum.directSpread + row.directSpread,
+      allocatedSupport: sum.allocatedSupport + row.allocatedSupport,
+      fullyLoadedResult: sum.fullyLoadedResult + row.fullyLoadedResult,
+    }),
+    {
+      revenue: 0,
+      directExpense: 0,
+      directSpread: 0,
+      allocatedSupport: 0,
+      fullyLoadedResult: 0,
+    },
+  );
+  const trail = rows[0];
+  const basisOptions: Array<{
+    value: ProgramAllocationBasis;
+    label: string;
+    provenance: 'filed' | 'illustrative';
+  }> = [
+    { value: 'direct-expense', label: 'Direct expense', provenance: 'filed' },
+    { value: 'revenue', label: 'Program revenue', provenance: 'filed' },
+    { value: 'headcount', label: 'Headcount', provenance: 'illustrative' },
+  ];
+
+  return (
+    <section className="space-y-5" aria-labelledby="program-full-cost-title">
+      <div className="rounded-2xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <p id="program-full-cost-title" className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))]">
+            2024 program economics
+          </p>
+          <Prov kind="filed" />
+        </div>
+        <p className="mt-1.5 max-w-5xl text-[11px] leading-5 text-[rgb(var(--text-2))]">
+          Trail Building shows a <span className="font-semibold text-[rgb(var(--text))]">$378,881 direct spread</span> on Form 990 Part III. That is not a margin: the program lines carry no allocated share of the filed $712,130 of management and general expense or $461,859 of fundraising expense.
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+          <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Trail direct spread</p><Prov kind="derived" /></div>
+          <p className="mt-3 font-mono text-2xl font-semibold text-[rgb(var(--sa-soft))]">{accounting(trail.directSpread, { symbol: true })}</p>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Revenue less direct program expense only</p>
+        </div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+          <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Shared support pool</p><Prov kind="filed" /></div>
+          <p className="mt-3 font-mono text-2xl font-semibold text-[rgb(var(--text))]">{accounting(supportPool, { symbol: true })}</p>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">M&amp;G plus fundraising, Form 990 Part IX</p>
+        </div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+          <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Trail fully-loaded result</p><Prov kind={resultProvenance} /></div>
+          <p className={`mt-3 font-mono text-2xl font-semibold ${trail.fullyLoadedResult >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{accounting(trail.fullyLoadedResult, { symbol: true })}</p>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">After {accounting(trail.allocatedSupport, { symbol: true })} of allocated support</p>
+        </div>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-12">
+        <ShellCard className="min-w-0 xl:col-span-8">
+          <Heading eyebrow="Functional → fully loaded" title="The spread changes when shared support is assigned" detail="2024 filed source rows" />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-left">
+              <thead>
+                <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
+                  <th className="px-5 py-3">Program</th>
+                  <th className="px-3 py-3 text-right"><span className="inline-flex items-center gap-2">Revenue <Prov kind="filed" /></span></th>
+                  <th className="px-3 py-3 text-right"><span className="inline-flex items-center gap-2">Direct expense <Prov kind="filed" /></span></th>
+                  <th className="px-3 py-3 text-right"><span className="inline-flex items-center gap-2">Direct spread <Prov kind="derived" /></span></th>
+                  <th className="px-3 py-3 text-right"><span className="inline-flex items-center gap-2">Support <Prov kind={resultProvenance} /></span></th>
+                  <th className="px-5 py-3 text-right"><span className="inline-flex items-center gap-2">Full result <Prov kind={resultProvenance} /></span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.name} className={`border-b border-[rgb(var(--line)/0.055)] ${row.name === 'Trail Building' ? 'bg-[rgb(var(--sa)/0.035)]' : ''}`}>
+                    <td className="px-5 py-4 text-xs font-semibold text-[rgb(var(--text))]">{row.name}</td>
+                    <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{accounting(row.revenue, { symbol: true })}</td>
+                    <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{accounting(row.directExpense, { symbol: true })}</td>
+                    <td className={`px-3 py-4 text-right font-mono text-xs font-semibold ${row.directSpread >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{accounting(row.directSpread, { symbol: true })}</td>
+                    <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text-2))]">{accounting(row.allocatedSupport, { symbol: true })}</td>
+                    <td className={`px-5 py-4 text-right font-mono text-xs font-semibold ${row.fullyLoadedResult >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{accounting(row.fullyLoadedResult, { symbol: true })}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.025)] font-semibold">
+                  <td className="px-5 py-4 text-[11px] font-black uppercase text-[rgb(var(--text))]">Program total</td>
+                  <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{accounting(totals.revenue, { symbol: true })}</td>
+                  <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{accounting(totals.directExpense, { symbol: true })}</td>
+                  <td className="px-3 py-4 text-right font-mono text-xs text-rose-700 dark:text-rose-200">{accounting(totals.directSpread, { symbol: true })}</td>
+                  <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text-2))]">{accounting(totals.allocatedSupport, { symbol: true })}</td>
+                  <td className="px-5 py-4 text-right font-mono text-xs text-rose-700 dark:text-rose-200">{accounting(totals.fullyLoadedResult, { symbol: true })}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p className="border-t border-[rgb(var(--line)/0.06)] px-5 py-3 text-[11px] leading-5 text-[rgb(var(--text-3))]">
+            Revenue and direct expense are filed Part III values. Allocated support and fully-loaded results are management calculations, not filed program margins.
+          </p>
+        </ShellCard>
+
+        <ShellCard className="min-w-0 xl:col-span-4">
+          <Heading eyebrow="Allocation model" title="Choose the management lens" detail={`${allocationPercent}% of support assigned`} />
+          <div className="space-y-5 p-5">
+            <div>
+              <p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Allocation basis</p>
+              <div className="mt-2 grid grid-cols-3 gap-1 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.025)] p-1">
+                {basisOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setBasis(option.value)}
+                    aria-pressed={basis === option.value}
+                    title={`${option.label} basis · ${option.provenance}`}
+                    className={`min-h-10 rounded-lg px-2 py-2 text-[11px] font-bold transition ${basis === option.value ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="flex items-center justify-between gap-3 text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
+                Support assigned to programs
+                <span className="font-mono text-sm text-[rgb(var(--text))]">{allocationPercent}%</span>
+              </span>
+              <span className="mt-3 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAllocationPercent((current) => Math.max(0, current - 5))}
+                  disabled={allocationPercent === 0}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--line)/0.09)] text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.05)] disabled:opacity-35"
+                  aria-label="Decrease program support allocation"
+                  title="Decrease by 5 percentage points"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={allocationPercent}
+                  onChange={(event) => setAllocationPercent(Number(event.target.value))}
+                  className="min-w-0 flex-1 accent-[rgb(var(--sa))]"
+                  aria-label="Percentage of shared support assigned to programs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setAllocationPercent((current) => Math.min(100, current + 5))}
+                  disabled={allocationPercent === 100}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[rgb(var(--line)/0.09)] text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.05)] disabled:opacity-35"
+                  aria-label="Increase program support allocation"
+                  title="Increase by 5 percentage points"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </span>
+              <span className="mt-2 flex justify-between text-[11px] text-[rgb(var(--text-4))]"><span>0%</span><span>100%</span></span>
+            </label>
+
+            {basis === 'headcount' ? (
+              <div className="space-y-2 border-t border-[rgb(var(--line)/0.07)] pt-4">
+                <div className="flex items-center justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Program FTE assumptions</p><Prov kind="illustrative" /></div>
+                {programs.map((program) => (
+                  <label key={program.name} className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] px-3 py-2">
+                    <span className="text-[11px] text-[rgb(var(--text-2))]">{program.name}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={56}
+                      value={headcounts[program.name]}
+                      onChange={(event) => setHeadcounts((current) => ({ ...current, [program.name]: Math.max(1, Number(event.target.value) || 1) }))}
+                      className="w-16 rounded-lg border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] px-2 py-1.5 text-right font-mono text-xs text-[rgb(var(--text))] outline-none"
+                      aria-label={`${program.name} illustrative headcount`}
+                    />
+                  </label>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="border-t border-[rgb(var(--line)/0.07)] pt-4">
+              <div className="flex items-center justify-between gap-3"><span className="text-[11px] text-[rgb(var(--text-3))]">Support allocated</span><span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{accounting(allocatedPool, { symbol: true })}</span></div>
+              <div className="mt-2 flex items-center justify-between gap-3"><span className="text-[11px] text-[rgb(var(--text-3))]">Support left unassigned</span><span className="font-mono text-xs text-[rgb(var(--text-2))]">{accounting(supportPool - allocatedPool, { symbol: true })}</span></div>
+            </div>
+
+            <div className={`rounded-2xl border p-4 ${trail.fullyLoadedResult >= 0 ? 'border-[rgb(var(--sa)/0.2)] bg-[rgb(var(--sa)/0.05)]' : 'border-rose-300/20 bg-rose-300/[0.05]'}`}>
+              <div className="flex items-center justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text))]">Trail Building result</p><Prov kind={resultProvenance} /></div>
+              <p data-testid="trail-fully-loaded-result" className={`mt-3 font-mono text-3xl font-semibold ${trail.fullyLoadedResult >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{accounting(trail.fullyLoadedResult, { symbol: true })}</p>
+              <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-3))]">The filed direct spread falls by {accounting(trail.allocatedSupport, { symbol: true })} under this allocation model.</p>
+            </div>
+          </div>
+        </ShellCard>
+      </div>
+    </section>
+  );
 }
 
 // Cost of labor — IMBA leases its entire workforce through a PEO and files no

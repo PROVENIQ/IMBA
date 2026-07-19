@@ -29,6 +29,13 @@ export const publicFinancialFacts = {
   deferredRevenue: 211_730,
   programServiceShare2024: 56.5,
   contributionShare2024: 43,
+  programLines2024: [
+    { name: 'Trail Building', revenue: 4_036_592, directExpense: 3_657_711 },
+    { name: 'Chapters & Programs', revenue: 34_110, directExpense: 1_905_818 },
+    { name: 'Conservation & Advocacy', revenue: 0, directExpense: 276_841 },
+  ],
+  managementAndGeneral2024: 712_130,
+  fundraisingExpense2024: 461_859,
   communitiesEngaged: 742,
 };
 
