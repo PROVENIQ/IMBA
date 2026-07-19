@@ -776,22 +776,22 @@ type RoleInsightDefinition = Omit<ImbaInsight, "id" | "scope">;
 
 const roleInsightDefinitions: Record<ImbaRoleKey, RoleInsightDefinition> = {
   executive: {
-    title: "3 enterprise decisions need ownership",
-    detail: "Equipment, design capacity, and billing milestones remain open in the executive decision queue.",
+    title: "The public baseline confirms an investment year",
+    detail: "The 2025 annual report shows a $779K deficit; current scenarios must distinguish planned investment from operating variance.",
     tone: "warning",
-    targetView: "decisions",
+    targetView: "finance-reports",
   },
   finance: {
-    title: "Billing timing is the near-term cash lever",
-    detail: "The modeled billing reset can pull an estimated $210K into the next 45 days.",
+    title: "PEO reconciliation ownership is pending",
+    detail: "The continuity register identifies payroll reconciliation as a Finance process that still needs a named backup owner.",
     tone: "warning",
-    targetView: "finance-ap-ar",
+    targetView: "people-payroll",
   },
   hr: {
-    title: "Design capacity reaches 104% in expansion",
-    detail: "Use the approved contract bench before opening a permanent position against unexecuted backlog.",
-    tone: "risk",
-    targetView: "capacity",
+    title: "3 onboarding workstreams are active",
+    detail: "People Ops should keep access, payroll, equipment, and readiness owners visible through each start.",
+    tone: "warning",
+    targetView: "people-onboarding",
   },
   "trail-solutions": {
     title: "Equipment reserve decision is still open",
@@ -800,10 +800,10 @@ const roleInsightDefinitions: Record<ImbaRoleKey, RoleInsightDefinition> = {
     targetView: "construction-reports",
   },
   "planning-design": {
-    title: "Shared design hours are 9% above plan",
-    detail: "High Desert Trail System is on watch and should be reviewed before additional design scope is accepted.",
+    title: "Base design utilization is 91%",
+    detail: "Only 0.6 FTE remains available before the expansion scenario pushes design capacity beyond its guardrail.",
     tone: "warning",
-    targetView: "mission-reports",
+    targetView: "capacity",
   },
   "local-programs": {
     title: "19 maintenance plans need renewal",
