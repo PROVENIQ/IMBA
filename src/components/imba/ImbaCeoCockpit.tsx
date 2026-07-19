@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -1866,6 +1866,7 @@ function ImbaRoadmapView({
 export function ImbaCeoCockpit() {
   const { connectors, syncJobs, addAuditEvent } = useImbaOsState();
   const [view, setView] = useState<ImbaOsView>("brief");
+  const workspaceScrollRef = useRef<HTMLElement | null>(null);
   const [scenarioKey, setScenarioKey] = useState<ImbaScenarioKey>("base");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -2303,7 +2304,18 @@ export function ImbaCeoCockpit() {
     visibleNavSections,
   ]);
 
+  useEffect(() => {
+    const workspace = workspaceScrollRef.current;
+    if (!workspace) return;
+    workspace.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const frame = window.requestAnimationFrame(() => {
+      workspace.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [view]);
+
   const setCurrentView = (next: ImbaOsView) => {
+    workspaceScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setView(next);
     setMobileNavOpen(false);
   };
@@ -2704,7 +2716,7 @@ export function ImbaCeoCockpit() {
           </div>
         </div>
 
-        <main className={`workspace-shell workspace-shell--${activeWorkspaceSlug} workspace-mode--${activeWorkspaceMode} min-w-0 flex-1 overflow-y-auto`} data-tour="workspace">
+        <main ref={workspaceScrollRef} className={`workspace-shell workspace-shell--${activeWorkspaceSlug} workspace-mode--${activeWorkspaceMode} min-w-0 flex-1 overflow-y-auto`} data-tour="workspace">
           <div className="workspace-canvas mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
             {isSectionLanding && !dismissedHeroes.has(activeSectionLabel) ? (
               <ImbaWorkspaceSignature
