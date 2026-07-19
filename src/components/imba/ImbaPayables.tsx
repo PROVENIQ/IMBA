@@ -33,6 +33,7 @@ import {
 } from '@/lib/ap-data';
 import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
+import { ImbaInfoTooltip } from '@/components/imba/ImbaInfoTooltip';
 
 /**
  * Accounts Payable — native IMBA-OS MONEY view.
@@ -279,6 +280,7 @@ export function ImbaPayables({ role, filters }: { role?: ImbaRoleKey; filters?: 
           <span className="text-[11px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-100">Bill.com</span>
           <span className="text-[11px] text-[rgb(var(--text-2))]">payment connector · demo</span>
           <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+          <ImbaInfoTooltip label="Bill.com payment connector" text="Approve & Pay posts the bill payment to QuickBooks (the GL) and hands disbursement to Bill.com. Bill.com is a planned connector — in this demo the action queues a control-plane job and logs an audit entry; no money moves, and a person authorizes each payment." placement="below" align="right" />
         </div>
       </div>
 
