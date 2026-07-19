@@ -2476,20 +2476,28 @@ export function ImbaCeoCockpit() {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <div className="relative hidden md:block">
-              <select
-                value={role}
-                onChange={(event) => changeRole(event.target.value as ImbaRoleKey)}
-                aria-label="Select role"
-                className="appearance-none rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] py-2.5 pl-3 pr-9 text-[11px] font-bold text-[rgb(var(--text))] outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
-              >
-                {Object.keys(imbaRoleProfiles).map((key) => (
-                  <option key={key} value={key}>
-                    {imbaRoleProfiles[key as ImbaRoleKey].label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
+            <div className="hidden items-center gap-1.5 md:flex">
+              <div className="relative">
+                <select
+                  value={role}
+                  onChange={(event) => changeRole(event.target.value as ImbaRoleKey)}
+                  aria-label="Select role"
+                  className="appearance-none rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] py-2.5 pl-3 pr-9 text-[11px] font-bold text-[rgb(var(--text))] outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
+                >
+                  {Object.keys(imbaRoleProfiles).map((key) => (
+                    <option key={key} value={key}>
+                      {imbaRoleProfiles[key as ImbaRoleKey].label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
+              </div>
+              <ImbaInfoTooltip
+                label="Role selector · demo only"
+                text="Demo control — switch roles to preview each leader's scoped view. In a live system your role, and what you can see or do, come from your authenticated identity and the organization's row- and action-level policies — not a selectable dropdown."
+                placement="below"
+                align="right"
+              />
             </div>
             {isScenarioAware ? (
               <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 xl:flex">

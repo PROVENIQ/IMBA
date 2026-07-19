@@ -259,7 +259,15 @@ export function ImbaPayables({ role, filters }: { role?: ImbaRoleKey; filters?: 
       {/* Acting-as + connector */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Acting as</span>
+          <span className="flex items-center gap-1 text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
+            Acting as
+            <ImbaInfoTooltip
+              label="Acting as · demo only"
+              text="Demo control — act as each seat to see how threshold routing, approval limits, and segregation of duties behave. In a live system the actor is your authenticated identity, and approval authority comes from each person's assigned role and limits configured by the organization — not a switch you pick."
+              placement="below"
+              align="left"
+            />
+          </span>
           <div className="flex flex-wrap gap-2">
             {apUsers.map((user) => (
               <button
