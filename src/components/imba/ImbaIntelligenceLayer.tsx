@@ -39,6 +39,7 @@ export interface ImbaMetricSelection {
 
 export interface ImbaInsight {
   id: string;
+  scope?: string;
   title: string;
   detail: string;
   tone: 'positive' | 'warning' | 'risk';
@@ -141,7 +142,7 @@ export function ImbaInsightStrip({ insights, onSelect }: { insights: ImbaInsight
       {insights.map((insight) => (
         <button key={insight.id} type="button" onClick={() => onSelect(insight)} className={`group flex items-start gap-3 rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 ${tone[insight.tone]}`}>
           <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span className="min-w-0 flex-1"><span className="block text-[11px] font-black uppercase tracking-wider">{insight.title}</span><span className="mt-1 block text-[11px] leading-4 text-[rgb(var(--text-2))]">{insight.detail}</span></span>
+          <span className="min-w-0 flex-1">{insight.scope ? <span className="mb-1 block text-[10px] font-semibold uppercase text-[rgb(var(--text-3))]">{insight.scope}</span> : null}<span className="block text-[11px] font-black uppercase tracking-wider">{insight.title}</span><span className="mt-1 block text-[11px] leading-4 text-[rgb(var(--text-2))]">{insight.detail}</span></span>
           <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
         </button>
       ))}

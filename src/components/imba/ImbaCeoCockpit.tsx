@@ -772,6 +772,71 @@ function sectionForView(view: string): string {
   return imbaNavSections.find((s) => s.items.some((item) => item.id === view))?.label ?? 'Management';
 }
 
+type RoleInsightDefinition = Omit<ImbaInsight, "id" | "scope">;
+
+const roleInsightDefinitions: Record<ImbaRoleKey, RoleInsightDefinition> = {
+  executive: {
+    title: "3 enterprise decisions need ownership",
+    detail: "Equipment, design capacity, and billing milestones remain open in the executive decision queue.",
+    tone: "warning",
+    targetView: "decisions",
+  },
+  finance: {
+    title: "Billing timing is the near-term cash lever",
+    detail: "The modeled billing reset can pull an estimated $210K into the next 45 days.",
+    tone: "warning",
+    targetView: "finance-ap-ar",
+  },
+  hr: {
+    title: "Design capacity reaches 104% in expansion",
+    detail: "Use the approved contract bench before opening a permanent position against unexecuted backlog.",
+    tone: "risk",
+    targetView: "capacity",
+  },
+  "trail-solutions": {
+    title: "Equipment reserve decision is still open",
+    detail: "Great Lakes Buildout needs a construction leadership decision on equipment and closeout exposure.",
+    tone: "risk",
+    targetView: "construction-reports",
+  },
+  "planning-design": {
+    title: "Shared design hours are 9% above plan",
+    detail: "High Desert Trail System is on watch and should be reviewed before additional design scope is accepted.",
+    tone: "warning",
+    targetView: "mission-reports",
+  },
+  "local-programs": {
+    title: "19 maintenance plans need renewal",
+    detail: "The trail asset register reports 84% of maintenance plans current across the illustrative portfolio.",
+    tone: "warning",
+    targetView: "trail-assets",
+  },
+  communications: {
+    title: "2 approval exceptions block release",
+    detail: "Brand or policy review is holding two items in the marketing and communications queue.",
+    tone: "warning",
+    targetView: "development-marketing",
+  },
+  "government-affairs": {
+    title: "Public comment deadline is Aug 19",
+    detail: "The regional land-management plan is mobilizing and needs its approved policy message and audience.",
+    tone: "warning",
+    targetView: "advocacy-policy",
+  },
+  development: {
+    title: "12 relationships need a next action",
+    detail: "The relationship pipeline has 47 active records; twelve are missing a current stewardship or cultivation move.",
+    tone: "warning",
+    targetView: "development-crm",
+  },
+  board: {
+    title: "Board packet readiness is 72%",
+    detail: "Three owner inputs remain open before the modeled Aug 14 packet lock.",
+    tone: "warning",
+    targetView: "governance-board",
+  },
+};
+
 function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const profile = imbaRoleProfiles[role];
   const sidebarOrder = [
@@ -1732,54 +1797,254 @@ export function ImbaCeoCockpit() {
     const atRisk = filteredProjects.filter(
       (project) => project.status === "at-risk",
     );
+    const onWatch = filteredProjects.filter(
+      (project) => project.status === "watch",
+    );
     const billingLag = filteredProjects
       .filter((project) => project.completion - project.billed >= 7)
       .sort((a, b) => b.completion - b.billed - (a.completion - a.billed))[0];
-    const lowestContribution = [...filteredProjects].sort(
-      (a, b) => a.contribution - b.contribution,
-    )[0];
-    return [
-      {
-        id: "risk",
-        title: atRisk.length
-          ? `${atRisk.length} project outside guardrail`
-          : "No at-risk project in scope",
-        detail:
-          atRisk[0]?.signal ??
-          "The selected portfolio contains healthy and watch signals only.",
-        tone: atRisk.length ? "risk" : "positive",
-        project: atRisk[0]?.name,
-        targetView: "project-command",
-      },
-      {
-        id: "billing",
-        title: billingLag
-          ? "Delivery is ahead of billing"
-          : "Billing is aligned",
-        detail: billingLag
-          ? `${billingLag.name} is ${billingLag.completion - billingLag.billed} points ahead of invoicing.`
-          : "No selected project exceeds the modeled billing-lag threshold.",
-        tone: billingLag ? "warning" : "positive",
-        project: billingLag?.name,
-        targetView: "finance-ap-ar",
-      },
-      {
-        id: "contribution",
-        title: lowestContribution
-          ? "Lowest forecast contribution"
-          : "No project selected",
-        detail: lowestContribution
-          ? `${lowestContribution.name} is forecast at ${lowestContribution.contribution.toFixed(1)}%; open the record to review remaining cost.`
-          : "Clear filters to restore the project portfolio.",
-        tone:
-          lowestContribution && lowestContribution.contribution < 12
-            ? "warning"
-            : "positive",
-        project: lowestContribution?.name,
-        targetView: "project-command",
-      },
-    ];
-  }, [filteredProjects]);
+    const accessibleViews = new Set(
+      visibleNavSections.flatMap((section) =>
+        section.items.map((item) => item.id),
+      ),
+    );
+    const target = (preferred: ImbaOsView) =>
+      accessibleViews.has(preferred) ? preferred : view;
+    const scope = `${imbaRoleProfiles[role].label} / ${activeSectionLabel}`;
+    const roleInsight = roleInsightDefinitions[role];
+    const roleScopedInsight: ImbaInsight = {
+      ...roleInsight,
+      id: `role-${role}-${activeSectionLabel}`,
+      scope,
+      targetView: target(roleInsight.targetView),
+    };
+
+    let sectionInsights: ImbaInsight[];
+    switch (activeSectionLabel) {
+      case "Mission":
+        sectionInsights = [
+          {
+            id: "mission-risk",
+            scope,
+            title: atRisk.length
+              ? `${atRisk.length} delivery record outside guardrail`
+              : "No at-risk delivery record in scope",
+            detail:
+              atRisk[0]?.signal ??
+              "The selected portfolio contains healthy and watch signals only.",
+            tone: atRisk.length ? "risk" : "positive",
+            project: atRisk[0]?.name,
+            targetView: target("construction-reports"),
+          },
+          {
+            id: "mission-watch",
+            scope,
+            title: onWatch.length
+              ? `${onWatch.length} delivery record on watch`
+              : "No watch signal in scope",
+            detail:
+              onWatch[0]?.signal ??
+              "No selected project currently requires elevated delivery monitoring.",
+            tone: onWatch.length ? "warning" : "positive",
+            project: onWatch[0]?.name,
+            targetView: target("mission-reports"),
+          },
+        ];
+        break;
+      case "Money":
+        sectionInsights = [
+          {
+            id: "money-billing",
+            scope,
+            title: billingLag
+              ? "Delivery is ahead of billing"
+              : "Billing is aligned",
+            detail: billingLag
+              ? `${billingLag.name} is ${billingLag.completion - billingLag.billed} points ahead of invoicing.`
+              : "No selected project exceeds the modeled billing-lag threshold.",
+            tone: billingLag ? "warning" : "positive",
+            project: billingLag?.name,
+            targetView: target("finance-ap-ar"),
+          },
+          {
+            id: "money-cash-floor",
+            scope,
+            title:
+              scenario.deployableCash <= 1_500_000
+                ? "Deployable cash is at the modeled floor"
+                : "Deployable cash remains above floor",
+            detail: `${scenario.label} shows ${money(scenario.deployableCash)} against the $1.50M management threshold.`,
+            tone:
+              scenario.deployableCash <= 1_500_000 ? "risk" : "positive",
+            targetView: target("liquidity"),
+          },
+        ];
+        break;
+      case "People":
+        sectionInsights = [
+          {
+            id: "people-capacity",
+            scope,
+            title: "Design capacity reaches 104% in expansion",
+            detail: "The base plan is already at 91%; permanent hiring remains gated on executed design backlog.",
+            tone: "risk",
+            targetView: target("capacity"),
+          },
+          {
+            id: "people-recovery",
+            scope,
+            title: "Labor recovery is 2 points below target",
+            detail: "Modeled recovery is 88% against a 90% target; incomplete project and grant coding remains the control risk.",
+            tone: "warning",
+            targetView: target("people-reports"),
+          },
+        ];
+        break;
+      case "Development":
+        sectionInsights = [
+          {
+            id: "development-handoffs",
+            scope,
+            title: "3 award handoffs need restriction setup",
+            detail: "Award records should not move into delivery until Finance receives the restrictions and reporting assumptions.",
+            tone: "warning",
+            targetView: target("development-reports"),
+          },
+          {
+            id: "development-renewal",
+            scope,
+            title: "$280K of partnership value is at renewal risk",
+            detail: "Three corporate relationships need current fulfillment evidence and an owned renewal move.",
+            tone: "risk",
+            targetView: target("development-partnerships"),
+          },
+        ];
+        break;
+      case "Governance":
+        sectionInsights = [
+          {
+            id: "governance-overdue",
+            scope,
+            title: "1 compliance item is overdue",
+            detail: "The overdue chapter good-standing receipt remains in the owned remediation queue.",
+            tone: "risk",
+            targetView: target("governance-compliance"),
+          },
+          {
+            id: "governance-attestations",
+            scope,
+            title: "2 conflict attestations remain open",
+            detail: "31 of 33 board and officer attestations are complete in the illustrative compliance register.",
+            tone: "warning",
+            targetView: target("governance-compliance"),
+          },
+        ];
+        break;
+      case "Collaboration":
+        sectionInsights = [
+          {
+            id: "collaboration-response",
+            scope,
+            title: "11 stakeholder messages need a response",
+            detail: "Three of the open responses depend on Finance before the owner can close the commitment.",
+            tone: "warning",
+            targetView: target("communications-inbox"),
+          },
+          {
+            id: "collaboration-approvals",
+            scope,
+            title: "4 client approvals affect $252K of billing",
+            detail: "Milestone acceptance must be captured before the related invoices can be released.",
+            tone: "risk",
+            targetView: target("collaboration-inbox"),
+          },
+        ];
+        break;
+      case "Platform": {
+        const openSyncJobs = syncJobs.filter(
+          (job) => job.status !== "synced",
+        );
+        const syncExceptions = syncJobs.filter(
+          (job) => job.status === "error",
+        );
+        sectionInsights = [
+          {
+            id: "platform-sync-work",
+            scope,
+            title: `${openSyncJobs.length} sync ${openSyncJobs.length === 1 ? "job" : "jobs"} need attention`,
+            detail: syncExceptions.length
+              ? `${syncExceptions.length} exception ${syncExceptions.length === 1 ? "is" : "are"} held from posting; the remaining work is queued or awaiting approval.`
+              : "Open work is queued or awaiting approval; no connector exception is present.",
+            tone: syncExceptions.length ? "risk" : openSyncJobs.length ? "warning" : "positive",
+            targetView: target("integration-sync"),
+          },
+          {
+            id: "platform-connectors",
+            scope,
+            title: "Connector health is role-visible",
+            detail: `QuickBooks is ${connectors.qbo.syncHealth.toLowerCase()} and ADP is ${connectors.adp.syncHealth.toLowerCase()} in ${connectors.qbo.mode.toLowerCase()} mode.`,
+            tone:
+              connectors.qbo.syncHealth === "healthy" &&
+              connectors.adp.syncHealth === "healthy"
+                ? "positive"
+                : "warning",
+            targetView: target("platform-health"),
+          },
+        ];
+        break;
+      }
+      case "System":
+        sectionInsights = [
+          {
+            id: "system-runbooks",
+            scope,
+            title: "4 process backup gaps remain",
+            detail: "Two-deep runbook coverage is 72%, with three continuity tests due this quarter.",
+            tone: "warning",
+            targetView: target("system-runbooks"),
+          },
+          {
+            id: "system-exceptions",
+            scope,
+            title: "7 data exceptions are contained",
+            detail: "The append-only activity trail reports no uncontrolled postings from the current exception queue.",
+            tone: "positive",
+            targetView: target("system-activity"),
+          },
+        ];
+        break;
+      default:
+        sectionInsights = [
+          {
+            id: "management-decisions",
+            scope,
+            title: `${imbaDecisions.length} management decisions remain open`,
+            detail: "Equipment, design capacity, and billing timing each have an owner, recommendation, and due point.",
+            tone: "warning",
+            targetView: target("decisions"),
+          },
+          {
+            id: "management-downside",
+            scope,
+            title: "Conservative cash falls below the floor",
+            detail: `${imbaScenarios.conservative.label} ends at ${money(imbaScenarios.conservative.yearEndCash)}, $80K below the modeled $1.50M threshold.`,
+            tone: "risk",
+            targetView: target("whatif"),
+          },
+        ];
+    }
+
+    return [roleScopedInsight, ...sectionInsights];
+  }, [
+    activeSectionLabel,
+    connectors,
+    filteredProjects,
+    role,
+    scenario,
+    syncJobs,
+    view,
+    visibleNavSections,
+  ]);
 
   const setCurrentView = (next: ImbaOsView) => {
     setView(next);
@@ -2042,26 +2307,18 @@ export function ImbaCeoCockpit() {
               </select>
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
             </div>
-            <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 md:flex">
-              {isScenarioAware ? (
+            {isScenarioAware ? (
+              <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 md:flex">
                 <CalendarDays className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
-              ) : (
-                <BookOpen className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
-              )}
-              <span className="text-[11px] font-semibold text-[rgb(var(--text))]">
-                {isScenarioAware
-                  ? "Rolling 12 + 13 weeks"
-                  : "Aligned to leadership proposal"}
-              </span>
-              {isScenarioAware ? (
+                <span className="text-[11px] font-semibold text-[rgb(var(--text))]">Rolling 12 + 13 weeks</span>
                 <ImbaInfoTooltip
                   label="Forecast horizon"
                   text="The operating forecast looks across the next 12 months while the liquidity view examines weekly cash movement for the next 13 weeks."
                   align="right"
                   placement="below"
                 />
-              ) : null}
-            </div>
+              </div>
+            ) : null}
             {isScenarioAware ? (
               <div className="flex items-center gap-1">
                 <div className="relative">
