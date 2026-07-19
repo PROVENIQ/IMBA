@@ -45,7 +45,10 @@ export type ImbaFinanceView =
   | 'finance-reports'
   | 'finance-transactions'
   | 'finance-expenses'
-  | 'finance-cost-of-labor';
+  | 'finance-cost-of-labor'
+  | 'finance-vendors'
+  | 'finance-customers'
+  | 'finance-grantors';
 
 function money(value: number): string {
   const sign = value < 0 ? '-' : '';
@@ -94,6 +97,9 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
   'finance-transactions': { eyebrow: 'Money · transaction control', title: 'Bills + invoices', description: 'Controlled entry for vendor bills, client invoices, chapter obligations, project milestones, and coding evidence.' },
   'finance-expenses': { eyebrow: 'Money · employee spend', title: 'Expenses (Expensify)', description: 'Card spend and receipts flow from Expensify into coding, reconcile to the card statement, and post to the GL and reimbursements.' },
   'finance-cost-of-labor': { eyebrow: 'Money · workforce cost', title: 'Cost of labor', description: 'IMBA leases its entire workforce through a PEO. This decomposes the PEO reimbursement into the filed Form 990 lines and builds the loaded rate — showing exactly where public data runs out.' },
+  'finance-vendors': { eyebrow: 'Money · payables', title: 'Vendors', description: 'Money-out parties — subcontractors, suppliers, and service providers. Each maps one-to-one to a QuickBooks Vendor.' },
+  'finance-customers': { eyebrow: 'Money · receivables', title: 'Customers', description: 'Earned-revenue parties — Trail Solutions clients who contract IMBA for planning, design, and construction. Each maps to a QuickBooks Customer.' },
+  'finance-grantors': { eyebrow: 'Money · restricted funds', title: 'Grantors', description: 'Foundations and funders behind restricted, contributed revenue. QuickBooks has no Grantor type, so these are recorded as Customers — IMBA-OS keeps them a separate class so contributed and earned revenue never blur.' },
 };
 
 export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void; role?: ImbaRoleKey; filters?: ImbaFilterState }) {
@@ -116,7 +122,152 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
       {view === 'finance-transactions' ? <TransactionsIntegrated onNavigate={onNavigate} /> : null}
       {view === 'finance-expenses' ? <ExpenseTracking /> : null}
       {view === 'finance-cost-of-labor' ? <CostOfLabor /> : null}
+      {view === 'finance-vendors' ? <Vendors /> : null}
+      {view === 'finance-customers' ? <Customers /> : null}
+      {view === 'finance-grantors' ? <Grantors /> : null}
     </div>
+  );
+}
+
+// QuickBooks record-type badge — every IMBA-OS party maps to a QBO Vendor or
+// Customer. Grantors are the interesting case: QBO has no Grantor type, so they
+// live as Customers there while IMBA-OS keeps them a distinct class.
+function QboRecord({ type }: { type: 'Vendor' | 'Customer' }) {
+  return <span className="rounded-full bg-[rgb(var(--sa)/0.1)] px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-soft))]">QBO · {type}</span>;
+}
+
+function PartyNote({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-2xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] px-4 py-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">{children}</div>;
+}
+
+function Vendors() {
+  // The five largest are IMBA's filed 2024 independent contractors (990 Part VII,
+  // Section B); the rest are illustrative operating vendors.
+  const vendors: Array<{ name: string; category: string; terms: string; ytd: number; prov: 'filed' | 'illustrative' }> = [
+    { name: 'Progressive Bike Ramps / American Ramp Co', category: 'Bike-park installations', terms: 'Milestone', ytd: 194_264, prov: 'filed' },
+    { name: 'Parkitect AG', category: 'Modular pumptrack installs', terms: 'Milestone', ytd: 178_380, prov: 'filed' },
+    { name: 'Titus Trails LLC', category: 'Trail-building subcontractor', terms: 'Progress', ytd: 166_293, prov: 'filed' },
+    { name: 'Skvare LLC', category: 'Website + IT', terms: 'Net 30', ytd: 148_519, prov: 'filed' },
+    { name: 'Bluebird Consulting', category: 'Leadership + strategy', terms: 'Net 30', ytd: 147_504, prov: 'filed' },
+    { name: 'Summit Trail Equipment Co.', category: 'Field equipment', terms: 'Net 30', ytd: 41_200, prov: 'illustrative' },
+    { name: 'Cascade Signage Works', category: 'Signage + fabrication', terms: 'Net 30', ytd: 22_800, prov: 'illustrative' },
+    { name: 'Ridgeline Fuel & Transport', category: 'Crew travel + fuel', terms: 'Net 15', ytd: 18_450, prov: 'illustrative' },
+  ];
+  const total = vendors.reduce((s, v) => s + v.ytd, 0);
+  const over100 = vendors.filter((v) => v.ytd >= 100_000).length;
+  return (
+    <>
+      <PartyNote>Vendors are money-out parties. Each maps one-to-one to a <span className="font-semibold text-[rgb(var(--text))]">QuickBooks Vendor</span>. The five largest below are IMBA&#39;s <span className="font-semibold text-[rgb(var(--text))]">filed 2024 independent contractors</span> (Form 990 Part VII, Section B).</PartyNote>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Kpi label="Active vendors" value={String(vendors.length)} note="Subcontractors, suppliers, services" />
+        <Kpi label="Paid · illustrative + filed" value={money(total)} note="Top contractors are filed 990 figures" tone="teal" />
+        <Kpi label="Over $100K contractors" value={String(over100)} note="Reported individually on the 990" tone="amber" />
+      </div>
+      <ShellCard>
+        <Heading eyebrow="Payables parties" title="Vendor register" detail="Maps to QuickBooks Vendors" />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-left">
+            <thead>
+              <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                <th className="px-5 py-3">Vendor</th><th className="px-3 py-3">Category</th><th className="px-3 py-3">Terms</th><th className="px-3 py-3 text-right">Paid (2024)</th><th className="px-5 py-3">QuickBooks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((v) => (
+                <tr key={v.name} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                  <td className="px-5 py-3.5"><span className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--text))]">{v.name} <Prov kind={v.prov} /></span></td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{v.category}</td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{v.terms}</td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(v.ytd)}</td>
+                  <td className="px-5 py-3.5"><QboRecord type="Vendor" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ShellCard>
+    </>
+  );
+}
+
+function Customers() {
+  const openAr = imbaReceivables.reduce((s, r) => s + r.amount, 0);
+  return (
+    <>
+      <PartyNote>Customers are earned-revenue parties — Trail Solutions clients who contract IMBA for planning, design, and construction. Each maps to a <span className="font-semibold text-[rgb(var(--text))]">QuickBooks Customer</span>. Values are illustrative.</PartyNote>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Kpi label="Active customers" value={String(imbaReceivables.length)} note="Trail Solutions engagements" />
+        <Kpi label="Open receivable" value={money(openAr)} note="Billed + unbilled milestones" tone="teal" />
+        <Kpi label="QuickBooks class" value="Customer" note="Earned Trail Solutions revenue" tone="lime" />
+      </div>
+      <ShellCard>
+        <Heading eyebrow="Receivables parties" title="Customer register" detail="Maps to QuickBooks Customers" />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-left">
+            <thead>
+              <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                <th className="px-5 py-3">Customer</th><th className="px-3 py-3">Engagement</th><th className="px-3 py-3 text-right">Open AR</th><th className="px-3 py-3">Status</th><th className="px-5 py-3">QuickBooks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {imbaReceivables.map((r) => (
+                <tr key={r.ref} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                  <td className="px-5 py-3.5"><span className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--text))]">{r.customer} <Prov kind="illustrative" /></span></td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{r.project}</td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(r.amount)}</td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{r.status}</td>
+                  <td className="px-5 py-3.5"><QboRecord type="Customer" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ShellCard>
+    </>
+  );
+}
+
+function Grantors() {
+  const award = imbaGrants.reduce((s, g) => s + g.award, 0);
+  const drawn = imbaGrants.reduce((s, g) => s + g.spent, 0);
+  return (
+    <>
+      <div className="rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] px-4 py-3">
+        <p className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-100">The QuickBooks separation</p>
+        <p className="mt-1.5 text-[11px] leading-5 text-[rgb(var(--text-2))]">
+          QuickBooks has no <span className="font-semibold text-[rgb(var(--text))]">Grantor</span> record type, so grantors are entered as <span className="font-semibold text-[rgb(var(--text))]">Customers</span> there. IMBA-OS keeps them a distinct class: it&#39;s the same QuickBooks record, but <span className="font-semibold text-[rgb(var(--text))]">contributed, restricted revenue stays separate from earned Trail Solutions revenue</span> — so net-asset restriction and functional reporting stay clean.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-4">
+        <Kpi label="Active grantors" value={String(imbaGrants.length)} note="Foundations + funders (illustrative)" />
+        <Kpi label="Awarded" value={money(award)} note="Restricted commitments" tone="teal" />
+        <Kpi label="Drawn to date" value={money(drawn)} note="Allowable spend recorded" tone="lime" />
+        <Kpi label="QuickBooks class" value="Customer" note="IMBA-OS class · Grantor" tone="amber" />
+      </div>
+      <ShellCard>
+        <Heading eyebrow="Restricted-fund parties" title="Grantor register" detail="QBO Customer · IMBA-OS Grantor" />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-left">
+            <thead>
+              <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                <th className="px-5 py-3">Grantor · program</th><th className="px-3 py-3 text-right">Award</th><th className="px-3 py-3 text-right">Drawn</th><th className="px-3 py-3">Restriction</th><th className="px-5 py-3">Record mapping</th>
+              </tr>
+            </thead>
+            <tbody>
+              {imbaGrants.map((g) => (
+                <tr key={g.id} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                  <td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{g.funder}</p><p className="mt-0.5 text-[11px] text-[rgb(var(--text-3))]">{g.program}</p></td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(g.award)}</td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--sa-soft))]">{money(g.spent)}</td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{g.restriction}</td>
+                  <td className="px-5 py-3.5"><span className="flex flex-wrap items-center gap-1.5"><QboRecord type="Customer" /><span className="rounded-full bg-amber-300/10 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-100">IMBA · Grantor</span></span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ShellCard>
+    </>
   );
 }
 

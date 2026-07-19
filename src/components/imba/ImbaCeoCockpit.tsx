@@ -336,10 +336,28 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: FileText,
       },
       {
+        id: "finance-vendors",
+        label: "Vendors",
+        description: "Payables parties → QBO Vendors",
+        icon: Building2,
+      },
+      {
         id: "finance-ap-ar",
         label: "Accounts receivable",
         description: "Collections + aging",
         icon: CircleDollarSign,
+      },
+      {
+        id: "finance-customers",
+        label: "Customers",
+        description: "Trail Solutions clients → QBO Customers",
+        icon: Users,
+      },
+      {
+        id: "finance-grantors",
+        label: "Grantors",
+        description: "Funders · QBO Customer, class Grantor",
+        icon: HeartHandshake,
       },
       {
         id: "finance-transactions",
@@ -450,6 +468,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Grant workspace",
         description: "Research through award handoff",
         icon: FileText,
+      },
+      {
+        id: "finance-grantors",
+        label: "Grantors",
+        description: "Funders · QBO Customer, class Grantor",
+        icon: HeartHandshake,
       },
       {
         id: "development-campaigns",
@@ -889,6 +913,9 @@ const financeViews: ImbaFinanceView[] = [
   "finance-transactions",
   "finance-expenses",
   "finance-cost-of-labor",
+  "finance-vendors",
+  "finance-customers",
+  "finance-grantors",
 ];
 const operationsViews: ImbaOperationsView[] = [
   "project-command",
