@@ -26,43 +26,27 @@ import {
  * report components and report-data.ts / drilldown-data.ts; no logic rewritten.
  */
 
-type Tab = 'activities' | 'position' | 'cashflows' | 'budget';
+export type ImbaStatementTab = 'activities' | 'position' | 'cashflows' | 'budget';
 
-const TABS: { key: Tab; label: string }[] = [
+const TABS: { key: ImbaStatementTab; label: string }[] = [
   { key: 'activities', label: 'Statement of Activities' },
   { key: 'position', label: 'Financial Position' },
   { key: 'cashflows', label: 'Cash Flows' },
   { key: 'budget', label: 'Budget vs. Actual' },
 ];
 
-const toolbar: Record<Tab, { period: string; basis: string; targetId: string; filename: string }> = {
+const toolbar: Record<ImbaStatementTab, { period: string; basis: string; targetId: string; filename: string }> = {
   activities: { period: 'FY 2022–2024', basis: 'GAAP · FASB ASC 958 · Public Form 990', targetId: 'soa', filename: 'imba-statement-of-activities' },
   position: { period: 'As of Dec 31, 2024', basis: 'GAAP · FASB ASC 958 · Public baseline', targetId: 'sfp', filename: 'imba-statement-of-financial-position' },
   cashflows: { period: 'Rolling · Reviewed monthly', basis: 'GAAP · FASB ASC 958 · Public baseline', targetId: 'scf', filename: 'imba-statement-of-cash-flows' },
   budget: { period: 'Twelve-month outlook', basis: 'Accrual basis · Illustrative forecast', targetId: 'bva', filename: 'imba-budget-vs-actual' },
 };
 
-export function ImbaStatements() {
-  const [tab, setTab] = useState<Tab>('activities');
+export function ImbaStatementOutput({ tab }: { tab: ImbaStatementTab }) {
   const tb = toolbar[tab];
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] p-2">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`rounded-xl px-4 py-2 text-[11px] font-bold transition ${
-              tab === t.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
       <ReportToolbar period={tb.period} basis={tb.basis} targetId={tb.targetId} filename={tb.filename} />
 
       {tab === 'activities' ? (
@@ -115,6 +99,30 @@ export function ImbaStatements() {
           </div>
         </ReportPaper>
       ) : null}
+    </div>
+  );
+}
+
+export function ImbaStatements() {
+  const [tab, setTab] = useState<ImbaStatementTab>('activities');
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] p-2">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={`rounded-xl px-4 py-2 text-[11px] font-bold transition ${
+              tab === t.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <ImbaStatementOutput tab={tab} />
     </div>
   );
 }

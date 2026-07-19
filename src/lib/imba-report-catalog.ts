@@ -28,7 +28,7 @@ export type QboCatalogCategory = {
 export const qboLaneMeta: Record<QboReportLane, { label: string; explain: string }> = {
   'qbo-direct': {
     label: 'Direct from QBO',
-    explain: 'Runs in QuickBooks Online today with no additional setup. IMBA-OS calls the QBO Reports API with the selected date range and renders the result.',
+    explain: 'Available from QuickBooks Online with no additional accounting setup. A production IMBA-OS connector syncs the source data into its governed reporting store; opening a report reads that local copy instead of logging in or making a per-report QuickBooks call.',
   },
   'qbo-config': {
     label: 'After QBO configuration',
@@ -36,7 +36,7 @@ export const qboLaneMeta: Record<QboReportLane, { label: string; explain: string
   },
   'imba-os': {
     label: 'Calculated by IMBA-OS',
-    explain: 'Not available from IMBA’s QuickBooks. IMBA-OS composes it from QBO transactions plus PEO settlement invoices, ADP records, and the allocation model — and labels the result with its provenance.',
+    explain: 'Not available from IMBA’s QuickBooks. IMBA-OS composes it from previously synced QBO transactions plus PEO settlement invoices, ADP records, and the allocation model — and labels the result with its provenance.',
   },
 };
 

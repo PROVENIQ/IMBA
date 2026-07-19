@@ -7,7 +7,7 @@ import {
   Check,
   ClipboardCheck,
   CreditCard,
-  Download,
+  Database,
   Eye,
   FileBarChart,
   Landmark,
@@ -15,6 +15,7 @@ import {
   PieChart,
   Plus,
   Receipt,
+  RefreshCw,
   Search,
   ShieldCheck,
   X,
@@ -25,6 +26,7 @@ import {
   imbaPayables,
   imbaReceivables,
   imbaReports,
+  imbaVendors,
 } from '@/lib/imba-detail-data';
 import { accounting, financialHistory, publicFinancialFacts } from '@/lib/imba-data';
 import {
@@ -39,7 +41,7 @@ import type { ImbaOsView } from '@/lib/imba-os-data';
 import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
 import { ImbaPayables } from '@/components/imba/ImbaPayables';
-import { ImbaStatements } from '@/components/imba/ImbaStatements';
+import { ImbaReportOutput } from '@/components/imba/ImbaReportOutput';
 import { ImbaInfoTooltip } from '@/components/imba/ImbaInfoTooltip';
 
 export type ImbaFinanceView =
@@ -66,8 +68,8 @@ function money(value: number): string {
   return `${sign}$${absolute.toFixed(0)}`;
 }
 
-function ShellCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}>{children}</section>;
+function ShellCard({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
+  return <section id={id} className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}>{children}</section>;
 }
 
 function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; detail?: string }) {
@@ -123,7 +125,6 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
       {view === 'finance-reports' ? (
         <div className="space-y-5">
           <ProgramFullCostPanel />
-          <ImbaStatements />
           <Reports />
         </div>
       ) : null}
@@ -149,18 +150,8 @@ function PartyNote({ children }: { children: React.ReactNode }) {
 }
 
 function Vendors() {
-  // The five largest are IMBA's filed 2024 independent contractors (990 Part VII,
-  // Section B); the rest are illustrative operating vendors.
-  const vendors: Array<{ name: string; category: string; terms: string; ytd: number; prov: 'filed' | 'illustrative' }> = [
-    { name: 'Progressive Bike Ramps / American Ramp Co', category: 'Bike-park installations', terms: 'Milestone', ytd: 194_264, prov: 'filed' },
-    { name: 'Parkitect AG', category: 'Modular pumptrack installs', terms: 'Milestone', ytd: 178_380, prov: 'filed' },
-    { name: 'Titus Trails LLC', category: 'Trail-building subcontractor', terms: 'Progress', ytd: 166_293, prov: 'filed' },
-    { name: 'Skvare LLC', category: 'Website + IT', terms: 'Net 30', ytd: 148_519, prov: 'filed' },
-    { name: 'Bluebird Consulting', category: 'Leadership + strategy', terms: 'Net 30', ytd: 147_504, prov: 'filed' },
-    { name: 'Summit Trail Equipment Co.', category: 'Field equipment', terms: 'Net 30', ytd: 41_200, prov: 'illustrative' },
-    { name: 'Cascade Signage Works', category: 'Signage + fabrication', terms: 'Net 30', ytd: 22_800, prov: 'illustrative' },
-    { name: 'Ridgeline Fuel & Transport', category: 'Crew travel + fuel', terms: 'Net 15', ytd: 18_450, prov: 'illustrative' },
-  ];
+  // Register data lives in imba-detail-data.ts (shared with the report renderers).
+  const vendors = imbaVendors;
   const total = vendors.reduce((s, v) => s + v.ytd, 0);
   const over100 = vendors.filter((v) => v.ytd >= 100_000).length;
   return (
@@ -1099,19 +1090,25 @@ function LaneBadge({ lane }: { lane: QboReportLane }) {
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${laneBadgeCls[lane]}`}>{qboLaneMeta[lane].label}</span>;
 }
 
+const filedAnnualReports = new Set([
+  'Statement of Activities',
+  'Statement of Financial Position',
+  'Functional Expense Report',
+  'Form 990 Workpapers',
+  'Single-Audit Readiness Check',
+]);
+
 function Reports() {
-  const { addAuditEvent } = useImbaOsState();
+  const { connectors, syncConnectorNow } = useImbaOsState();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
   const [selected, setSelected] = useState(imbaReports[0]);
-  const [prepared, setPrepared] = useState('');
   const presets = useMemo(buildPeriodPresets, []);
   const ytd = presets.find((preset) => preset.key === 'ytd') ?? presets[0];
   const [period, setPeriod] = useState<ReportPeriod>({ from: ytd.from, to: ytd.to, preset: 'ytd' });
   const [qboQuery, setQboQuery] = useState('');
   const [qboLane, setQboLane] = useState<'All' | QboReportLane>('All');
   const [selectedQbo, setSelectedQbo] = useState<(QboCatalogReport & { category: string }) | null>(null);
-  const [queuedQbo, setQueuedQbo] = useState('');
   useEffect(() => {
     try {
       const raw = localStorage.getItem('imba-report-period-v1');
@@ -1129,60 +1126,58 @@ function Reports() {
   const qboGroups = qboReportCatalog
     .map((group) => ({ ...group, reports: group.reports.filter((report) => (qboLane === 'All' || report.lane === qboLane) && `${report.name} ${report.note ?? ''} ${group.category}`.toLowerCase().includes(qboQuery.toLowerCase())) }))
     .filter((group) => group.reports.length > 0);
-  const queueQboRun = () => {
-    if (!selectedQbo) return;
-    addAuditEvent({ action: 'Report run queued', record: selectedQbo.name, actor: 'Finance', detail: `Period ${period.from} → ${period.to} · ${qboLaneMeta[selectedQbo.lane].label}. Demo mode: request recorded locally; no live QuickBooks call.` });
-    setQueuedQbo(selectedQbo.name);
-  };
   const categories = ['All', ...Array.from(new Set(imbaReports.map((report) => report.category)))];
   const rows = imbaReports.filter((report) => (category === 'All' || report.category === category) && `${report.name} ${report.description}`.toLowerCase().includes(query.toLowerCase()));
-  const prepareExport = () => {
-    const exportRows = [
-      ['Field', 'Value'],
-      ['Report', selected.name],
-      ['Category', selected.category],
-      ['Cadence', selected.cadence],
-      ['Audience', selected.audience],
-      ['Status', selected.status],
-      ['Description', selected.description],
-      ['Period start', period.from],
-      ['Period end', period.to],
-      ['Data classification', 'Prototype / illustrative'],
-      ['Generated at', new Date().toISOString()],
-    ];
-    const csv = exportRows
-      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
-      .join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${selected.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}.csv`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-    setPrepared(selected.name);
+  const annualSelected = filedAnnualReports.has(selected.name);
+  const openReport = (report: (typeof imbaReports)[number]) => {
+    setSelected(report);
+    if (filedAnnualReports.has(report.name)) setPeriod({ from: '2024-01-01', to: '2024-12-31', preset: 'fy2024' });
+    window.requestAnimationFrame(() => document.getElementById('imba-report-output')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
   return (
     <div className="grid gap-5 xl:grid-cols-12">
       <ShellCard className="xl:col-span-12">
+        <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_2fr_auto] lg:items-center">
+          <div>
+            <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--sa-soft))]"><Database className="h-3.5 w-3.5" /> QuickBooks connection</p>
+            <p className="mt-1 text-sm font-semibold text-[rgb(var(--text))]">Connect once. Sync centrally. Run reports locally.</p>
+          </div>
+          <div className="grid gap-2 text-[11px] text-[rgb(var(--text-2))] sm:grid-cols-4">
+            {['Authorize once with OAuth', 'Sync nightly + on demand', 'Store a governed IMBA-OS copy', 'Render and enrich reports here'].map((step, index) => <div key={step} className="rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><span className="mr-1.5 font-mono text-[rgb(var(--sa-soft))]">{index + 1}</span>{step}</div>)}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${connectors.qbo.mode === 'Production' && connectors.qbo.status === 'configured' ? 'bg-[rgb(var(--sa)/0.12)] text-[rgb(var(--sa-soft))]' : 'bg-amber-300/10 text-amber-800 dark:text-amber-200'}`}>{connectors.qbo.mode} · {connectors.qbo.status}</span>
+            <button type="button" onClick={() => syncConnectorNow('qbo')} className="flex items-center gap-1.5 rounded-xl border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-black uppercase text-[rgb(var(--text))]"><RefreshCw className="h-3.5 w-3.5" /> Refresh demo copy</button>
+            <p className="w-full text-right text-[11px] text-[rgb(var(--text-3))]">{connectors.qbo.lastSync}</p>
+          </div>
+        </div>
+        <div className="border-t border-amber-300/20 bg-amber-300/[0.045] px-5 py-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">
+          This workspace is configured in <span className="font-semibold text-[rgb(var(--text))]">Demo mode</span>, not connected to IMBA&apos;s production QuickBooks company. No report below logs into QuickBooks or calls it when opened; production reports would read the latest governed sync already held by IMBA-OS.
+        </div>
+      </ShellCard>
+      <ShellCard className="xl:col-span-12">
         <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-4">
           <div>
-            <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]"><CalendarClock className="h-3.5 w-3.5" /> Reporting period <ImbaInfoTooltip label="Reporting period" text="Every report on this page runs for this date range. In production the range is passed to the QuickBooks Reports API as start_date / end_date; in demo mode it stamps the previews and CSV exports." /></p>
+            <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]"><CalendarClock className="h-3.5 w-3.5" /> Reporting period <ImbaInfoTooltip label="Reporting period" text="Operating reports use the selected range against IMBA-OS's synced reporting store. Reports grounded in the public Form 990 automatically lock to the available fiscal year instead of pretending monthly detail exists." /></p>
             <h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{fmtDay(period.from)} – {fmtDay(period.to)}</h2>
+            {annualSelected ? <p className="mt-1 text-[11px] font-semibold text-amber-800 dark:text-amber-200">{selected.name} is tied to filed annual data, so the period is locked to FY 2024.</p> : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {presets.map((preset) => <button key={preset.key} type="button" onClick={() => setPeriod({ from: preset.from, to: preset.to, preset: preset.key })} className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider transition ${period.preset === preset.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.02)] text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'}`}>{preset.label}</button>)}
-            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">From<input type="date" value={period.from} max={period.to} onChange={(event) => setPeriod({ ...period, from: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
-            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">To<input type="date" value={period.to} min={period.from} onChange={(event) => setPeriod({ ...period, to: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
+            {presets.map((preset) => <button key={preset.key} type="button" disabled={annualSelected && preset.key !== 'fy2024'} onClick={() => setPeriod({ from: preset.from, to: preset.to, preset: preset.key })} className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-35 ${period.preset === preset.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.02)] text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'}`}>{preset.label}</button>)}
+            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">From<input type="date" disabled={annualSelected} value={period.from} max={period.to} onChange={(event) => setPeriod({ ...period, from: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none disabled:opacity-50" /></label>
+            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">To<input type="date" disabled={annualSelected} value={period.to} min={period.from} onChange={(event) => setPeriod({ ...period, to: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none disabled:opacity-50" /></label>
           </div>
         </div>
       </ShellCard>
-      <ShellCard className="xl:col-span-8">
+      <ShellCard className="xl:col-span-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Governed catalog</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Financial + management reports</h2></div><div className="flex gap-2"><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search reports" className="w-32 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none">{categories.map((item) => <option key={item}>{item}</option>)}</select></div></div>
-        <div className="grid gap-3 p-5 md:grid-cols-2">{rows.map((report) => <button key={report.name} type="button" onClick={() => setSelected(report)} className={`rounded-2xl border p-4 text-left transition ${selected.name === report.name ? 'border-[rgb(var(--sa)/0.30)] bg-[rgb(var(--sa))]/[0.055]' : 'border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] hover:bg-[rgb(var(--line)/0.04)]'}`}><div className="flex items-start justify-between gap-3"><span className="rounded-xl bg-[rgb(var(--sa)/0.10)] p-2 text-[rgb(var(--sa-soft))]"><FileBarChart className="h-4 w-4" /></span><span className="rounded-full border border-[rgb(var(--line)/0.08)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--text-2))]">{report.status}</span></div><h3 className="mt-3 text-xs font-semibold text-[rgb(var(--text))]">{report.name}</h3><p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">{report.description}</p><div className="mt-3 flex justify-between border-t border-[rgb(var(--line)/0.06)] pt-3 text-[11px] text-[rgb(var(--text-3))]"><span>{report.cadence}</span><span>{report.audience}</span></div></button>)}</div>
+        <div className="grid gap-3 p-5">{rows.map((report) => <button key={report.name} type="button" aria-pressed={selected.name === report.name} onClick={() => openReport(report)} className={`rounded-2xl border p-4 text-left transition ${selected.name === report.name ? 'border-[rgb(var(--sa)/0.30)] bg-[rgb(var(--sa))]/[0.055]' : 'border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] hover:bg-[rgb(var(--line)/0.04)]'}`}><div className="flex items-start justify-between gap-3"><span className="rounded-xl bg-[rgb(var(--sa)/0.10)] p-2 text-[rgb(var(--sa-soft))]"><FileBarChart className="h-4 w-4" /></span><span className="rounded-full border border-[rgb(var(--line)/0.08)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--text-2))]">{filedAnnualReports.has(report.name) ? 'Filed FY 2024' : report.status}</span></div><h3 className="mt-3 text-xs font-semibold text-[rgb(var(--text))]">{report.name}</h3><p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">{report.description}</p><div className="mt-3 flex justify-between border-t border-[rgb(var(--line)/0.06)] pt-3 text-[11px] text-[rgb(var(--text-3))]"><span>{report.cadence}</span><span>Open report <ArrowRight className="ml-1 inline h-3 w-3" /></span></div></button>)}</div>
       </ShellCard>
-      <ShellCard className="xl:col-span-4"><Heading eyebrow="Report preview" title={selected.name} /><div className="space-y-4 p-5"><p className="text-xs leading-5 text-[rgb(var(--text-2))]">{selected.description}</p><p className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><CalendarClock className="h-3.5 w-3.5" /> Reporting period: {fmtDay(period.from)} – {fmtDay(period.to)}</p><div className="grid grid-cols-2 gap-3"><Kpi label="Cadence" value={selected.cadence} note="Refresh rhythm" tone="teal" /><Kpi label="Status" value={selected.status.replace('Prototype ', '')} note="Build maturity" /></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Report controls</p><div className="mt-3 space-y-2">{['Data refreshed and reconciled', 'Owner certification attached', 'Material variances annotated', 'Distribution list permissioned'].map((item, index) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">{index < 2 ? <ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> : <ClipboardCheck className="h-3.5 w-3.5 text-[rgb(var(--info))]" />}{item}</div>)}</div></div><button type="button" onClick={prepareExport} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" /> Download board-ready CSV</button>{prepared ? <p className="flex items-center gap-2 text-[11px] text-[rgb(var(--sa-soft))]"><Check className="h-3.5 w-3.5" /> {prepared} downloaded with a prototype-data classification.</p> : null}</div></ShellCard>
+      <ShellCard id="imba-report-output" className="scroll-mt-4 xl:col-span-8">
+        <Heading eyebrow="Generated report" title={selected.name} detail={`${selected.cadence} · ${selected.audience}`} />
+        <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">{selected.description}</div>
+        <div className="p-4 sm:p-5"><ImbaReportOutput reportName={selected.name} period={period} /></div>
+      </ShellCard>
       <ShellCard className="xl:col-span-12">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
           <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Source-system catalog</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">QuickBooks nonprofit report library · {qboReportCount} reports</h2></div>
@@ -1201,7 +1196,7 @@ function Reports() {
               {group.caveat ? <p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">{group.caveat}</p> : null}
               <div className="mt-3 space-y-1">
                 {group.reports.map((report) => (
-                  <button key={report.name} type="button" onClick={() => { setSelectedQbo({ ...report, category: group.category }); setQueuedQbo(''); }} className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition ${selectedQbo?.name === report.name ? 'bg-[rgb(var(--sa))]/[0.055] ring-1 ring-[rgb(var(--sa)/0.30)]' : 'hover:bg-[rgb(var(--line)/0.04)]'}`}>
+                  <button key={report.name} type="button" onClick={() => setSelectedQbo({ ...report, category: group.category })} className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition ${selectedQbo?.name === report.name ? 'bg-[rgb(var(--sa))]/[0.055] ring-1 ring-[rgb(var(--sa)/0.30)]' : 'hover:bg-[rgb(var(--line)/0.04)]'}`}>
                     <span className="text-[11px] text-[rgb(var(--text-2))]">{report.name}</span>
                     <LaneBadge lane={report.lane} />
                   </button>
@@ -1219,10 +1214,19 @@ function Reports() {
             </div>
             <div className="grid grid-cols-2 gap-2"><Kpi label="From" value={fmtDay(period.from)} note="Report start date" tone="teal" /><Kpi label="To" value={fmtDay(period.to)} note="Report end date" tone="teal" /></div>
             <div className="flex items-start gap-2">
-              <button type="button" disabled={queuedQbo === selectedQbo.name} onClick={queueQboRun} className="rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))] disabled:bg-[rgb(var(--sa)/0.10)] disabled:text-[rgb(var(--sa-soft))]">{queuedQbo === selectedQbo.name ? 'Run queued' : 'Queue report run'}</button>
-              <ImbaInfoTooltip label="Queue report run · demo only" text={selectedQbo.lane === 'imba-os' ? 'In production IMBA-OS computes this report itself from synced QBO, PEO, and ADP data for the selected period. In demo mode the request is recorded locally and stamped into the audit trail — nothing external is called.' : 'In production this calls the QuickBooks Reports API with start_date and end_date set to the selected period and renders the result. In demo mode the request is recorded locally and stamped into the audit trail — nothing external is called.'} />
+              <button type="button" onClick={() => document.getElementById('qbo-report-output')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]">View report output</button>
+              <ImbaInfoTooltip label="Rendered from the reporting store" text="Every catalog entry produces a document below. Reports backed by demo data contain rows; transaction-level reports show their real structure and clearly say that synced QuickBooks rows are required. Opening one never makes a per-report QuickBooks call." />
               <button type="button" aria-label="Close report detail" onClick={() => setSelectedQbo(null)} className="rounded-xl border border-[rgb(var(--line)/0.1)] p-3 text-[rgb(var(--text-2))]"><X className="h-4 w-4" /></button>
             </div>
+          </div>
+        ) : null}
+        {selectedQbo ? (
+          <div id="qbo-report-output" className="scroll-mt-4 border-t border-[rgb(var(--line)/0.07)] p-4 sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">QuickBooks catalog output</p><h3 className="mt-1 text-sm font-semibold text-[rgb(var(--text))]">{selectedQbo.name}</h3></div>
+              <LaneBadge lane={selectedQbo.lane} />
+            </div>
+            <ImbaReportOutput reportName={selectedQbo.name} period={period} />
           </div>
         ) : null}
         <div className="border-t border-[rgb(var(--line)/0.07)] p-5">

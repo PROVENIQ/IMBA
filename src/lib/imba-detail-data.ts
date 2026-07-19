@@ -33,6 +33,20 @@ export const imbaPayables = [
   { ref: 'CHAPTERS', vendor: 'Member organization settlements', category: 'Chapter obligation', amount: 318_000, due: 'Monthly cycle', approval: 'Finance', status: 'Ring-fenced' },
 ];
 
+// Vendor register — the five largest are IMBA's filed 2024 independent
+// contractors (Form 990 Part VII, Section B); the rest are illustrative
+// operating vendors. Shared by the Vendors view and the report renderers.
+export const imbaVendors: Array<{ name: string; category: string; terms: string; ytd: number; prov: 'filed' | 'illustrative' }> = [
+  { name: 'Progressive Bike Ramps / American Ramp Co', category: 'Bike-park installations', terms: 'Milestone', ytd: 194_264, prov: 'filed' },
+  { name: 'Parkitect AG', category: 'Modular pumptrack installs', terms: 'Milestone', ytd: 178_380, prov: 'filed' },
+  { name: 'Titus Trails LLC', category: 'Trail-building subcontractor', terms: 'Progress', ytd: 166_293, prov: 'filed' },
+  { name: 'Skvare LLC', category: 'Website + IT', terms: 'Net 30', ytd: 148_519, prov: 'filed' },
+  { name: 'Bluebird Consulting', category: 'Leadership + strategy', terms: 'Net 30', ytd: 147_504, prov: 'filed' },
+  { name: 'Summit Trail Equipment Co.', category: 'Field equipment', terms: 'Net 30', ytd: 41_200, prov: 'illustrative' },
+  { name: 'Cascade Signage Works', category: 'Signage + fabrication', terms: 'Net 30', ytd: 22_800, prov: 'illustrative' },
+  { name: 'Ridgeline Fuel & Transport', category: 'Crew travel + fuel', terms: 'Net 15', ytd: 18_450, prov: 'illustrative' },
+];
+
 export const imbaReports = [
   { name: 'CEO Monthly Financial Brief', category: 'Executive', cadence: 'Monthly', audience: 'Kent + leadership', status: 'Prototype live', description: 'What changed, why it matters, forecast, and decisions.' },
   { name: 'Statement of Activities', category: 'Financial statements', cadence: 'Monthly', audience: 'Finance + Board', status: 'Designed', description: 'Current period and YTD by restriction and line of business.' },
@@ -46,6 +60,8 @@ export const imbaReports = [
   { name: 'Single-Audit Readiness Check', category: 'Compliance', cadence: 'On threshold', audience: 'Finance + Audit Committee', status: 'Not currently triggered', description: 'Forward-looking only: IMBA had no federal award expenditures in 2024, so no Uniform Guidance (Single) Audit is required. Monitors the $1,000,000 threshold and 15% de minimis indirect rate if federal funding begins.' },
   { name: 'Internal Controls & Fiscal Policy Register', category: 'Governance', cadence: 'Continuous', audience: 'Finance + Audit Committee', status: 'Designed', description: 'Documented internal controls, approval thresholds, segregation of duties, and fiscal policies mapped to risk and to the append-only audit trail.' },
   { name: '13-Week Cash Forecast', category: 'Treasury', cadence: 'Weekly', audience: 'Kent + Finance', status: 'Prototype live', description: 'Collections, disbursements, restrictions, and minimum cash.' },
+  { name: 'AR Aging & Collections', category: 'Treasury', cadence: 'Weekly', audience: 'Finance', status: 'Prototype live', description: 'Open receivables by age bucket with unbilled milestones and collection status.' },
+  { name: 'Vendor Spend + 1099 Report', category: 'Compliance', cadence: 'Annual', audience: 'Finance + auditors', status: 'Prototype live', description: 'Vendor payments with filed 990 contractors flagged; supports 1099 preparation.' },
 ];
 
 // Current IMBA staff (names + titles from IMBA's public staff page). Locations
