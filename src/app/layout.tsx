@@ -6,9 +6,10 @@ export const metadata: Metadata = {
   description: 'A nonprofit operating system and executive decision cockpit for IMBA.',
 };
 
-// Applies the saved theme before first paint so there's no light→dark flash.
-// Light is the default; only an explicit stored "dark" opts in.
-const themeScript = `(function(){try{if(localStorage.getItem('imba-theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+// Applies the saved theme before first paint so there's no dark→light flash.
+// Dark is the default (the command-surface first impression); only an explicit
+// stored "light" opts out.
+const themeScript = `(function(){try{if(localStorage.getItem('imba-theme')!=='light'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

@@ -43,9 +43,9 @@ html.dark {
   --card-2: 20 35 33;
   --line: 255 255 255;
   --text: 255 255 255;
-  --text-2: 175 192 187;
-  --text-3: 113 137 129;
-  --text-4: 97 121 113;
+  --text-2: 185 201 196;
+  --text-3: 150 172 163;   /* brightened for small caption legibility (~AA on dark cards) */
+  --text-4: 132 155 146;   /* brightened; was disappearing at 8-10px */
   --info: 159 214 204;     /* = #9fd6cc, the original dark-theme teal */
   --pos: 217 245 156;      /* = #d9f59c, the original dark-theme lime */
   --sa-soft: 223 247 168;  /* light-lime fallback for chrome outside the accented area */

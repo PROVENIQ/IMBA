@@ -1904,10 +1904,10 @@ export function ImbaCeoCockpit() {
   // Theme defaults to light (set for the Monday demo); a no-FOUC script in the
   // root layout applies the stored choice before paint, and this state mirrors
   // it for the toggle UI and for picking the accent's light/dark eyebrow tone.
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   useEffect(() => {
     const stored = window.localStorage.getItem("imba-theme");
-    setTheme(stored === "dark" ? "dark" : "light");
+    setTheme(stored === "light" ? "light" : "dark");
   }, []);
   useEffect(() => {
     setSidebarCollapsed(
