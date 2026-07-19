@@ -2130,13 +2130,10 @@ export function ImbaCeoCockpit() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="flex items-center justify-between px-2">
+          <div className="px-2">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--text-4))]">
               Nonprofit operating system
             </p>
-            <span className="rounded-full border border-[#68b9aa]/15 bg-[#68b9aa]/[0.06] px-2 py-1 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
-              {visibleNavSections.length} sections
-            </span>
           </div>
           <nav
             className="mt-3 space-y-2"
