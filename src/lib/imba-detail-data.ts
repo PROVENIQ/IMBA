@@ -37,10 +37,14 @@ export const imbaReports = [
   { name: 'CEO Monthly Financial Brief', category: 'Executive', cadence: 'Monthly', audience: 'Kent + leadership', status: 'Prototype live', description: 'What changed, why it matters, forecast, and decisions.' },
   { name: 'Statement of Activities', category: 'Financial statements', cadence: 'Monthly', audience: 'Finance + Board', status: 'Designed', description: 'Current period and YTD by restriction and line of business.' },
   { name: 'Statement of Financial Position', category: 'Financial statements', cadence: 'Monthly', audience: 'Finance + Board', status: 'Designed', description: 'Assets, liabilities, and net assets with deployability bridge.' },
+  { name: 'Statement of Cash Flows', category: 'Financial statements', cadence: 'Monthly', audience: 'Finance + Board', status: 'Designed', description: 'Operating, investing, and financing activity with deployable-cash bridge.' },
   { name: 'Trail Solutions Portfolio Margin', category: 'Project accounting', cadence: 'Monthly', audience: 'Kent + Trail Solutions', status: 'Prototype live', description: 'Budget, actual, commitments, EAC, contribution, and billing.' },
   { name: 'Grant Burn + Deadline Report', category: 'Restricted funds', cadence: 'Biweekly', audience: 'Finance + program owners', status: 'Prototype live', description: 'Award, allowable spend, draws, balance, deadlines, and risks.' },
   { name: 'Budget vs Actual by Engine', category: 'Planning', cadence: 'Monthly', audience: 'Leadership + Board', status: 'Prototype live', description: 'Philanthropy, membership, Trail Solutions, and shared services.' },
   { name: 'Functional Expense Report', category: 'Compliance', cadence: 'Quarterly', audience: 'Finance + auditors', status: 'Designed', description: 'Program, management/general, and fundraising allocation.' },
+  { name: 'Single Audit Package (Uniform Guidance)', category: 'Compliance', cadence: 'Annual', audience: 'Finance + external auditors', status: 'Designed', description: 'Schedule of Expenditures of Federal Awards (SEFA), major-program determination, and Uniform Guidance (2 CFR 200) documentation for the Single Audit.' },
+  { name: 'Form 990 Workpapers', category: 'Compliance', cadence: 'Annual', audience: 'Finance + auditors', status: 'Designed', description: 'Reconciled book-to-990 mapping, functional allocation, and schedules supporting the annual Form 990 filing.' },
+  { name: 'Internal Controls & Fiscal Policy Register', category: 'Governance', cadence: 'Continuous', audience: 'Finance + Audit Committee', status: 'Designed', description: 'Documented internal controls, approval thresholds, segregation of duties, and fiscal policies mapped to risk and to the append-only audit trail.' },
   { name: '13-Week Cash Forecast', category: 'Treasury', cadence: 'Weekly', audience: 'Kent + Finance', status: 'Prototype live', description: 'Collections, disbursements, restrictions, and minimum cash.' },
 ];
 

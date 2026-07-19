@@ -471,10 +471,10 @@ const configs: Record<ImbaMissionView, MissionConfig> = {
 
 function MetricCard({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <div className="rounded-[18px] border border-white/[0.08] bg-[#142321] p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718981]">{label}</p>
-      <p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-blue-100">{value}</p>
-      <p className="mt-1.5 text-[10px] leading-4 text-[#81978f]">{note}</p>
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p>
+      <p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-blue-700 dark:text-blue-100">{value}</p>
+      <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p>
     </div>
   );
 }
@@ -513,35 +513,35 @@ export function ImbaMissionWorkspace({
         {config.metrics.map((metric) => <MetricCard key={metric.label} {...metric} />)}
       </div>
 
-      <section className="rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90 p-5">
-        <div className="flex items-center gap-2 text-blue-100">
+      <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] p-5">
+        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-100">
           <Compass className="h-4 w-4" />
-          <p className="text-[9px] font-black uppercase tracking-[0.2em]">Operating lifecycle</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.2em]">Operating lifecycle</p>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           {config.workflow.map((item, index) => (
             <div key={item} className="flex items-center gap-3 rounded-2xl border border-blue-300/10 bg-blue-300/[0.035] p-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-300/10 font-mono text-[9px] text-blue-100">{index + 1}</span>
-              <p className="text-[10px] font-semibold text-white">{item}</p>
-              {index < config.workflow.length - 1 ? <ArrowRight className="ml-auto hidden h-3.5 w-3.5 text-[#617971] md:block" /> : null}
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-300/10 font-mono text-[11px] text-blue-700 dark:text-blue-100">{index + 1}</span>
+              <p className="text-[11px] font-semibold text-[rgb(var(--text))]">{item}</p>
+              {index < config.workflow.length - 1 ? <ArrowRight className="ml-auto hidden h-3.5 w-3.5 text-[rgb(var(--text-4))] md:block" /> : null}
             </div>
           ))}
         </div>
       </section>
 
       <div className="grid gap-5 xl:grid-cols-12">
-        <section className="rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90 xl:col-span-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-4">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#718981]">Mission operating register</p>
-              <h3 className="mt-1 text-base font-semibold text-white">{config.title} queue</h3>
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Mission operating register</p>
+              <h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{config.title} queue</h3>
             </div>
             <div className="flex flex-wrap gap-2">
-              <label className="flex items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.025] px-3 py-2">
-                <Search className="h-3.5 w-3.5 text-[#718981]" />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search records" className="w-36 bg-transparent text-[10px] text-white outline-none placeholder:text-[#617971]" />
+              <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2">
+                <Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search records" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" />
               </label>
-              <select value={stage} onChange={(event) => setStage(event.target.value)} className="rounded-xl border border-white/[0.09] bg-[#14201e] px-3 py-2 text-[10px] text-white outline-none">
+              <select value={stage} onChange={(event) => setStage(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none">
                 {stages.map((item) => <option key={item}>{item}</option>)}
               </select>
             </div>
@@ -549,7 +549,7 @@ export function ImbaMissionWorkspace({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left">
               <thead>
-                <tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.15em] text-[#6f8981]">
+                <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.15em] text-[rgb(var(--text-3))]">
                   <th className="px-5 py-3">Record</th>
                   <th className="px-3 py-3">{config.valueLabel}</th>
                   <th className="px-3 py-3">Owner</th>
@@ -559,12 +559,12 @@ export function ImbaMissionWorkspace({
               </thead>
               <tbody>
                 {records.map((record) => (
-                  <tr key={record.id} className={`border-b border-white/[0.055] last:border-0 hover:bg-white/[0.025] ${selected.id === record.id ? "bg-blue-300/[0.04]" : ""}`}>
-                    <td className="px-5 py-3.5"><button type="button" aria-current={selected.id === record.id ? "true" : undefined} onClick={() => setSelectedId(record.id)} className="block text-left"><span className="block text-xs font-semibold text-white">{record.name}</span><span className="mt-1 block text-[9px] text-[#718981]">{record.id} / {record.secondary}</span></button></td>
-                    <td className="px-3 py-3.5 font-mono text-xs font-semibold text-blue-100">{record.value}</td>
-                    <td className="px-3 py-3.5 text-[10px] text-[#afc0bb]">{record.owner}</td>
-                    <td className="px-3 py-3.5 text-[10px] text-[#afc0bb]">{record.next}</td>
-                    <td className="px-5 py-3.5"><span className="rounded-full border border-white/[0.08] bg-white/[0.035] px-2 py-1 text-[8px] font-black uppercase text-white">{record.status}</span></td>
+                  <tr key={record.id} className={`border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.025)] ${selected.id === record.id ? "bg-blue-300/[0.04]" : ""}`}>
+                    <td className="px-5 py-3.5"><button type="button" aria-current={selected.id === record.id ? "true" : undefined} onClick={() => setSelectedId(record.id)} className="block text-left"><span className="block text-xs font-semibold text-[rgb(var(--text))]">{record.name}</span><span className="mt-1 block text-[11px] text-[rgb(var(--text-3))]">{record.id} / {record.secondary}</span></button></td>
+                    <td className="px-3 py-3.5 font-mono text-xs font-semibold text-blue-700 dark:text-blue-100">{record.value}</td>
+                    <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{record.owner}</td>
+                    <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{record.next}</td>
+                    <td className="px-5 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.035)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--text))]">{record.status}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -572,26 +572,26 @@ export function ImbaMissionWorkspace({
           </div>
         </section>
 
-        <section className="rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90 xl:col-span-4">
-          <div className="border-b border-white/[0.07] px-5 py-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#718981]">Selected / {selected.id}</p>
-            <h3 className="mt-1 text-base font-semibold text-white">{selected.name}</h3>
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-4">
+          <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Selected / {selected.id}</p>
+            <h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{selected.name}</h3>
           </div>
           <div className="space-y-4 p-5">
-            <p className="text-xs leading-6 text-[#a9bbb5]">{selected.detail}</p>
-            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-              <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-blue-100" /><p className="text-[9px] font-black uppercase tracking-wider text-[#718981]">Key relationships</p></div>
-              <div className="mt-3 flex flex-wrap gap-2">{selected.relationships.map((item) => <span key={item} className="rounded-full border border-blue-300/10 bg-blue-300/[0.04] px-2.5 py-1 text-[9px] text-blue-100">{item}</span>)}</div>
+            <p className="text-xs leading-6 text-[rgb(var(--text-2))]">{selected.detail}</p>
+            <div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4">
+              <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-blue-700 dark:text-blue-100" /><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Key relationships</p></div>
+              <div className="mt-3 flex flex-wrap gap-2">{selected.relationships.map((item) => <span key={item} className="rounded-full border border-blue-300/10 bg-blue-300/[0.04] px-2.5 py-1 text-[11px] text-blue-700 dark:text-blue-100">{item}</span>)}</div>
             </div>
-            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
-              <div className="flex items-center gap-2"><Database className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /><p className="text-[9px] font-black uppercase tracking-wider text-[#718981]">Connected touchpoints</p></div>
-              <div className="mt-3 space-y-2">{selected.touchpoints.map((item) => <div key={item} className="flex items-center gap-2 text-[9px] text-[#a9bbb5]"><ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />{item}</div>)}</div>
+            <div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4">
+              <div className="flex items-center gap-2"><Database className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Connected touchpoints</p></div>
+              <div className="mt-3 space-y-2">{selected.touchpoints.map((item) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]"><ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />{item}</div>)}</div>
             </div>
-            <button type="button" onClick={() => onNavigate(selected.linkedView)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-3 text-[9px] font-black uppercase text-[rgb(var(--sa-ink))]">
+            <button type="button" onClick={() => onNavigate(selected.linkedView)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-3 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]">
               Open linked work <ArrowRight className="h-3.5 w-3.5" />
             </button>
-            <div className="flex items-center gap-2 text-[9px] text-[#718981]"><MapPin className="h-3.5 w-3.5" />Relationships and activity roll up to the community record.</div>
-            <div className="flex items-center gap-2 text-[9px] text-[#718981]"><BarChart3 className="h-3.5 w-3.5" />Every stage change requires dated evidence.</div>
+            <div className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><MapPin className="h-3.5 w-3.5" />Relationships and activity roll up to the community record.</div>
+            <div className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><BarChart3 className="h-3.5 w-3.5" />Every stage change requires dated evidence.</div>
           </div>
         </section>
       </div>

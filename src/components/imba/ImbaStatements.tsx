@@ -36,9 +36,9 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const toolbar: Record<Tab, { period: string; basis: string; targetId: string; filename: string }> = {
-  activities: { period: 'FY 2022–2024', basis: 'Accrual basis · Public Form 990', targetId: 'soa', filename: 'imba-statement-of-activities' },
-  position: { period: 'As of Dec 31, 2024', basis: 'Accrual basis · Public baseline', targetId: 'sfp', filename: 'imba-statement-of-financial-position' },
-  cashflows: { period: 'Rolling · Reviewed monthly', basis: 'Accrual basis · Public baseline', targetId: 'scf', filename: 'imba-statement-of-cash-flows' },
+  activities: { period: 'FY 2022–2024', basis: 'GAAP · FASB ASC 958 · Public Form 990', targetId: 'soa', filename: 'imba-statement-of-activities' },
+  position: { period: 'As of Dec 31, 2024', basis: 'GAAP · FASB ASC 958 · Public baseline', targetId: 'sfp', filename: 'imba-statement-of-financial-position' },
+  cashflows: { period: 'Rolling · Reviewed monthly', basis: 'GAAP · FASB ASC 958 · Public baseline', targetId: 'scf', filename: 'imba-statement-of-cash-flows' },
   budget: { period: 'Twelve-month outlook', basis: 'Accrual basis · Illustrative forecast', targetId: 'bva', filename: 'imba-budget-vs-actual' },
 };
 
@@ -48,14 +48,14 @@ export function ImbaStatements() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#111b1a]/90 p-2">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] p-2">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
             className={`rounded-xl px-4 py-2 text-[11px] font-bold transition ${
-              tab === t.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'text-[#94a8a1] hover:bg-white/[0.05]'
+              tab === t.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'
             }`}
           >
             {t.label}
@@ -70,8 +70,8 @@ export function ImbaStatements() {
           id="soa"
           title="Statement of Activities"
           period="For the years ended December 31, 2022, 2023, and 2024"
-          basis="Accrual basis · Amounts in U.S. dollars"
-          footnote="Source: IMBA Form 990 filings. Click any figure to drill into its composition. Percent-of-revenue column reflects fiscal year 2024."
+          basis="Accrual basis · U.S. GAAP (FASB ASC 958) · Amounts in U.S. dollars"
+          footnote="Prepared on the accrual basis in accordance with U.S. GAAP (FASB ASC 958-205); net assets are classified as with and without donor restrictions. Prior-year figures tie to IMBA's filed Forms 990 (EIN 47-1254119). Click any figure to drill into its composition. Percent-of-revenue column reflects fiscal year 2024."
         >
           <DrillableStatement columns={activitiesColumns} rows={activitiesRows} />
         </ReportPaper>
@@ -82,8 +82,8 @@ export function ImbaStatements() {
           id="sfp"
           title="Statement of Financial Position"
           period="As of December 31, 2024"
-          basis="Accrual basis · Amounts in U.S. dollars"
-          footnote="Total net assets of $3,754,879 reconcile to the FY 2024 Form 990. Asset detail requires the general ledger (Connect GL)."
+          basis="Accrual basis · U.S. GAAP (FASB ASC 958) · Amounts in U.S. dollars"
+          footnote="Net assets are presented in two classes per FASB ASC 958 — without and with donor restrictions. Total net assets of $3,754,879 reconcile to the FY 2024 Form 990. Asset detail requires the general ledger (Connect GL)."
         >
           <StatementTable columns={positionColumns} rows={positionRows} />
         </ReportPaper>

@@ -129,7 +129,7 @@ function Card({
 }) {
   return (
     <section
-      className={`rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90 ${className}`}
+      className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}
     >
       {children}
     </section>
@@ -148,14 +148,14 @@ function Heading({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.07] px-5 py-4">
+    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#718981]">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">
           {eyebrow}
         </p>
-        <h3 className="mt-1 text-base font-semibold text-white">{title}</h3>
+        <h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{title}</h3>
         {detail ? (
-          <p className="mt-1 text-[9px] text-[#718981]">{detail}</p>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{detail}</p>
         ) : null}
       </div>
       {action}
@@ -178,19 +178,19 @@ function Kpi({
     tone === "lime"
       ? "text-[rgb(var(--sa-soft))]"
       : tone === "amber"
-        ? "text-amber-100"
+        ? "text-amber-800 dark:text-amber-100"
         : tone === "rose"
-          ? "text-rose-100"
-          : "text-indigo-100";
+          ? "text-rose-700 dark:text-rose-100"
+          : "text-indigo-700 dark:text-indigo-100";
   return (
-    <div className="rounded-[18px] border border-white/[0.08] bg-[#142321] p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.17em] text-[#718981]">
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.17em] text-[rgb(var(--text-3))]">
         {label}
       </p>
       <p className={`mt-3 font-mono text-2xl font-semibold ${color}`}>
         {value}
       </p>
-      <p className="mt-1 text-[9px] text-[#81978f]">{note}</p>
+      <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{note}</p>
     </div>
   );
 }
@@ -404,7 +404,7 @@ export function ImbaCollaborationWorkspace({
   return (
     <div className="space-y-5">
       {notice ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] px-4 py-3 text-[9px] text-[rgb(var(--sa-soft))]">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] px-4 py-3 text-[11px] text-[rgb(var(--sa-soft))]">
           <span className="flex items-center gap-2">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {notice}
@@ -620,18 +620,18 @@ function CollaborationOverview({
                   key={item.title}
                   type="button"
                   onClick={() => onNavigate(item.view)}
-                  className="group rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 text-left hover:border-indigo-300/20 hover:bg-indigo-300/[0.035]"
+                  className="group rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4 text-left hover:border-indigo-300/20 hover:bg-indigo-300/[0.035]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-100">
+                    <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-700 dark:text-indigo-100">
                       <Icon className="h-4 w-4" />
                     </span>
-                    <ArrowRight className="h-4 w-4 text-[#607870] transition group-hover:translate-x-1 group-hover:text-indigo-100" />
+                    <ArrowRight className="h-4 w-4 text-[rgb(var(--text-4))] transition group-hover:translate-x-1 group-hover:text-indigo-700 dark:group-hover:text-indigo-100" />
                   </div>
-                  <p className="mt-4 text-sm font-semibold text-white">
+                  <p className="mt-4 text-sm font-semibold text-[rgb(var(--text))]">
                     {item.title}
                   </p>
-                  <p className="mt-1 text-[10px] text-[#7f958e]">{item.note}</p>
+                  <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{item.note}</p>
                 </button>
               );
             })}
@@ -670,22 +670,22 @@ function CollaborationOverview({
               return (
                 <div
                   key={item.name}
-                  className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+                  className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-100">
+                    <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-700 dark:text-indigo-100">
                       <Icon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold text-white">
+                        <p className="text-xs font-semibold text-[rgb(var(--text))]">
                           {item.name}
                         </p>
-                        <span className="text-[8px] font-black uppercase text-indigo-100">
+                        <span className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                           {item.role}
                         </span>
                       </div>
-                      <p className="mt-1 text-[9px] leading-4 text-[#81978f]">
+                      <p className="mt-1 text-[11px] leading-4 text-[rgb(var(--text-3))]">
                         {item.detail}
                       </p>
                     </div>
@@ -700,7 +700,7 @@ function CollaborationOverview({
                   "Integration discovery checklist created. No Slack, Teams, Notion, or SharePoint credentials were requested.",
                 )
               }
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 bg-indigo-300/[0.07] px-4 py-3 text-[9px] font-black uppercase text-indigo-100"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 bg-indigo-300/[0.07] px-4 py-3 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100"
             >
               <Network className="h-3.5 w-3.5" /> Start discovery checklist
             </button>
@@ -752,41 +752,41 @@ function CollaborationInbox({
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
           <Heading eyebrow="Mentions + context" title="What needs awareness" />
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-[rgb(var(--line)/0.06)]">
             {mentions.map(({ room, post }) => (
               <button
                 key={`${room.id}-${post.id}`}
                 type="button"
                 onClick={() => onOpenRoom(room.id)}
-                className="flex w-full items-start gap-3 px-5 py-4 text-left hover:bg-white/[0.025]"
+                className="flex w-full items-start gap-3 px-5 py-4 text-left hover:bg-[rgb(var(--line)/0.025)]"
               >
-                <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-100">
+                <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-700 dark:text-indigo-100">
                   <AtSign className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-semibold text-white">
+                    <span className="text-[11px] font-semibold text-[rgb(var(--text))]">
                       {room.name}
                     </span>
-                    <span className="text-[8px] text-[#617971]">
+                    <span className="text-[11px] text-[rgb(var(--text-4))]">
                       {post.time}
                     </span>
                   </span>
-                  <span className="mt-1 block text-[9px] leading-4 text-[#93a7a0]">
+                  <span className="mt-1 block text-[11px] leading-4 text-[rgb(var(--text-2))]">
                     {post.text}
                   </span>
-                  <span className="mt-2 block text-[8px] font-black uppercase text-indigo-100">
+                  <span className="mt-2 block text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                     {post.mentions.map((mention) => `@${mention}`).join(" · ")}
                   </span>
                 </span>
-                <ChevronRight className="h-4 w-4 text-[#526a63]" />
+                <ChevronRight className="h-4 w-4 text-[rgb(var(--text-4))]" />
               </button>
             ))}
           </div>
         </Card>
         <Card>
           <Heading eyebrow="Assigned work" title="What needs action" />
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-[rgb(var(--line)/0.06)]">
             {tasks.map(({ room, task }) => (
               <div
                 key={`${room.id}-${task.id}`}
@@ -795,21 +795,21 @@ function CollaborationInbox({
                 <button
                   type="button"
                   onClick={() => onToggleTask(room.id, task.id)}
-                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-white/[0.14] text-[rgb(var(--sa-ink))] hover:border-[rgb(var(--sa))]"
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-[rgb(var(--line)/0.14)] text-[rgb(var(--sa-ink))] hover:border-[rgb(var(--sa))]"
                 >
                   {task.status === "Done" ? (
                     <Check className="h-3.5 w-3.5 bg-[rgb(var(--sa))]" />
                   ) : null}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold text-white">
+                  <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                     {task.title}
                   </p>
-                  <p className="mt-1 text-[9px] text-[#718981]">
+                  <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                     {room.name} · {task.owner} · {task.due}
                   </p>
                 </div>
-                <span className="rounded-full bg-amber-300/10 px-2 py-1 text-[8px] font-black uppercase text-amber-100">
+                <span className="rounded-full bg-amber-300/10 px-2 py-1 text-[11px] font-black uppercase text-amber-800 dark:text-amber-100">
                   {task.status}
                 </span>
               </div>
@@ -871,13 +871,13 @@ function TeamWorkspaces({
               key={room.id}
               type="button"
               onClick={() => onSelectRoom(room.id)}
-              className={`w-full rounded-2xl p-3 text-left ${room.id === selectedRoomId ? "bg-indigo-300/[0.1] text-white" : "text-[#8fa39d] hover:bg-white/[0.03]"}`}
+              className={`w-full rounded-2xl p-3 text-left ${room.id === selectedRoomId ? "bg-indigo-300/[0.1] text-[rgb(var(--text))]" : "text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.03)]"}`}
             >
               <div className="flex items-center gap-2">
-                <Hash className="h-3.5 w-3.5 text-indigo-100" />
-                <span className="text-[10px] font-semibold">{room.name}</span>
+                <Hash className="h-3.5 w-3.5 text-indigo-700 dark:text-indigo-100" />
+                <span className="text-[11px] font-semibold">{room.name}</span>
               </div>
-              <p className="mt-1.5 text-[8px] text-[#637b73]">
+              <p className="mt-1.5 text-[11px] text-[rgb(var(--text-4))]">
                 {room.kind} · {room.status}
               </p>
             </button>
@@ -888,26 +888,26 @@ function TeamWorkspaces({
         <section className="rounded-[22px] border border-indigo-300/15 bg-indigo-300/[0.04]">
           <div className="flex flex-wrap items-start justify-between gap-4 p-5">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-wider text-indigo-100">
+              <p className="text-[11px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-100">
                 {selectedRoom.kind} workspace
               </p>
-              <h3 className="mt-1 text-xl font-semibold text-white">
+              <h3 className="mt-1 text-xl font-semibold text-[rgb(var(--text))]">
                 {selectedRoom.name}
               </h3>
-              <p className="mt-2 max-w-3xl text-[10px] leading-5 text-[#9bada7]">
+              <p className="mt-2 max-w-3xl text-[11px] leading-5 text-[rgb(var(--text-2))]">
                 {selectedRoom.summary}
               </p>
             </div>
-            <div className="rounded-xl border border-white/[0.08] bg-black/10 px-4 py-3 text-right">
-              <p className="text-[8px] font-black uppercase text-[#718981]">
+            <div className="rounded-xl border border-[rgb(var(--line)/0.08)] bg-black/10 px-4 py-3 text-right">
+              <p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
                 Financial context
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[rgb(var(--sa-soft))]">
+              <p className="mt-1 text-[11px] font-semibold text-[rgb(var(--sa-soft))]">
                 {selectedRoom.financialContext}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap border-t border-white/[0.07] px-3">
+          <div className="flex flex-wrap border-t border-[rgb(var(--line)/0.07)] px-3">
             {(
               [
                 "Discussion",
@@ -921,7 +921,7 @@ function TeamWorkspaces({
                 key={item}
                 type="button"
                 onClick={() => onTab(item)}
-                className={`border-b-2 px-4 py-3 text-[9px] font-black uppercase ${tab === item ? "border-indigo-300 text-indigo-100" : "border-transparent text-[#718981]"}`}
+                className={`border-b-2 px-4 py-3 text-[11px] font-black uppercase ${tab === item ? "border-indigo-300 text-indigo-700 dark:text-indigo-100" : "border-transparent text-[rgb(var(--text-3))]"}`}
               >
                 {item}
               </button>
@@ -935,11 +935,11 @@ function TeamWorkspaces({
               title={`${selectedRoom.posts.length} messages`}
               detail={`Members · ${selectedRoom.members.join(" · ")}`}
             />
-            <div className="divide-y divide-white/[0.06]">
+            <div className="divide-y divide-[rgb(var(--line)/0.06)]">
               {selectedRoom.posts.map((post) => (
                 <article key={post.id} className="px-5 py-4">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-300/10 text-[9px] font-black text-indigo-100">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-300/10 text-[11px] font-black text-indigo-700 dark:text-indigo-100">
                       {post.author
                         .split(" ")
                         .map((part) => part[0])
@@ -948,23 +948,23 @@ function TeamWorkspaces({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[10px] font-semibold text-white">
+                        <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                           {post.author}
                         </p>
-                        <span className="text-[8px] text-[#617971]">
+                        <span className="text-[11px] text-[rgb(var(--text-4))]">
                           {post.role} · {post.time}
                         </span>
                         {post.state ? (
-                          <span className="rounded-full bg-white/[0.05] px-2 py-0.5 text-[7px] font-black uppercase text-indigo-100">
+                          <span className="rounded-full bg-[rgb(var(--line)/0.05)] px-2 py-0.5 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                             {post.state}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-[10px] leading-5 text-[#a8b9b3]">
+                      <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">
                         {post.text}
                       </p>
                       {post.mentions.length ? (
-                        <p className="mt-2 text-[8px] font-black text-indigo-100">
+                        <p className="mt-2 text-[11px] font-black text-indigo-700 dark:text-indigo-100">
                           {post.mentions
                             .map((mention) => `@${mention}`)
                             .join(" · ")}
@@ -976,7 +976,7 @@ function TeamWorkspaces({
                           onClick={() =>
                             onConvert(selectedRoom.id, post.id, "task")
                           }
-                          className="rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[8px] font-black uppercase text-[#9aafa8]"
+                          className="rounded-lg border border-[rgb(var(--line)/0.08)] px-2.5 py-1.5 text-[11px] font-black uppercase text-[rgb(var(--text-2))]"
                         >
                           Convert to task
                         </button>
@@ -985,7 +985,7 @@ function TeamWorkspaces({
                           onClick={() =>
                             onConvert(selectedRoom.id, post.id, "decision")
                           }
-                          className="rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[8px] font-black uppercase text-[#9aafa8]"
+                          className="rounded-lg border border-[rgb(var(--line)/0.08)] px-2.5 py-1.5 text-[11px] font-black uppercase text-[rgb(var(--text-2))]"
                         >
                           Propose decision
                         </button>
@@ -995,23 +995,23 @@ function TeamWorkspaces({
                 </article>
               ))}
             </div>
-            <div className="border-t border-white/[0.07] p-4">
+            <div className="border-t border-[rgb(var(--line)/0.07)] p-4">
               <textarea
                 value={composer}
                 onChange={(event) => onComposer(event.target.value)}
                 rows={3}
                 placeholder="Add context, use @mentions, or record a proposed decision…"
-                className="w-full resize-none rounded-xl border border-white/[0.09] bg-[#0d1917] p-3 text-[10px] leading-5 text-white outline-none placeholder:text-[#526a63] focus:border-indigo-300/30"
+                className="w-full resize-none rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--panel))] p-3 text-[11px] leading-5 text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))] focus:border-indigo-300/30"
               />
               <div className="mt-2 flex items-center justify-between">
-                <p className="text-[8px] text-[#617971]">
+                <p className="text-[11px] text-[rgb(var(--text-4))]">
                   Prototype entry remains inside IMBA-OS until an approved
                   connector is configured.
                 </p>
                 <button
                   type="button"
                   onClick={onPost}
-                  className="flex items-center gap-2 rounded-xl bg-indigo-300 px-4 py-2.5 text-[8px] font-black uppercase text-[#15172d]"
+                  className="flex items-center gap-2 rounded-xl bg-indigo-300 px-4 py-2.5 text-[11px] font-black uppercase text-[#15172d]"
                 >
                   <Send className="h-3 w-3" /> Post
                 </button>
@@ -1022,7 +1022,7 @@ function TeamWorkspaces({
         {tab === "Tasks" ? (
           <Card>
             <Heading eyebrow="Room assignments" title="Owned work" />
-            <div className="divide-y divide-white/[0.06]">
+            <div className="divide-y divide-[rgb(var(--line)/0.06)]">
               {selectedRoom.tasks.map((task) => (
                 <div
                   key={task.id}
@@ -1031,7 +1031,7 @@ function TeamWorkspaces({
                   <button
                     type="button"
                     onClick={() => onToggleTask(selectedRoom.id, task.id)}
-                    className={`flex h-6 w-6 items-center justify-center rounded-md border ${task.status === "Done" ? "border-[rgb(var(--sa))] bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]" : "border-white/[0.14]"}`}
+                    className={`flex h-6 w-6 items-center justify-center rounded-md border ${task.status === "Done" ? "border-[rgb(var(--sa))] bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]" : "border-[rgb(var(--line)/0.14)]"}`}
                   >
                     {task.status === "Done" ? (
                       <Check className="h-3.5 w-3.5" />
@@ -1039,20 +1039,20 @@ function TeamWorkspaces({
                   </button>
                   <div>
                     <p
-                      className={`text-[10px] font-semibold ${task.status === "Done" ? "text-[#718981] line-through" : "text-white"}`}
+                      className={`text-[11px] font-semibold ${task.status === "Done" ? "text-[rgb(var(--text-3))] line-through" : "text-[rgb(var(--text))]"}`}
                     >
                       {task.title}
                     </p>
                     {task.source ? (
-                      <p className="mt-1 text-[8px] text-indigo-100">
+                      <p className="mt-1 text-[11px] text-indigo-700 dark:text-indigo-100">
                         Created from {task.source}
                       </p>
                     ) : null}
                   </div>
-                  <p className="text-[9px] text-[#82978f]">
+                  <p className="text-[11px] text-[rgb(var(--text-3))]">
                     {task.owner} · {task.due}
                   </p>
-                  <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase text-indigo-100">
+                  <span className="rounded-full bg-[rgb(var(--line)/0.05)] px-2 py-1 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                     {task.status}
                   </span>
                 </div>
@@ -1070,7 +1070,7 @@ function TeamWorkspaces({
                 <button
                   type="button"
                   onClick={onSaveKnowledge}
-                  className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[8px] font-black uppercase text-[#15172d]"
+                  className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[11px] font-black uppercase text-[#15172d]"
                 >
                   Save new version
                 </button>
@@ -1081,7 +1081,7 @@ function TeamWorkspaces({
                 value={knowledgeDraft}
                 onChange={(event) => onKnowledgeDraft(event.target.value)}
                 rows={18}
-                className="w-full resize-y rounded-2xl border border-white/[0.08] bg-[#0d1917] p-4 text-[11px] leading-6 text-[#c5d1cd] outline-none focus:border-indigo-300/30"
+                className="w-full resize-y rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] p-4 text-[11px] leading-6 text-[rgb(var(--text))] outline-none focus:border-indigo-300/30"
               />
             </div>
           </Card>
@@ -1096,22 +1096,22 @@ function TeamWorkspaces({
               {selectedRoom.decisions.map((decision) => (
                 <div
                   key={decision.id}
-                  className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+                  className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold text-white">
+                      <p className="text-xs font-semibold text-[rgb(var(--text))]">
                         {decision.decision}
                       </p>
-                      <p className="mt-2 text-[10px] leading-5 text-[#93a7a0]">
+                      <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">
                         {decision.rationale}
                       </p>
                     </div>
-                    <span className="rounded-full bg-[rgb(var(--sa)/0.10)] px-2 py-1 text-[8px] font-black uppercase text-[rgb(var(--sa-soft))]">
+                    <span className="rounded-full bg-[rgb(var(--sa)/0.10)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--sa-soft))]">
                       {decision.status}
                     </span>
                   </div>
-                  <p className="mt-3 text-[8px] font-black uppercase text-indigo-100">
+                  <p className="mt-3 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                     {decision.owner} · {decision.due}
                   </p>
                 </div>
@@ -1125,27 +1125,27 @@ function TeamWorkspaces({
               eyebrow="Linked evidence"
               title="References remain in their authoritative system"
             />
-            <div className="divide-y divide-white/[0.06]">
+            <div className="divide-y divide-[rgb(var(--line)/0.06)]">
               {selectedRoom.files.map((file) => (
                 <div
                   key={file.name}
                   className="grid gap-3 px-5 py-4 sm:grid-cols-[auto_1fr_1fr_auto]"
                 >
-                  <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-100">
+                  <span className="rounded-xl bg-indigo-300/10 p-2 text-indigo-700 dark:text-indigo-100">
                     <FileText className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="text-[10px] font-semibold text-white">
+                    <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                       {file.name}
                     </p>
-                    <p className="mt-1 text-[8px] text-[#718981]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                       {file.type}
                     </p>
                   </div>
-                  <p className="text-[9px] text-[#93a7a0]">
+                  <p className="text-[11px] text-[rgb(var(--text-2))]">
                     Authority · {file.source}
                   </p>
-                  <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase text-indigo-100">
+                  <span className="rounded-full bg-[rgb(var(--line)/0.05)] px-2 py-1 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                     {file.status}
                   </span>
                 </div>
@@ -1180,7 +1180,7 @@ function KnowledgeHub({
   if (!selected)
     return (
       <Card>
-        <div className="p-8 text-center text-sm text-[#82978f]">
+        <div className="p-8 text-center text-sm text-[rgb(var(--text-3))]">
           No knowledge pages are authorized for this role.
         </div>
       </Card>
@@ -1192,13 +1192,13 @@ function KnowledgeHub({
           eyebrow="Searchable knowledge"
           title="Pages + standards"
           action={
-            <label className="flex items-center gap-2 rounded-lg border border-white/[0.08] px-2 py-1.5">
-              <Search className="h-3 w-3 text-[#718981]" />
+            <label className="flex items-center gap-2 rounded-lg border border-[rgb(var(--line)/0.08)] px-2 py-1.5">
+              <Search className="h-3 w-3 text-[rgb(var(--text-3))]" />
               <input
                 value={query}
                 onChange={(event) => onQuery(event.target.value)}
                 placeholder="Search"
-                className="w-20 bg-transparent text-[9px] text-white outline-none"
+                className="w-20 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none"
               />
             </label>
           }
@@ -1209,12 +1209,12 @@ function KnowledgeHub({
               key={page.id}
               type="button"
               onClick={() => onSelect(page.id)}
-              className={`w-full rounded-xl p-3 text-left ${selected.id === page.id ? "bg-indigo-300/[0.1]" : "hover:bg-white/[0.03]"}`}
+              className={`w-full rounded-xl p-3 text-left ${selected.id === page.id ? "bg-indigo-300/[0.1]" : "hover:bg-[rgb(var(--line)/0.03)]"}`}
             >
-              <p className="text-[10px] font-semibold text-white">
+              <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                 {page.title}
               </p>
-              <p className="mt-1 text-[8px] text-[#718981]">
+              <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                 {page.category} · v{page.version}
               </p>
             </button>
@@ -1230,7 +1230,7 @@ function KnowledgeHub({
             <button
               type="button"
               onClick={onSave}
-              className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[8px] font-black uppercase text-[#15172d]"
+              className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[11px] font-black uppercase text-[#15172d]"
             >
               Save version
             </button>
@@ -1241,7 +1241,7 @@ function KnowledgeHub({
             {selected.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-indigo-300/10 px-2 py-1 text-[8px] font-black text-indigo-100"
+                className="rounded-full bg-indigo-300/10 px-2 py-1 text-[11px] font-black text-indigo-700 dark:text-indigo-100"
               >
                 #{tag}
               </span>
@@ -1251,7 +1251,7 @@ function KnowledgeHub({
             value={draft}
             onChange={(event) => onDraft(event.target.value)}
             rows={22}
-            className="w-full resize-y rounded-2xl border border-white/[0.08] bg-[#0d1917] p-4 text-[11px] leading-6 text-[#c5d1cd] outline-none focus:border-indigo-300/30"
+            className="w-full resize-y rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] p-4 text-[11px] leading-6 text-[rgb(var(--text))] outline-none focus:border-indigo-300/30"
           />
         </div>
       </Card>
@@ -1280,12 +1280,12 @@ function MeetingsDecisions({
               key={meeting.id}
               type="button"
               onClick={() => onSelect(meeting.id)}
-              className={`w-full rounded-2xl p-3 text-left ${selected.id === meeting.id ? "bg-indigo-300/[0.1]" : "hover:bg-white/[0.03]"}`}
+              className={`w-full rounded-2xl p-3 text-left ${selected.id === meeting.id ? "bg-indigo-300/[0.1]" : "hover:bg-[rgb(var(--line)/0.03)]"}`}
             >
-              <p className="text-[10px] font-semibold text-white">
+              <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                 {meeting.title}
               </p>
-              <p className="mt-1 text-[8px] text-[#718981]">
+              <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                 {meeting.date} · {meeting.status}
               </p>
             </button>
@@ -1310,7 +1310,7 @@ function MeetingsDecisions({
                         : "Complete",
                   })
                 }
-                className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[8px] font-black uppercase text-[#15172d]"
+                className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[11px] font-black uppercase text-[#15172d]"
               >
                 {selected.status === "Complete"
                   ? "Reopen notes"
@@ -1320,16 +1320,16 @@ function MeetingsDecisions({
           />
           <div className="grid gap-5 p-5 md:grid-cols-2">
             <div>
-              <p className="text-[9px] font-black uppercase text-indigo-100">
+              <p className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                 Agenda
               </p>
               <div className="mt-3 space-y-2">
                 {selected.agenda.map((item, index) => (
                   <div
                     key={item}
-                    className="flex items-start gap-2 text-[10px] text-[#a8b9b3]"
+                    className="flex items-start gap-2 text-[11px] text-[rgb(var(--text-2))]"
                   >
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-300/10 font-mono text-[8px] text-indigo-100">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-300/10 font-mono text-[11px] text-indigo-700 dark:text-indigo-100">
                       {index + 1}
                     </span>
                     {item}
@@ -1338,7 +1338,7 @@ function MeetingsDecisions({
               </div>
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase text-indigo-100">
+              <p className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                 Working notes
               </p>
               <textarea
@@ -1347,7 +1347,7 @@ function MeetingsDecisions({
                   onUpdate({ ...selected, notes: event.target.value })
                 }
                 rows={8}
-                className="mt-3 w-full resize-none rounded-xl border border-white/[0.08] bg-[#0d1917] p-3 text-[10px] leading-5 text-[#b7c6c1] outline-none"
+                className="mt-3 w-full resize-none rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] p-3 text-[11px] leading-5 text-[rgb(var(--text))] outline-none"
               />
             </div>
           </div>
@@ -1363,18 +1363,18 @@ function MeetingsDecisions({
                 selected.decisions.map((decision) => (
                   <div
                     key={decision.id}
-                    className="rounded-xl border border-white/[0.07] p-3"
+                    className="rounded-xl border border-[rgb(var(--line)/0.07)] p-3"
                   >
-                    <p className="text-[10px] font-semibold text-white">
+                    <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                       {decision.decision}
                     </p>
-                    <p className="mt-1 text-[9px] leading-4 text-[#82978f]">
+                    <p className="mt-1 text-[11px] leading-4 text-[rgb(var(--text-3))]">
                       {decision.rationale}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-[10px] text-[#718981]">
+                <p className="text-[11px] text-[rgb(var(--text-3))]">
                   No decisions recorded yet.
                 </p>
               )}
@@ -1398,7 +1398,7 @@ function MeetingsDecisions({
                     ],
                   })
                 }
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 px-3 py-2.5 text-[8px] font-black uppercase text-indigo-100"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 px-3 py-2.5 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100"
               >
                 <Plus className="h-3 w-3" /> Add proposed decision
               </button>
@@ -1414,18 +1414,18 @@ function MeetingsDecisions({
                 selected.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="rounded-xl border border-white/[0.07] p-3"
+                    className="rounded-xl border border-[rgb(var(--line)/0.07)] p-3"
                   >
-                    <p className="text-[10px] font-semibold text-white">
+                    <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                       {task.title}
                     </p>
-                    <p className="mt-1 text-[8px] text-[#718981]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                       {task.owner} · {task.due}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-[10px] text-[#718981]">
+                <p className="text-[11px] text-[rgb(var(--text-3))]">
                   No assignments recorded yet.
                 </p>
               )}
@@ -1447,7 +1447,7 @@ function MeetingsDecisions({
                     ],
                   })
                 }
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 px-3 py-2.5 text-[8px] font-black uppercase text-indigo-100"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 px-3 py-2.5 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100"
               >
                 <Plus className="h-3 w-3" /> Add follow-up
               </button>
@@ -1503,32 +1503,32 @@ function StakeholderInbox({
             eyebrow="Shared commitment queue"
             title="External messages become owned work"
           />
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-[rgb(var(--line)/0.06)]">
             {messages.map((message) => (
               <button
                 key={message.id}
                 type="button"
                 onClick={() => onSelect(message.id)}
-                className={`grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[1.2fr_1.5fr_1fr_auto] ${selected.id === message.id ? "bg-indigo-300/[0.05]" : "hover:bg-white/[0.02]"}`}
+                className={`grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[1.2fr_1.5fr_1fr_auto] ${selected.id === message.id ? "bg-indigo-300/[0.05]" : "hover:bg-[rgb(var(--line)/0.02)]"}`}
               >
                 <div>
-                  <p className="text-[10px] font-semibold text-white">
+                  <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                     {message.stakeholder}
                   </p>
-                  <p className="mt-1 text-[8px] text-indigo-100">
+                  <p className="mt-1 text-[11px] text-indigo-700 dark:text-indigo-100">
                     {message.group} · {message.id}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-white">{message.subject}</p>
-                  <p className="mt-1 text-[8px] text-[#718981]">
+                  <p className="text-[11px] text-[rgb(var(--text))]">{message.subject}</p>
+                  <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                     Linked · {message.linkedRecord}
                   </p>
                 </div>
-                <p className="text-[9px] text-[#93a7a0]">
+                <p className="text-[11px] text-[rgb(var(--text-2))]">
                   {message.owner} · {message.due}
                 </p>
-                <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase text-indigo-100">
+                <span className="rounded-full bg-[rgb(var(--line)/0.05)] px-2 py-1 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                   {message.status}
                 </span>
               </button>
@@ -1541,19 +1541,19 @@ function StakeholderInbox({
             title={selected.subject}
           />
           <div className="space-y-4 p-5">
-            <p className="text-[10px] leading-5 text-[#a8b9b3]">
+            <p className="text-[11px] leading-5 text-[rgb(var(--text-2))]">
               {selected.context}
             </p>
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-              <p className="text-[8px] font-black uppercase text-[#718981]">
+            <div className="rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-3">
+              <p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
                 Financial / governance effect
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-[rgb(var(--sa-soft))]">
+              <p className="mt-1 text-[11px] font-semibold text-[rgb(var(--sa-soft))]">
                 {selected.financialEffect}
               </p>
             </div>
             <label className="block">
-              <span className="text-[8px] font-black uppercase text-[#718981]">
+              <span className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
                 Assigned owner
               </span>
               <input
@@ -1561,21 +1561,21 @@ function StakeholderInbox({
                 onChange={(event) =>
                   onUpdate({ ...selected, owner: event.target.value })
                 }
-                className="mt-2 w-full rounded-xl border border-white/[0.08] bg-[#0d1917] px-3 py-2.5 text-[10px] text-white outline-none"
+                className="mt-2 w-full rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] px-3 py-2.5 text-[11px] text-[rgb(var(--text))] outline-none"
               />
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => onUpdate({ ...selected, status: "Ready" })}
-                className="rounded-xl bg-indigo-300 px-3 py-3 text-[8px] font-black uppercase text-[#15172d]"
+                className="rounded-xl bg-indigo-300 px-3 py-3 text-[11px] font-black uppercase text-[#15172d]"
               >
                 Mark ready
               </button>
               <button
                 type="button"
                 onClick={() => onUpdate({ ...selected, status: "Closed" })}
-                className="rounded-xl border border-white/[0.08] px-3 py-3 text-[8px] font-black uppercase text-white"
+                className="rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-3 text-[11px] font-black uppercase text-[rgb(var(--text))]"
               >
                 Close commitment
               </button>
@@ -1634,17 +1634,17 @@ function MessageTemplates({
                 key={template.id}
                 type="button"
                 onClick={() => onSelect(template.id)}
-                className={`w-full rounded-2xl p-3 text-left ${selected.id === template.id ? "bg-indigo-300/[0.1]" : "hover:bg-white/[0.03]"}`}
+                className={`w-full rounded-2xl p-3 text-left ${selected.id === template.id ? "bg-indigo-300/[0.1]" : "hover:bg-[rgb(var(--line)/0.03)]"}`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-semibold text-white">
+                  <p className="text-[11px] font-semibold text-[rgb(var(--text))]">
                     {template.name}
                   </p>
-                  <span className="text-[8px] font-black uppercase text-indigo-100">
+                  <span className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">
                     {template.status}
                   </span>
                 </div>
-                <p className="mt-1 text-[8px] text-[#718981]">
+                <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                   {template.audience} · {template.usage} uses
                 </p>
               </button>
@@ -1661,7 +1661,7 @@ function MessageTemplates({
                 type="button"
                 onClick={() => onUse(selected)}
                 disabled={selected.status === "Draft"}
-                className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[8px] font-black uppercase text-[#15172d] disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-xl bg-indigo-300 px-4 py-2.5 text-[11px] font-black uppercase text-[#15172d] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Use controlled template
               </button>
@@ -1669,18 +1669,18 @@ function MessageTemplates({
           />
           <div className="space-y-4 p-5">
             <div>
-              <p className="text-[8px] font-black uppercase text-[#718981]">
+              <p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
                 Subject
               </p>
-              <p className="mt-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 text-[10px] text-white">
+              <p className="mt-2 rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-3 text-[11px] text-[rgb(var(--text))]">
                 {selected.subject}
               </p>
             </div>
             <div>
-              <p className="text-[8px] font-black uppercase text-[#718981]">
+              <p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">
                 Body
               </p>
-              <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-white/[0.07] bg-[#0d1917] p-4 font-sans text-[10px] leading-6 text-[#b7c6c1]">
+              <pre className="mt-2 whitespace-pre-wrap rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel))] p-4 font-sans text-[11px] leading-6 text-[rgb(var(--text))]">
                 {selected.body}
               </pre>
             </div>
@@ -1692,12 +1692,12 @@ function MessageTemplates({
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-white/[0.07] p-3"
+                  className="rounded-xl border border-[rgb(var(--line)/0.07)] p-3"
                 >
-                  <p className="text-[8px] font-black uppercase text-[#617971]">
+                  <p className="text-[11px] font-black uppercase text-[rgb(var(--text-4))]">
                     {label}
                   </p>
-                  <p className="mt-1 text-[9px] font-semibold text-indigo-100">
+                  <p className="mt-1 text-[11px] font-semibold text-indigo-700 dark:text-indigo-100">
                     {value}
                   </p>
                 </div>

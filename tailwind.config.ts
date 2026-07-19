@@ -4,6 +4,9 @@ import type { Config } from 'tailwindcss';
 // uses plain CSS in globals.css; the two coexist. IMBA-OS components use only
 // standard utilities + arbitrary values, so no custom color tokens are needed.
 const config: Config = {
+  // Class strategy: the cockpit toggles a `dark` class on <html>. Light is the
+  // default; `dark:` variants restore the original dark-tuned accent shades.
+  darkMode: 'class',
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {

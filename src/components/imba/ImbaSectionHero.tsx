@@ -67,18 +67,18 @@ export function ImbaSectionHero({ section, onClose }: { section: string; onClose
           type="button"
           onClick={onClose}
           aria-label="Dismiss section overview"
-          className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg border border-white/[0.1] text-[#9aafa8] transition hover:bg-white/[0.06] hover:text-white"
+          className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg border border-[rgb(var(--line)/0.1)] text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.06)] hover:text-[rgb(var(--text))]"
         >
           <X className="h-4 w-4" />
         </button>
       ) : null}
       <div className="max-w-3xl pr-10">
-        <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[rgb(var(--sa-soft))]">{section}</p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">{meta.title}</h2>
-        <p className="mt-2 text-sm leading-6 text-[#a5b7b1]">{meta.description}</p>
+        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--sa-soft))]">{section}</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">{meta.title}</h2>
+        <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-2))]">{meta.description}</p>
         <div className="mt-4 inline-block rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-4 py-3">
-          <p className="text-[9px] font-black uppercase tracking-wider text-amber-100">Demo · illustrative</p>
-          <p className="mt-1 text-[10px] text-[#9caaa6]">Structure is production-minded; current values are illustrative.</p>
+          <p className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-100">Demo · illustrative</p>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">Structure is production-minded; current values are illustrative.</p>
         </div>
       </div>
     </section>

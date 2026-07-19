@@ -28,6 +28,7 @@ import {
   Mail,
   MapPin,
   Menu,
+  Moon,
   Mountain,
   Network,
   Presentation,
@@ -36,6 +37,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Sun,
   Target,
   TrendingUp,
   Users,
@@ -173,7 +175,7 @@ interface ImbaNavSection {
 const imbaNavSections: ImbaNavSection[] = [
   {
     label: "Mission",
-    color: "border-blue-400/30 text-blue-200",
+    color: "border-blue-400/30 text-blue-700 dark:text-blue-200",
     active: "bg-blue-400/10",
     items: [
       {
@@ -252,7 +254,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "Money",
-    color: "border-emerald-400/30 text-emerald-200",
+    color: "border-emerald-400/30 text-emerald-700 dark:text-emerald-200",
     active: "bg-emerald-400/10",
     items: [
       {
@@ -325,7 +327,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "People",
-    color: "border-cyan-400/30 text-cyan-200",
+    color: "border-cyan-400/30 text-cyan-700 dark:text-cyan-200",
     active: "bg-cyan-400/10",
     items: [
       {
@@ -380,7 +382,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "Development",
-    color: "border-amber-300/30 text-amber-100",
+    color: "border-amber-300/30 text-amber-800 dark:text-amber-100",
     active: "bg-amber-300/10",
     items: [
       {
@@ -429,7 +431,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "Platform",
-    color: "border-violet-400/30 text-violet-200",
+    color: "border-violet-400/30 text-violet-700 dark:text-violet-200",
     active: "bg-violet-400/10",
     items: [
       {
@@ -496,7 +498,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "Governance",
-    color: "border-rose-400/30 text-rose-200",
+    color: "border-rose-400/30 text-rose-700 dark:text-rose-200",
     active: "bg-rose-400/10",
     items: [
       {
@@ -527,7 +529,7 @@ const imbaNavSections: ImbaNavSection[] = [
   },
   {
     label: "Collaboration",
-    color: "border-indigo-400/30 text-indigo-200",
+    color: "border-indigo-400/30 text-indigo-700 dark:text-indigo-200",
     active: "bg-indigo-400/10",
     items: [
       {
@@ -575,33 +577,8 @@ const imbaNavSections: ImbaNavSection[] = [
     ],
   },
   {
-    label: "System",
-    color: "border-slate-400/30 text-slate-200",
-    active: "bg-slate-400/10",
-    items: [
-      {
-        id: "system",
-        label: "System control",
-        description: "Access + quality + continuity",
-        icon: Settings,
-      },
-      {
-        id: "system-runbooks",
-        label: "Runbooks",
-        description: "Institution-owned procedures",
-        icon: BookOpen,
-      },
-      {
-        id: "system-activity",
-        label: "Activity + decisions",
-        description: "Append-only operating trail",
-        icon: ListChecks,
-      },
-    ],
-  },
-  {
     label: "Management",
-    color: "border-lime-300/30 text-lime-100",
+    color: "border-lime-300/30 text-lime-700 dark:text-lime-100",
     active: "bg-lime-300/10",
     items: [
       {
@@ -630,6 +607,31 @@ const imbaNavSections: ImbaNavSection[] = [
       },
     ],
   },
+  {
+    label: "System",
+    color: "border-slate-400/30 text-slate-700 dark:text-slate-200",
+    active: "bg-slate-400/10",
+    items: [
+      {
+        id: "system",
+        label: "System control",
+        description: "Access + quality + continuity",
+        icon: Settings,
+      },
+      {
+        id: "system-runbooks",
+        label: "Runbooks",
+        description: "Institution-owned procedures",
+        icon: BookOpen,
+      },
+      {
+        id: "system-activity",
+        label: "Activity + decisions",
+        description: "Append-only operating trail",
+        icon: ListChecks,
+      },
+    ],
+  },
 ];
 
 const allNavItems = imbaNavSections.flatMap((section) => section.items);
@@ -637,19 +639,24 @@ const allNavItems = imbaNavSections.flatMap((section) => section.items);
 // Per-section accent, matching each section's sidebar color. Values are RGB
 // channels so opacity modifiers keep working: rgb(var(--sa)/0.1). Applied as
 // CSS variables on the content container; workspace accent tokens read them.
-const sectionAccents: Record<string, { sa: string; soft: string; ink: string }> = {
-  Mission: { sa: '96 165 250', soft: '191 219 254', ink: '8 20 35' },
-  Money: { sa: '183 227 91', soft: '223 247 168', ink: '16 32 22' },
-  People: { sa: '34 211 238', soft: '165 243 252', ink: '6 26 31' },
-  Development: { sa: '251 191 36', soft: '253 230 138', ink: '38 27 6' },
-  Platform: { sa: '167 139 250', soft: '221 214 254', ink: '24 16 42' },
-  Governance: { sa: '251 113 133', soft: '254 205 211', ink: '42 12 18' },
-  Collaboration: { sa: '129 140 248', soft: '199 210 254', ink: '16 18 42' },
-  System: { sa: '148 163 184', soft: '226 232 240', ink: '15 20 28' },
-  Management: { sa: '163 230 53', soft: '217 249 157', ink: '20 30 6' },
+// `soft` is the eyebrow/label accent for the dark theme (a bright pastel that
+// reads on near-black). `softLight` is the light-theme counterpart: a deeper,
+// saturated tone that stays legible on white. The cockpit swaps between them by
+// theme when it builds --sa-soft.
+type SectionAccent = { sa: string; soft: string; softLight: string; ink: string };
+const sectionAccents: Record<string, SectionAccent> = {
+  Mission: { sa: '96 165 250', soft: '191 219 254', softLight: '29 78 145', ink: '8 20 35' },
+  Money: { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
+  People: { sa: '34 211 238', soft: '165 243 252', softLight: '14 105 128', ink: '6 26 31' },
+  Development: { sa: '251 191 36', soft: '253 230 138', softLight: '140 92 8', ink: '38 27 6' },
+  Platform: { sa: '167 139 250', soft: '221 214 254', softLight: '88 52 191', ink: '24 16 42' },
+  Governance: { sa: '251 113 133', soft: '254 205 211', softLight: '190 33 60', ink: '42 12 18' },
+  Collaboration: { sa: '129 140 248', soft: '199 210 254', softLight: '67 76 190', ink: '16 18 42' },
+  System: { sa: '148 163 184', soft: '226 232 240', softLight: '65 80 100', ink: '15 20 28' },
+  Management: { sa: '163 230 53', soft: '217 249 157', softLight: '74 104 20', ink: '20 30 6' },
 };
 
-function accentForView(view: string): { sa: string; soft: string; ink: string } {
+function accentForView(view: string): SectionAccent {
   const section = imbaNavSections.find((s) => s.items.some((item) => item.id === view));
   return sectionAccents[section?.label ?? ''] ?? sectionAccents.Money;
 }
@@ -839,10 +846,10 @@ function money(value: number, compact = true): string {
 
 function statusClasses(status: ImbaProjectStatus): string {
   if (status === "healthy")
-    return "border-emerald-400/25 bg-emerald-400/10 text-emerald-300";
+    return "border-emerald-400/25 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300";
   if (status === "watch")
-    return "border-amber-400/25 bg-amber-400/10 text-amber-200";
-  return "border-rose-400/25 bg-rose-400/10 text-rose-200";
+    return "border-amber-400/25 bg-amber-400/10 text-amber-800 dark:text-amber-200";
+  return "border-rose-400/25 bg-rose-400/10 text-rose-700 dark:text-rose-200";
 }
 
 function Panel({
@@ -854,7 +861,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90 shadow-[0_22px_80px_rgba(0,0,0,0.22)] ${className}`}
+      className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] shadow-[0_22px_80px_rgba(0,0,0,0.22)] ${className}`}
     >
       {children}
     </section>
@@ -871,12 +878,12 @@ function PanelTitle({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-white/[0.07] px-5 py-4">
+    <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a4b8b1]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[rgb(var(--text-2))]">
           {eyebrow}
         </p>
-        <h2 className="mt-1 text-base font-semibold tracking-tight text-white">
+        <h2 className="mt-1 text-base font-semibold tracking-tight text-[rgb(var(--text))]">
           {title}
         </h2>
       </div>
@@ -904,16 +911,16 @@ function MetricCard({
 }) {
   const toneClass =
     tone === "positive"
-      ? "text-[rgb(var(--sa))] bg-[rgb(var(--sa)/0.10)] border-[rgb(var(--sa)/0.20)]"
+      ? "text-[rgb(var(--sa-soft))] bg-[rgb(var(--sa)/0.10)] border-[rgb(var(--sa)/0.20)]"
       : tone === "warning"
-        ? "text-amber-200 bg-amber-300/10 border-amber-300/20"
-        : "text-[#9fd6cc] bg-[#68b9aa]/10 border-[#68b9aa]/20";
+        ? "text-amber-800 dark:text-amber-200 bg-amber-300/10 border-amber-300/20"
+        : "text-[rgb(var(--info))] bg-[#68b9aa]/10 border-[#68b9aa]/20";
 
   return (
-    <div className="group rounded-[20px] border border-white/[0.08] bg-[#142321] p-4 transition hover:-translate-y-0.5 hover:border-white/[0.16]">
+    <div className="group rounded-[20px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4 transition hover:-translate-y-0.5 hover:border-[rgb(var(--line)/0.16)]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8ca19a]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
             {label}
           </p>
           {metricDefinitions[label] ? (
@@ -935,25 +942,25 @@ function MetricCard({
           className="mt-4 flex w-full items-end justify-between gap-3 text-left"
           aria-label={`Explain ${label}`}
         >
-          <span className="font-mono text-[28px] font-semibold leading-none tracking-[-0.05em] text-white">
+          <span className="font-mono text-[28px] font-semibold leading-none tracking-[-0.05em] text-[rgb(var(--text))]">
             {value}
           </span>
-          <span className="inline-flex items-center gap-1 pb-0.5 text-[8px] font-black uppercase tracking-wider text-[#7f9a91] transition group-hover:text-[rgb(var(--sa-soft))]">
+          <span className="inline-flex items-center gap-1 pb-0.5 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))] transition group-hover:text-[rgb(var(--sa-soft))]">
             Explain <ArrowRight className="h-3 w-3" />
           </span>
         </button>
       ) : (
-        <p className="mt-4 font-mono text-[28px] font-semibold leading-none tracking-[-0.05em] text-white">
+        <p className="mt-4 font-mono text-[28px] font-semibold leading-none tracking-[-0.05em] text-[rgb(var(--text))]">
           {value}
         </p>
       )}
       <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-        <span className="text-[#94aaa3]">{detail}</span>
+        <span className="text-[rgb(var(--text-2))]">{detail}</span>
         <span
           className={
             tone === "warning"
-              ? "font-semibold text-amber-200"
-              : "font-semibold text-[rgb(var(--sa))]"
+              ? "font-semibold text-amber-800 dark:text-amber-200"
+              : "font-semibold text-[rgb(var(--sa-soft))]"
           }
         >
           {delta}
@@ -985,7 +992,7 @@ function CashRunwayChart({ series }: { series: number[] }) {
 
   return (
     <div className="relative pt-3">
-      <div className="absolute left-5 top-3 text-[10px] font-medium text-[#6f8981]">
+      <div className="absolute left-5 top-3 text-[11px] font-medium text-[rgb(var(--text-3))]">
         $2.5M
       </div>
       <svg
@@ -1039,7 +1046,7 @@ function CashRunwayChart({ series }: { series: number[] }) {
           opacity="0.65"
         />
       </svg>
-      <div className="flex justify-between px-5 text-[10px] font-semibold uppercase tracking-wider text-[#6f8981]">
+      <div className="flex justify-between px-5 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-3))]">
         <span>Week 1</span>
         <span>13-week low</span>
         <span>Week 13</span>
@@ -1059,77 +1066,77 @@ function DecisionCard({
 }) {
   const urgencyClass =
     decision.urgency === "Now"
-      ? "bg-rose-400/10 text-rose-200 border-rose-400/20"
-      : "bg-amber-300/10 text-amber-100 border-amber-300/20";
+      ? "bg-rose-400/10 text-rose-700 dark:text-rose-200 border-rose-400/20"
+      : "bg-amber-300/10 text-amber-800 dark:text-amber-100 border-amber-300/20";
 
   return (
-    <article className="rounded-[18px] border border-white/[0.08] bg-[#152321] p-4">
+    <article className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2">
             <span
-              className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-widest ${urgencyClass}`}
+              className={`rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-widest ${urgencyClass}`}
             >
               {decision.urgency}
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6f8981]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-3))]">
               Due {decision.due}
             </span>
           </div>
-          <h3 className="mt-3 text-base font-semibold text-white">
+          <h3 className="mt-3 text-base font-semibold text-[rgb(var(--text))]">
             {decision.title}
           </h3>
-          <p className="mt-2 text-sm leading-6 text-[#a6b9b3]">
+          <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-2))]">
             {decision.context}
           </p>
         </div>
         {status ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#d9f59c]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[rgb(var(--pos))]">
             <Check className="h-3.5 w-3.5" /> {status}
           </span>
         ) : null}
       </div>
-      <div className="mt-4 grid gap-3 rounded-2xl border border-white/[0.06] bg-black/10 p-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 rounded-2xl border border-[rgb(var(--line)/0.06)] bg-black/10 p-3 md:grid-cols-2">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718a82]">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
             Finance recommendation
           </p>
-          <p className="mt-1.5 text-xs leading-5 text-[#d3dfdb]">
+          <p className="mt-1.5 text-xs leading-5 text-[rgb(var(--text))]">
             {decision.recommendation}
           </p>
         </div>
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718a82]">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
             Expected effect
           </p>
-          <p className="mt-1.5 text-xs leading-5 text-[#d9f59c]">
+          <p className="mt-1.5 text-xs leading-5 text-[rgb(var(--pos))]">
             {decision.financialEffect}
           </p>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold text-[#82978f]">
+        <p className="text-[11px] font-semibold text-[rgb(var(--text-3))]">
           Owner · {decision.owner}
         </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => onSetStatus("approved")}
-            className="rounded-xl bg-[rgb(var(--sa))] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
+            className="rounded-xl bg-[rgb(var(--sa))] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
           >
             Approve path
           </button>
           <button
             type="button"
             onClick={() => onSetStatus("delegated")}
-            className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-white transition hover:bg-white/[0.08]"
+            className="rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))] transition hover:bg-[rgb(var(--line)/0.08)]"
           >
             Delegate
           </button>
           <button
             type="button"
             onClick={() => onSetStatus("deferred")}
-            className="rounded-xl border border-white/[0.08] px-3 py-2 text-[10px] font-black uppercase tracking-wider text-[#93a7a0] transition hover:text-white"
+            className="rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-2))] transition hover:text-[rgb(var(--text))]"
           >
             Defer
           </button>
@@ -1153,7 +1160,7 @@ function PortfolioTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] text-left">
         <thead>
-          <tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.18em] text-[#6f8981]">
+          <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
             <th className="px-5 py-3">Engagement</th>
             <th className="px-3 py-3">Delivery</th>
             <th className="px-3 py-3 text-right">Contract</th>
@@ -1166,56 +1173,56 @@ function PortfolioTable({
           {rows.map((project) => (
             <tr
               key={project.name}
-              className="border-b border-white/[0.055] last:border-0 hover:bg-white/[0.025]"
+              className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.025)]"
             >
               <td className="px-5 py-3.5">
                 {onSelectProject ? (
                   <button
                     type="button"
                     onClick={() => onSelectProject(project.name)}
-                    className="text-xs font-semibold text-white hover:text-[rgb(var(--sa-soft))]"
+                    className="text-xs font-semibold text-[rgb(var(--text))] hover:text-[rgb(var(--sa-soft))]"
                   >
                     {project.name}
                   </button>
                 ) : (
-                  <p className="text-xs font-semibold text-white">
+                  <p className="text-xs font-semibold text-[rgb(var(--text))]">
                     {project.name}
                   </p>
                 )}
-                <p className="mt-1 text-[10px] text-[#738a82]">
+                <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                   {project.region} · {project.phase}
                 </p>
               </td>
               <td className="px-3 py-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-20 overflow-hidden rounded-full bg-white/[0.08]">
+                  <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[rgb(var(--line)/0.08)]">
                     <div
                       className="h-full rounded-full bg-[#68b9aa]"
                       style={{ width: `${project.completion}%` }}
                     />
                   </div>
-                  <span className="font-mono text-[10px] text-[#9fb2ac]">
+                  <span className="font-mono text-[11px] text-[rgb(var(--text-2))]">
                     {project.completion}%
                   </span>
                 </div>
               </td>
-              <td className="px-3 py-3.5 text-right font-mono text-xs text-[#d8e2df]">
+              <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">
                 {money(project.contractValue)}
               </td>
-              <td className="px-3 py-3.5 text-right font-mono text-xs text-[#a4b8b1]">
+              <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text-2))]">
                 {money(project.forecastCost)}
               </td>
-              <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-[#d9f59c]">
+              <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-[rgb(var(--pos))]">
                 {project.contribution.toFixed(1)}%
               </td>
               <td className="px-5 py-3.5">
                 <span
-                  className={`inline-flex rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-wider ${statusClasses(project.status)}`}
+                  className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-wider ${statusClasses(project.status)}`}
                 >
                   {project.status}
                 </span>
                 {!compact ? (
-                  <p className="mt-1.5 max-w-[240px] text-[10px] leading-4 text-[#879c95]">
+                  <p className="mt-1.5 max-w-[240px] text-[11px] leading-4 text-[rgb(var(--text-3))]">
                     {project.signal}
                   </p>
                 ) : null}
@@ -1268,22 +1275,22 @@ function ImbaOsSectionView({
               <Icon className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#718981]">
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--text-3))]">
                 IMBA-OS · {section.subtitle}
               </p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-white">
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">
                 {section.label}
               </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#a5b7b1]">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-2))]">
                 {section.thesis}
               </p>
             </div>
           </div>
           <div className="rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.05] px-4 py-3 text-right">
-            <p className="text-[9px] font-black uppercase tracking-wider text-[#6f8981]">
+            <p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
               Build posture
             </p>
-            <p className="mt-1 text-xs font-semibold text-[#b9d7d0]">
+            <p className="mt-1 text-xs font-semibold text-[rgb(var(--text))]">
               Integrate first · replace only with evidence
             </p>
           </div>
@@ -1294,15 +1301,15 @@ function ImbaOsSectionView({
         {section.outcomes.map((outcome) => (
           <div
             key={outcome.label}
-            className="rounded-2xl border border-white/[0.08] bg-[#142321] p-4"
+            className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"
           >
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#6f8981]">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
               {outcome.label}
             </p>
-            <p className="mt-3 font-mono text-2xl font-semibold tracking-tight text-white">
+            <p className="mt-3 font-mono text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">
               {outcome.value}
             </p>
-            <p className="mt-1 text-[10px] text-[#80958e]">{outcome.note}</p>
+            <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{outcome.note}</p>
           </div>
         ))}
       </div>
@@ -1313,7 +1320,7 @@ function ImbaOsSectionView({
             eyebrow="Operating modules"
             title={`What ${section.label} becomes inside IMBA-OS`}
             action={
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-[#607870]">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
                 Prototype architecture
               </span>
             }
@@ -1324,27 +1331,27 @@ function ImbaOsSectionView({
                 module.stage === "Demonstrated"
                   ? "border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]"
                   : module.stage === "Designed"
-                    ? "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[#9fd6cc]"
-                    : "border-white/[0.09] bg-white/[0.04] text-[#91a49e]";
+                    ? "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[rgb(var(--info))]"
+                    : "border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.04)] text-[rgb(var(--text-2))]";
               return (
                 <article
                   key={module.name}
-                  className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
+                  className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">
+                    <h3 className="text-sm font-semibold text-[rgb(var(--text))]">
                       {module.name}
                     </h3>
                     <span
-                      className={`shrink-0 rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${stageClass}`}
+                      className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-wider ${stageClass}`}
                     >
                       {module.stage}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-[#8da19a]">
+                  <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">
                     {module.purpose}
                   </p>
-                  <div className="mt-4 flex items-center gap-2 border-t border-white/[0.06] pt-3 text-[9px] font-semibold text-[#617971]">
+                  <div className="mt-4 flex items-center gap-2 border-t border-[rgb(var(--line)/0.06)] pt-3 text-[11px] font-semibold text-[rgb(var(--text-4))]">
                     <Database className="h-3.5 w-3.5" /> {module.source}
                   </div>
                 </article>
@@ -1362,19 +1369,19 @@ function ImbaOsSectionView({
             {section.priorities.map((priority, index) => (
               <div
                 key={priority}
-                className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3"
+                className="flex items-start gap-3 rounded-2xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] p-3"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[9px] font-bold text-[rgb(var(--sa-soft))]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[11px] font-bold text-[rgb(var(--sa-soft))]">
                   0{index + 1}
                 </span>
-                <p className="pt-1 text-xs leading-5 text-[#afc0bb]">
+                <p className="pt-1 text-xs leading-5 text-[rgb(var(--text-2))]">
                   {priority}
                 </p>
               </div>
             ))}
           </div>
           {linkedView[section.id] ? (
-            <div className="border-t border-white/[0.07] p-4">
+            <div className="border-t border-[rgb(var(--line)/0.07)] p-4">
               <button
                 type="button"
                 onClick={() => onNavigate(linkedView[section.id]!)}
@@ -1424,18 +1431,18 @@ function ImbaOsSectionView({
             return (
               <div
                 key={step.title}
-                className="relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
+                className="relative rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"
               >
                 <div className="flex items-center justify-between">
-                  <StepIcon className="h-4 w-4 text-[rgb(var(--sa))]" />
-                  <span className="font-mono text-[8px] text-[#526a63]">
+                  <StepIcon className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
+                  <span className="font-mono text-[11px] text-[rgb(var(--text-4))]">
                     0{index + 1}
                   </span>
                 </div>
-                <h3 className="mt-4 text-xs font-semibold text-white">
+                <h3 className="mt-4 text-xs font-semibold text-[rgb(var(--text))]">
                   {step.title}
                 </h3>
-                <p className="mt-2 text-[10px] leading-4 text-[#7f958e]">
+                <p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">
                   {step.text}
                 </p>
               </div>
@@ -1457,13 +1464,13 @@ function ImbaRoadmapView({
       <section className="rounded-[24px] border border-[#68b9aa]/20 bg-[linear-gradient(120deg,rgba(104,185,170,.1),rgba(183,227,91,.035))] p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#77a69b]">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--text-3))]">
               Proposal translated into product
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">
               The first-year IMBA-OS roadmap
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#9fb1ab]">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-2))]">
               The software grows in the same order as the finance function:
               understand the current state, stabilize the close, make projects
               trustworthy, then add foresight and scale.
@@ -1486,23 +1493,23 @@ function ImbaRoadmapView({
           >
             <div className="relative z-10 flex items-start sm:justify-center">
               <span
-                className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-wider ${index < 2 ? "border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]" : "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[#9fd6cc]"}`}
+                className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-2 text-[11px] font-black uppercase tracking-wider ${index < 2 ? "border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]" : "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[rgb(var(--info))]"}`}
               >
                 {step.milestone}
               </span>
             </div>
-            <div className="rounded-[20px] border border-white/[0.08] bg-[#111b1a]/90 p-5">
-              <h3 className="text-base font-semibold text-white">
+            <div className="rounded-[20px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] p-5">
+              <h3 className="text-base font-semibold text-[rgb(var(--text))]">
                 {step.title}
               </h3>
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 {step.deliverables.map((item) => (
                   <div
                     key={item}
-                    className="flex items-start gap-2 rounded-xl bg-white/[0.025] px-3 py-2.5"
+                    className="flex items-start gap-2 rounded-xl bg-[rgb(var(--line)/0.025)] px-3 py-2.5"
                   >
-                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--sa))]" />
-                    <span className="text-[11px] leading-5 text-[#99aca6]">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--sa-soft))]" />
+                    <span className="text-[11px] leading-5 text-[rgb(var(--text-2))]">
                       {item}
                     </span>
                   </div>
@@ -1538,6 +1545,18 @@ export function ImbaCeoCockpit() {
     useState<ImbaMetricSelection | null>(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [intelligenceHydrated, setIntelligenceHydrated] = useState(false);
+  // Theme defaults to light (set for the Monday demo); a no-FOUC script in the
+  // root layout applies the stored choice before paint, and this state mirrors
+  // it for the toggle UI and for picking the accent's light/dark eyebrow tone.
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  useEffect(() => {
+    const stored = window.localStorage.getItem("imba-theme");
+    setTheme(stored === "dark" ? "dark" : "light");
+  }, []);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem("imba-theme", theme);
+  }, [theme]);
   const scenario = imbaScenarios[scenarioKey];
   const currentView =
     allNavItems.find((item) => item.id === view) ?? allNavItems[0];
@@ -1545,7 +1564,8 @@ export function ImbaCeoCockpit() {
   const accent = accentForView(view);
   const accentStyle = {
     '--sa': accent.sa,
-    '--sa-soft': accent.soft,
+    // Eyebrow/label accent must stay legible on the active theme's surface.
+    '--sa-soft': theme === 'dark' ? accent.soft : accent.softLight,
     '--sa-ink': accent.ink,
   } as React.CSSProperties;
   const activeSectionLabel = sectionForView(view);
@@ -1762,19 +1782,19 @@ export function ImbaCeoCockpit() {
     setSelectedMetric({ label, value, detail });
 
   return (
-    <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#07100f] font-sans text-[#e8efed]">
+    <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[rgb(var(--panel))] font-sans text-[rgb(var(--text))]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_2%,rgba(105,185,170,0.12),transparent_30%),radial-gradient(circle_at_15%_100%,rgba(183,227,91,0.08),transparent_28%)]" />
 
       <aside
-        className={`${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} absolute inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-white/[0.08] bg-[#0a1513] transition-transform duration-300 lg:relative lg:translate-x-0`}
+        className={`${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} absolute inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] transition-transform duration-300 lg:relative lg:translate-x-0`}
       >
-        <div className="flex h-[86px] items-center justify-between border-b border-white/[0.08] px-5">
+        <div className="flex h-[86px] items-center justify-between border-b border-[rgb(var(--line)/0.08)] px-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--sa))] text-[#0b2118] shadow-[0_0_30px_rgba(183,227,91,0.16)]">
               <Mountain className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-tight text-white">
+              <h1 className="text-sm font-semibold tracking-tight text-[rgb(var(--text))]">
                 IMBA-OS
               </h1>
             </div>
@@ -1782,7 +1802,7 @@ export function ImbaCeoCockpit() {
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}
-            className="rounded-lg p-2 text-[#8ca19a] hover:bg-white/[0.06] lg:hidden"
+            className="rounded-lg p-2 text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.06)] lg:hidden"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
@@ -1791,10 +1811,10 @@ export function ImbaCeoCockpit() {
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="flex items-center justify-between px-2">
-            <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[#526a63]">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--text-4))]">
               Nonprofit operating system
             </p>
-            <span className="rounded-full border border-[#68b9aa]/15 bg-[#68b9aa]/[0.06] px-2 py-1 text-[8px] font-black uppercase tracking-wider text-[#7fa69d]">
+            <span className="rounded-full border border-[#68b9aa]/15 bg-[#68b9aa]/[0.06] px-2 py-1 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
               {visibleNavSections.length} sections
             </span>
           </div>
@@ -1810,7 +1830,7 @@ export function ImbaCeoCockpit() {
               return (
                 <div
                   key={section.label}
-                  className={`overflow-hidden rounded-2xl border bg-white/[0.018] ${section.color}`}
+                  className={`overflow-hidden rounded-2xl border bg-[rgb(var(--line)/0.018)] ${section.color}`}
                 >
                   <button
                     type="button"
@@ -1820,10 +1840,10 @@ export function ImbaCeoCockpit() {
                         [section.label]: !isExpanded,
                       }))
                     }
-                    className={`flex w-full items-center justify-between px-3.5 py-3 text-left transition hover:bg-white/[0.035] ${hasActiveItem ? section.active : ""}`}
+                    className={`flex w-full items-center justify-between px-3.5 py-3 text-left transition hover:bg-[rgb(var(--line)/0.035)] ${hasActiveItem ? section.active : ""}`}
                     aria-expanded={isExpanded}
                   >
-                    <span className="text-[10px] font-black uppercase tracking-[0.13em]">
+                    <span className="text-[11px] font-black uppercase tracking-[0.13em]">
                       {section.label}
                     </span>
                     <ChevronRight
@@ -1840,21 +1860,21 @@ export function ImbaCeoCockpit() {
                             key={item.id}
                             type="button"
                             onClick={() => setCurrentView(item.id)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${active ? "bg-white/[0.08] text-white" : "text-[#8ea29c] hover:bg-white/[0.04] hover:text-white"}`}
+                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${active ? "bg-[rgb(var(--line)/0.08)] text-[rgb(var(--text))]" : "text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.04)] hover:text-[rgb(var(--text))]"}`}
                           >
                             <Icon
-                              className={`h-3.5 w-3.5 shrink-0 ${active ? "text-[rgb(var(--sa))]" : "text-current/60"}`}
+                              className={`h-3.5 w-3.5 shrink-0 ${active ? "text-[rgb(var(--sa-soft))]" : "text-current/60"}`}
                             />
                             <span className="min-w-0 flex-1">
-                              <span className="block text-[10px] font-semibold">
+                              <span className="block text-[11px] font-semibold">
                                 {item.label}
                               </span>
-                              <span className="mt-0.5 block truncate text-[8px] text-[#667f77]">
+                              <span className="mt-0.5 block truncate text-[11px] text-[rgb(var(--text-4))]">
                                 {item.description}
                               </span>
                             </span>
                             {active ? (
-                              <ArrowRight className="h-3 w-3 text-[rgb(var(--sa))]" />
+                              <ArrowRight className="h-3 w-3 text-[rgb(var(--sa-soft))]" />
                             ) : null}
                           </button>
                         );
@@ -1867,20 +1887,20 @@ export function ImbaCeoCockpit() {
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-white/[0.07] p-3">
-          <div className="rounded-2xl border border-white/[0.08] bg-[#101e1b] p-3">
-            <div className="flex items-center gap-2 text-[rgb(var(--sa))]">
+        <div className="shrink-0 border-t border-[rgb(var(--line)/0.07)] p-3">
+          <div className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card))] p-3">
+            <div className="flex items-center gap-2 text-[rgb(var(--sa-soft))]">
               <ShieldCheck className="h-4 w-4" />
-              <span className="text-[9px] font-black uppercase tracking-[0.18em]">
+              <span className="text-[11px] font-black uppercase tracking-[0.18em]">
                 Pitch-safe data
               </span>
             </div>
-            <p className="mt-2 text-[9px] leading-4 text-[#859b94]">
+            <p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">
               Public baseline + illustrative operating model. No claim of access
               to IMBA systems.
             </p>
           </div>
-          <div className="mt-3 flex items-center justify-between px-2 text-[8px] font-semibold uppercase tracking-wider text-[#526a63]">
+          <div className="mt-3 flex items-center justify-between px-2 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
             <span>IMBA-OS Prototype</span>
             <span>Technology × Mission</span>
           </div>
@@ -1897,19 +1917,19 @@ export function ImbaCeoCockpit() {
       ) : null}
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden" style={accentStyle}>
-        <header className="flex h-[86px] shrink-0 items-center justify-between border-b border-white/[0.08] bg-[#0a1513]/85 px-4 backdrop-blur-xl sm:px-6 xl:px-8">
+        <header className="relative z-30 flex h-[86px] shrink-0 items-center justify-between border-b border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel)/85%)] px-4 backdrop-blur-xl sm:px-6 xl:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              className="rounded-xl border border-white/[0.08] p-2 text-[#9aafa8] hover:bg-white/[0.05] lg:hidden"
+              className="rounded-xl border border-[rgb(var(--line)/0.08)] p-2 text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)] lg:hidden"
               aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="truncate text-lg font-semibold tracking-tight text-white">
+                <p className="truncate text-lg font-semibold tracking-tight text-[rgb(var(--text))]">
                   {currentView.label}
                 </p>
                 {activeSectionInfo ? (
@@ -1919,11 +1939,11 @@ export function ImbaCeoCockpit() {
                     note={activeSectionInfo.note}
                   />
                 ) : null}
-                <span className="hidden rounded-full border border-[#68b9aa]/20 bg-[#68b9aa]/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-[#9fd6cc] sm:inline-flex">
+                <span className="hidden rounded-full border border-[#68b9aa]/20 bg-[#68b9aa]/10 px-2 py-1 text-[11px] font-black uppercase tracking-widest text-[rgb(var(--info))] sm:inline-flex">
                   Illustrative
                 </span>
               </div>
-              <p className="mt-0.5 truncate text-[10px] font-medium text-[#718981]">
+              <p className="mt-0.5 truncate text-[11px] font-medium text-[rgb(var(--text-3))]">
                 What changed · why it matters · what is forecast · what Kent
                 decides
               </p>
@@ -1934,33 +1954,42 @@ export function ImbaCeoCockpit() {
             <button
               type="button"
               onClick={() => setCurrentView("integration-control")}
-              className="hidden items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 xl:flex"
+              className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 xl:flex"
               title="Open integration control plane"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-300" />
-              <span className="text-[9px] font-black uppercase text-emerald-100">
+              <span className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-100">
                 QBO {connectors.qbo.mode}
               </span>
-              <span className="h-3 w-px bg-white/[0.12]" />
+              <span className="h-3 w-px bg-[rgb(var(--line)/0.12)]" />
               <span
                 className={`h-2 w-2 rounded-full ${connectors.adp.syncHealth === "healthy" ? "bg-cyan-300" : "bg-amber-300"}`}
               />
-              <span className="text-[9px] font-black uppercase text-cyan-100">
+              <span className="text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">
                 ADP {connectors.adp.mode}
               </span>
               {syncJobs.some((job) => job.status === "error") ? (
-                <span className="rounded-full bg-rose-300/10 px-2 py-1 text-[8px] font-black text-rose-100">
+                <span className="rounded-full bg-rose-300/10 px-2 py-1 text-[11px] font-black text-rose-700 dark:text-rose-100">
                   {syncJobs.filter((job) => job.status === "error").length}{" "}
                   exception
                 </span>
               ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.03)] text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.07)] hover:text-[rgb(var(--text))]"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <div className="relative hidden md:block">
               <select
                 value={role}
                 onChange={(event) => changeRole(event.target.value as ImbaRoleKey)}
                 aria-label="Select role"
-                className="appearance-none rounded-xl border border-white/[0.1] bg-[#14201e] py-2.5 pl-3 pr-9 text-[10px] font-bold text-white outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
+                className="appearance-none rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] py-2.5 pl-3 pr-9 text-[11px] font-bold text-[rgb(var(--text))] outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
               >
                 {Object.keys(imbaRoleProfiles).map((key) => (
                   <option key={key} value={key}>
@@ -1968,15 +1997,15 @@ export function ImbaCeoCockpit() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#789087]" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
             </div>
-            <div className="hidden items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 md:flex">
+            <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 md:flex">
               {isScenarioAware ? (
-                <CalendarDays className="h-3.5 w-3.5 text-[#7fa39a]" />
+                <CalendarDays className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
               ) : (
-                <BookOpen className="h-3.5 w-3.5 text-[#7fa39a]" />
+                <BookOpen className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
               )}
-              <span className="text-[10px] font-semibold text-[#b9c7c3]">
+              <span className="text-[11px] font-semibold text-[rgb(var(--text))]">
                 {isScenarioAware
                   ? "Rolling 12 + 13 weeks"
                   : "Aligned to leadership proposal"}
@@ -1999,7 +2028,7 @@ export function ImbaCeoCockpit() {
                       setScenarioKey(event.target.value as ImbaScenarioKey)
                     }
                     aria-label="Select financial scenario"
-                    className="appearance-none rounded-xl border border-white/[0.1] bg-[#14201e] py-2.5 pl-3 pr-9 text-[10px] font-bold text-white outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
+                    className="appearance-none rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] py-2.5 pl-3 pr-9 text-[11px] font-bold text-[rgb(var(--text))] outline-none ring-[rgb(var(--sa)/0.40)] focus:ring-2"
                   >
                     {Object.entries(imbaScenarios).map(([key, item]) => (
                       <option key={key} value={key}>
@@ -2007,7 +2036,7 @@ export function ImbaCeoCockpit() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#789087]" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
                 </div>
                 <ImbaInfoTooltip
                   label="Scenario"
@@ -2018,7 +2047,7 @@ export function ImbaCeoCockpit() {
               </div>
             ) : null}
             <div
-              className="hidden h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[10px] font-black text-[rgb(var(--sa-soft))] sm:flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[11px] font-black text-[rgb(var(--sa-soft))] sm:flex"
               title={imbaRoleProfiles[role].label}
             >
               {imbaRoleProfiles[role].initials}
@@ -2026,7 +2055,7 @@ export function ImbaCeoCockpit() {
           </div>
         </header>
 
-        <div className="shrink-0 border-b border-white/[0.07] bg-[#0a1513]/85 px-4 py-3 sm:px-6 xl:px-8">
+        <div className="relative z-20 shrink-0 border-b border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel)/85%)] px-4 py-3 sm:px-6 xl:px-8">
           <div className="mx-auto max-w-[1580px]">
             <ImbaIntelligenceBar
               role={role}
@@ -2066,12 +2095,12 @@ export function ImbaCeoCockpit() {
             {isScenarioAware ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa))]" />
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa-soft))]" />
                   <div>
-                    <p className="text-xs font-semibold text-[#dbe8e4]">
+                    <p className="text-xs font-semibold text-[rgb(var(--text))]">
                       {scenario.label}: {scenario.description}
                     </p>
-                    <p className="mt-1 text-[10px] text-[#789087]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                       Scenario values are demo inputs. Public baselines below
                       are verified from the 2024 Form 990 and 2025 annual
                       report.
@@ -2081,7 +2110,7 @@ export function ImbaCeoCockpit() {
                 <button
                   type="button"
                   onClick={() => setCurrentView("decisions")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))] transition hover:bg-[rgb(var(--line)/0.08)]"
                 >
                   {
                     imbaDecisions.filter(
@@ -2089,19 +2118,19 @@ export function ImbaCeoCockpit() {
                     ).length
                   }{" "}
                   open decisions{" "}
-                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />
+                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />
                 </button>
               </div>
             ) : activeOsSection ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.055] px-4 py-3">
                 <div className="flex items-start gap-3">
-                  <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa))]" />
+                  <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa-soft))]" />
                   <div>
-                    <p className="text-xs font-semibold text-[#dbe8e4]">
+                    <p className="text-xs font-semibold text-[rgb(var(--text))]">
                       {activeOsSection.label} is one layer of a shared nonprofit
                       operating system.
                     </p>
-                    <p className="mt-1 text-[10px] text-[#789087]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                       {activeOsSection.modules.length} tailored modules ·
                       existing systems preserved where they work · finance
                       dimensions shared across the organization.
@@ -2111,10 +2140,10 @@ export function ImbaCeoCockpit() {
                 <button
                   type="button"
                   onClick={() => setCurrentView("roadmap")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-[10px] font-bold text-white hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.08)]"
                 >
                   See implementation sequence{" "}
-                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa))]" />
+                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />
                 </button>
               </div>
             ) : null}
@@ -2223,7 +2252,7 @@ export function ImbaCeoCockpit() {
                         <button
                           type="button"
                           onClick={() => setCurrentView("liquidity")}
-                          className="text-[10px] font-bold text-[rgb(var(--sa))] hover:text-[#d9f59c]"
+                          className="text-[11px] font-bold text-[rgb(var(--sa-soft))] hover:text-[rgb(var(--pos))]"
                         >
                           Open liquidity →
                         </button>
@@ -2232,18 +2261,18 @@ export function ImbaCeoCockpit() {
                     <div className="px-3 pb-4 pt-1 sm:px-5">
                       <div className="flex items-end justify-between gap-4 px-2 pt-3">
                         <div>
-                          <p className="font-mono text-2xl font-semibold tracking-tight text-white">
+                          <p className="font-mono text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">
                             {money(scenario.yearEndCash)}
                           </p>
-                          <p className="mt-1 text-[10px] text-[#789087]">
+                          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                             Illustrative year-end gross cash
                           </p>
                         </div>
                         <div className="rounded-xl border border-amber-300/15 bg-amber-300/[0.07] px-3 py-2 text-right">
-                          <p className="text-[9px] font-black uppercase tracking-wider text-amber-200">
+                          <p className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-200">
                             Lowest point
                           </p>
-                          <p className="mt-1 font-mono text-sm font-semibold text-white">
+                          <p className="mt-1 font-mono text-sm font-semibold text-[rgb(var(--text))]">
                             {money(
                               Math.min(...scenario.cashSeries) * 1_000_000,
                             )}
@@ -2259,7 +2288,7 @@ export function ImbaCeoCockpit() {
                       eyebrow="Kent's desk"
                       title="What needs a decision"
                       action={
-                        <span className="rounded-full bg-rose-400/10 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-rose-200">
+                        <span className="rounded-full bg-rose-400/10 px-2 py-1 text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-200">
                           2 now
                         </span>
                       }
@@ -2270,10 +2299,10 @@ export function ImbaCeoCockpit() {
                           key={decision.id}
                           type="button"
                           onClick={() => setCurrentView("decisions")}
-                          className="group flex w-full items-start gap-3 rounded-2xl p-3 text-left transition hover:bg-white/[0.04]"
+                          className="group flex w-full items-start gap-3 rounded-2xl p-3 text-left transition hover:bg-[rgb(var(--line)/0.04)]"
                         >
                           <div
-                            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${index === 1 ? "bg-amber-300/10 text-amber-200" : "bg-rose-400/10 text-rose-200"}`}
+                            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${index === 1 ? "bg-amber-300/10 text-amber-800 dark:text-amber-200" : "bg-rose-400/10 text-rose-700 dark:text-rose-200"}`}
                           >
                             {index === 1 ? (
                               <Clock3 className="h-3.5 w-3.5" />
@@ -2282,14 +2311,14 @@ export function ImbaCeoCockpit() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold leading-5 text-[#e4ece9]">
+                            <p className="text-xs font-semibold leading-5 text-[rgb(var(--text))]">
                               {decision.title}
                             </p>
-                            <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#718981]">
+                            <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">
                               {decision.financialEffect}
                             </p>
                           </div>
-                          <ArrowRight className="mt-1 h-3.5 w-3.5 text-[#526a63] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--sa))]" />
+                          <ArrowRight className="mt-1 h-3.5 w-3.5 text-[rgb(var(--text-4))] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--sa-soft))]" />
                         </button>
                       ))}
                     </div>
@@ -2304,7 +2333,7 @@ export function ImbaCeoCockpit() {
                       <button
                         type="button"
                         onClick={() => setCurrentView("portfolio")}
-                        className="text-[10px] font-bold text-[rgb(var(--sa))] hover:text-[#d9f59c]"
+                        className="text-[11px] font-bold text-[rgb(var(--sa-soft))] hover:text-[rgb(var(--pos))]"
                       >
                         All engagements →
                       </button>
@@ -2323,18 +2352,18 @@ export function ImbaCeoCockpit() {
                   {publicBaseline.map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-2xl border border-white/[0.07] bg-[#0d1816] px-4 py-3.5"
+                      className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel))] px-4 py-3.5"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#637a73]">
+                        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-4))]">
                           {item.label}
                         </p>
-                        <FileText className="h-3.5 w-3.5 text-[#526a63]" />
+                        <FileText className="h-3.5 w-3.5 text-[rgb(var(--text-4))]" />
                       </div>
-                      <p className="mt-2 font-mono text-lg font-semibold text-[#dce7e3]">
+                      <p className="mt-2 font-mono text-lg font-semibold text-[rgb(var(--text))]">
                         {item.value}
                       </p>
-                      <p className="mt-1 text-[10px] text-[#758b84]">
+                      <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                         {item.detail}
                       </p>
                     </div>
@@ -2444,7 +2473,7 @@ export function ImbaCeoCockpit() {
                     eyebrow="Estimate at completion"
                     title="Active engagement economics"
                     action={
-                      <span className="text-[10px] text-[#728880]">
+                      <span className="text-[11px] text-[rgb(var(--text-3))]">
                         Labor · equipment · subcontractors · overhead
                       </span>
                     }
@@ -2491,12 +2520,12 @@ export function ImbaCeoCockpit() {
                       ].map((row) => (
                         <div key={row.label}>
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-[#a4b6b0]">{row.label}</span>
-                            <span className="font-mono font-semibold text-white">
+                            <span className="text-[rgb(var(--text-2))]">{row.label}</span>
+                            <span className="font-mono font-semibold text-[rgb(var(--text))]">
                               {money(row.value)}
                             </span>
                           </div>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[rgb(var(--line)/0.06)]">
                             <div
                               className={`h-full rounded-full ${row.tone}`}
                               style={{ width: `${row.width}%` }}
@@ -2522,12 +2551,12 @@ export function ImbaCeoCockpit() {
                       ].map((control, index) => (
                         <div
                           key={control}
-                          className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
+                          className="flex items-center gap-3 rounded-2xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.025)] p-3"
                         >
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[10px] font-bold text-[#d7f49a]">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[11px] font-bold text-[rgb(var(--pos))]">
                             0{index + 1}
                           </span>
-                          <span className="text-xs font-medium text-[#c8d5d1]">
+                          <span className="text-xs font-medium text-[rgb(var(--text))]">
                             {control}
                           </span>
                         </div>
@@ -2623,17 +2652,17 @@ export function ImbaCeoCockpit() {
                         return (
                           <div key={item.label}>
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#9cafaa]">
+                              <span className="text-[rgb(var(--text-2))]">
                                 {item.label}
                               </span>
                               <span
-                                className={`font-mono font-semibold ${item.value < 0 ? "text-rose-200" : "text-white"}`}
+                                className={`font-mono font-semibold ${item.value < 0 ? "text-rose-700 dark:text-rose-200" : "text-[rgb(var(--text))]"}`}
                               >
                                 {item.value < 0 ? "−" : ""}
                                 {money(Math.abs(item.value))}
                               </span>
                             </div>
-                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[rgb(var(--line)/0.06)]">
                               <div
                                 className={`h-full rounded-full ${item.value < 0 ? "bg-rose-300/70" : "bg-[#68b9aa]"}`}
                                 style={{ width: `${width}%` }}
@@ -2644,14 +2673,14 @@ export function ImbaCeoCockpit() {
                       })}
                       <div className="mt-4 flex items-center justify-between rounded-2xl border border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa))]/[0.07] p-4">
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-wider text-[#9fbd65]">
+                          <p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--pos))]">
                             Deployable
                           </p>
-                          <p className="mt-1 text-xs text-[#a9b9b4]">
+                          <p className="mt-1 text-xs text-[rgb(var(--text-2))]">
                             Base scenario
                           </p>
                         </div>
-                        <p className="font-mono text-2xl font-semibold text-[#def6a7]">
+                        <p className="font-mono text-2xl font-semibold text-[rgb(var(--pos))]">
                           {money(scenario.deployableCash)}
                         </p>
                       </div>
@@ -2688,18 +2717,18 @@ export function ImbaCeoCockpit() {
                       return (
                         <div
                           key={action.title}
-                          className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
+                          className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"
                         >
                           <div className="flex items-center justify-between">
-                            <Icon className="h-4 w-4 text-[rgb(var(--sa))]" />
-                            <span className="font-mono text-sm font-semibold text-white">
+                            <Icon className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
+                            <span className="font-mono text-sm font-semibold text-[rgb(var(--text))]">
                               {action.value}
                             </span>
                           </div>
-                          <h3 className="mt-4 text-sm font-semibold text-white">
+                          <h3 className="mt-4 text-sm font-semibold text-[rgb(var(--text))]">
                             {action.title}
                           </h3>
-                          <p className="mt-2 text-xs leading-5 text-[#82978f]">
+                          <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">
                             {action.text}
                           </p>
                         </div>
@@ -2780,7 +2809,7 @@ export function ImbaCeoCockpit() {
                       eyebrow="People against work"
                       title="Capacity by delivery discipline"
                       action={
-                        <div className="flex gap-3 text-[9px] font-semibold text-[#80958e]">
+                        <div className="flex gap-3 text-[11px] font-semibold text-[rgb(var(--text-3))]">
                           <span className="flex items-center gap-1.5">
                             <i className="h-2 w-2 rounded-full bg-[#68b9aa]" />
                             Base
@@ -2799,21 +2828,21 @@ export function ImbaCeoCockpit() {
                           className="grid items-center gap-3 sm:grid-cols-[150px_1fr_72px]"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-white">
+                            <p className="text-xs font-semibold text-[rgb(var(--text))]">
                               {row.discipline}
                             </p>
-                            <p className="mt-1 text-[9px] text-[#70877f]">
+                            <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
                               Available {row.available}
                             </p>
                           </div>
                           <div className="space-y-1.5">
-                            <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="h-2.5 overflow-hidden rounded-full bg-[rgb(var(--line)/0.06)]">
                               <div
                                 className="h-full rounded-full bg-[#68b9aa]"
                                 style={{ width: `${Math.min(row.base, 100)}%` }}
                               />
                             </div>
-                            <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="h-2.5 overflow-hidden rounded-full bg-[rgb(var(--line)/0.06)]">
                               <div
                                 className={`h-full rounded-full ${row.expansion > 100 ? "bg-rose-300" : "bg-[rgb(var(--sa))]"}`}
                                 style={{
@@ -2823,12 +2852,12 @@ export function ImbaCeoCockpit() {
                             </div>
                           </div>
                           <div className="text-right font-mono text-xs">
-                            <p className="text-[#9fd6cc]">{row.base}%</p>
+                            <p className="text-[rgb(var(--info))]">{row.base}%</p>
                             <p
                               className={
                                 row.expansion > 100
-                                  ? "mt-1 text-rose-200"
-                                  : "mt-1 text-[#d9f59c]"
+                                  ? "mt-1 text-rose-700 dark:text-rose-200"
+                                  : "mt-1 text-[rgb(var(--pos))]"
                               }
                             >
                               {row.expansion}%
@@ -2845,13 +2874,13 @@ export function ImbaCeoCockpit() {
                     />
                     <div className="p-5">
                       <div className="rounded-2xl border border-[rgb(var(--sa)/0.18)] bg-[rgb(var(--sa))]/[0.06] p-4">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-[#9cb85f]">
+                        <p className="text-[11px] font-black uppercase tracking-widest text-[rgb(var(--pos))]">
                           Trigger
                         </p>
-                        <p className="mt-2 font-mono text-2xl font-semibold text-white">
+                        <p className="mt-2 font-mono text-2xl font-semibold text-[rgb(var(--text))]">
                           $750K
                         </p>
-                        <p className="mt-1 text-xs leading-5 text-[#8fa39d]">
+                        <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-2))]">
                           Executed design backlog before opening a permanent
                           role.
                         </p>
@@ -2865,7 +2894,7 @@ export function ImbaCeoCockpit() {
                         ].map((item, index) => (
                           <div key={item} className="flex items-center gap-3">
                             <span
-                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold ${index < 2 ? "bg-[#68b9aa]/15 text-[#9fd6cc]" : "bg-white/[0.05] text-[#677e77]"}`}
+                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${index < 2 ? "bg-[#68b9aa]/15 text-[rgb(var(--info))]" : "bg-[rgb(var(--line)/0.05)] text-[rgb(var(--text-4))]"}`}
                             >
                               {index < 2 ? (
                                 <Check className="h-3 w-3" />
@@ -2873,7 +2902,7 @@ export function ImbaCeoCockpit() {
                                 index + 1
                               )}
                             </span>
-                            <span className="text-xs text-[#a6b6b1]">
+                            <span className="text-xs text-[rgb(var(--text-2))]">
                               {item}
                             </span>
                           </div>
@@ -2914,18 +2943,18 @@ export function ImbaCeoCockpit() {
                       return (
                         <div
                           key={step.title}
-                          className="relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
+                          className="relative rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"
                         >
                           <div className="flex items-center justify-between">
-                            <Icon className="h-4 w-4 text-[rgb(var(--sa))]" />
-                            <span className="font-mono text-[9px] text-[#526a63]">
+                            <Icon className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
+                            <span className="font-mono text-[11px] text-[rgb(var(--text-4))]">
                               0{index + 1}
                             </span>
                           </div>
-                          <p className="mt-4 text-sm font-semibold text-white">
+                          <p className="mt-4 text-sm font-semibold text-[rgb(var(--text))]">
                             {step.title}
                           </p>
-                          <p className="mt-1.5 text-[10px] leading-4 text-[#7f958e]">
+                          <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">
                             {step.detail}
                           </p>
                         </div>
@@ -2940,35 +2969,35 @@ export function ImbaCeoCockpit() {
               <>
                 <div className="grid gap-3 lg:grid-cols-3">
                   <div className="rounded-2xl border border-rose-400/15 bg-rose-400/[0.055] p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-rose-200">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-200">
                       Decide now
                     </p>
-                    <p className="mt-2 font-mono text-2xl font-semibold text-white">
+                    <p className="mt-2 font-mono text-2xl font-semibold text-[rgb(var(--text))]">
                       2
                     </p>
-                    <p className="mt-1 text-[10px] text-[#8fa39d]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">
                       Cash or schedule exposed
                     </p>
                   </div>
                   <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-200">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-amber-800 dark:text-amber-200">
                       This month
                     </p>
-                    <p className="mt-2 font-mono text-2xl font-semibold text-white">
+                    <p className="mt-2 font-mono text-2xl font-semibold text-[rgb(var(--text))]">
                       1
                     </p>
-                    <p className="mt-1 text-[10px] text-[#8fa39d]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">
                       Capacity threshold approaching
                     </p>
                   </div>
                   <div className="rounded-2xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.05] p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[#d1ef8b]">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-[rgb(var(--pos))]">
                       Potential protected cash
                     </p>
-                    <p className="mt-2 font-mono text-2xl font-semibold text-white">
+                    <p className="mt-2 font-mono text-2xl font-semibold text-[rgb(var(--text))]">
                       $395K
                     </p>
-                    <p className="mt-1 text-[10px] text-[#8fa39d]">
+                    <p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">
                       If recommendations are adopted
                     </p>
                   </div>
@@ -2978,7 +3007,7 @@ export function ImbaCeoCockpit() {
                     eyebrow="Guardrail, not gatekeeper"
                     title="Executive decision queue"
                     action={
-                      <span className="text-[10px] text-[#6f8981]">
+                      <span className="text-[11px] text-[rgb(var(--text-3))]">
                         Every decision retains rationale and owner
                       </span>
                     }
@@ -3007,7 +3036,7 @@ export function ImbaCeoCockpit() {
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[700px] text-left">
                       <thead>
-                        <tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.16em] text-[#6d847c]">
+                        <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
                           <th className="px-5 py-3">Scenario</th>
                           <th className="px-3 py-3 text-right">Backlog</th>
                           <th className="px-3 py-3 text-right">
@@ -3023,7 +3052,7 @@ export function ImbaCeoCockpit() {
                         {Object.entries(imbaScenarios).map(([key, item]) => (
                           <tr
                             key={key}
-                            className={`border-b border-white/[0.05] last:border-0 ${key === scenarioKey ? "bg-[rgb(var(--sa))]/[0.045]" : ""}`}
+                            className={`border-b border-[rgb(var(--line)/0.05)] last:border-0 ${key === scenarioKey ? "bg-[rgb(var(--sa))]/[0.045]" : ""}`}
                           >
                             <td className="px-5 py-4">
                               <button
@@ -3031,28 +3060,28 @@ export function ImbaCeoCockpit() {
                                 onClick={() =>
                                   setScenarioKey(key as ImbaScenarioKey)
                                 }
-                                className="flex items-center gap-2 text-xs font-semibold text-white"
+                                className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--text))]"
                               >
                                 <span
-                                  className={`h-2 w-2 rounded-full ${key === scenarioKey ? "bg-[rgb(var(--sa))]" : "bg-[#466059]"}`}
+                                  className={`h-2 w-2 rounded-full ${key === scenarioKey ? "bg-[rgb(var(--sa))]" : "bg-[rgb(var(--card-2))]"}`}
                                 />
                                 {item.label}
                               </button>
-                              <p className="mt-1 max-w-sm text-[10px] text-[#748a83]">
+                              <p className="mt-1 max-w-sm text-[11px] text-[rgb(var(--text-3))]">
                                 {item.description}
                               </p>
                             </td>
-                            <td className="px-3 py-4 text-right font-mono text-xs text-[#cbd7d3]">
+                            <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">
                               {money(item.backlog)}
                             </td>
-                            <td className="px-3 py-4 text-right font-mono text-xs text-[#cbd7d3]">
+                            <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">
                               {money(item.deployableCash)}
                             </td>
-                            <td className="px-3 py-4 text-right font-mono text-xs text-[#cbd7d3]">
+                            <td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">
                               {item.runwayMonths.toFixed(1)} mo
                             </td>
                             <td
-                              className={`px-5 py-4 text-right font-mono text-xs font-semibold ${item.forecastResult >= 0 ? "text-[#d9f59c]" : "text-amber-200"}`}
+                              className={`px-5 py-4 text-right font-mono text-xs font-semibold ${item.forecastResult >= 0 ? "text-[rgb(var(--pos))]" : "text-amber-800 dark:text-amber-200"}`}
                             >
                               {money(item.forecastResult)}
                             </td>
@@ -3131,7 +3160,7 @@ export function ImbaCeoCockpit() {
           </div>
         </main>
 
-        <footer className="hidden shrink-0 items-center justify-between border-t border-white/[0.07] bg-[#091310] px-8 py-2 text-[9px] font-semibold uppercase tracking-wider text-[#4f665f] sm:flex">
+        <footer className="hidden shrink-0 items-center justify-between border-t border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel))] px-8 py-2 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))] sm:flex">
           <span>IMBA-OS pitch prototype · not connected to IMBA systems</span>
           <span className="flex items-center gap-2">
             <Compass className="h-3 w-3" /> Reliable numbers → practical choices

@@ -145,16 +145,16 @@ function reducer(state: State, action: Action): State {
 }
 
 const pillClass: Record<BillStatus, string> = {
-  Draft: 'bg-white/10 text-[#9fb2ac]',
-  Coded: 'bg-cyan-300/10 text-cyan-100',
-  'In review': 'bg-amber-300/10 text-amber-100',
-  'On hold': 'bg-cyan-300/10 text-cyan-100',
+  Draft: 'bg-white/10 text-[rgb(var(--text-2))]',
+  Coded: 'bg-cyan-300/10 text-cyan-700 dark:text-cyan-100',
+  'In review': 'bg-amber-300/10 text-amber-800 dark:text-amber-100',
+  'On hold': 'bg-cyan-300/10 text-cyan-700 dark:text-cyan-100',
   Paid: 'bg-[rgb(var(--sa)/0.15)] text-[rgb(var(--sa-soft))]',
-  Rejected: 'bg-rose-300/10 text-rose-100',
+  Rejected: 'bg-rose-300/10 text-rose-700 dark:text-rose-100',
 };
 
 function StatusPill({ status }: { status: BillStatus }) {
-  return <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase ${pillClass[status]}`}>{status}</span>;
+  return <span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${pillClass[status]}`}>{status}</span>;
 }
 
 function isOverdue(bill: Bill): boolean {
@@ -163,12 +163,12 @@ function isOverdue(bill: Bill): boolean {
 }
 
 function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose' }) {
-  const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[#9fd6cc]' : tone === 'amber' ? 'text-amber-200' : 'text-rose-200';
+  const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[rgb(var(--info))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : 'text-rose-700 dark:text-rose-200';
   return (
-    <div className="rounded-[18px] border border-white/[0.08] bg-[#142321] p-4">
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718981]">{label}</p>
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p>
       <p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p>
-      <p className="mt-1.5 text-[10px] leading-4 text-[#81978f]">{note}</p>
+      <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p>
     </div>
   );
 }
@@ -209,9 +209,9 @@ export function ImbaPayables() {
   return (
     <div className="space-y-5">
       {/* Acting-as + connector */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-[#111b1a]/90 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718981]">Acting as</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Acting as</span>
           <div className="flex flex-wrap gap-2">
             {apUsers.map((user) => (
               <button
@@ -219,18 +219,18 @@ export function ImbaPayables() {
                 type="button"
                 onClick={() => dispatch({ type: 'setUser', id: user.id })}
                 className={`flex items-center gap-2 rounded-xl border px-3 py-2 transition ${
-                  user.id === state.actingUserId ? 'border-[rgb(var(--sa)/0.40)] bg-[rgb(var(--sa))]/[0.06]' : 'border-white/[0.08] hover:border-white/[0.15]'
+                  user.id === state.actingUserId ? 'border-[rgb(var(--sa)/0.40)] bg-[rgb(var(--sa))]/[0.06]' : 'border-[rgb(var(--line)/0.08)] hover:border-[rgb(var(--line)/0.15)]'
                 }`}
               >
-                <span className={`flex h-6 w-6 items-center justify-center rounded-lg font-mono text-[8px] font-black ${user.id === state.actingUserId ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'bg-white/10 text-white'}`}>{user.initials}</span>
-                <span className="text-left"><span className="block text-[10px] font-semibold text-white">{user.name}</span><span className="block text-[8px] text-[#718981]">{user.role}</span></span>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-lg font-mono text-[11px] font-black ${user.id === state.actingUserId ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'bg-white/10 text-[rgb(var(--text))]'}`}>{user.initials}</span>
+                <span className="text-left"><span className="block text-[11px] font-semibold text-[rgb(var(--text))]">{user.name}</span><span className="block text-[11px] text-[rgb(var(--text-3))]">{user.role}</span></span>
               </button>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-violet-300/15 bg-violet-300/[0.05] px-3 py-2">
-          <span className="text-[9px] font-black uppercase tracking-wider text-violet-100">Bill.com</span>
-          <span className="text-[9px] text-[#9caaa6]">payment connector · demo</span>
+          <span className="text-[11px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-100">Bill.com</span>
+          <span className="text-[11px] text-[rgb(var(--text-2))]">payment connector · demo</span>
           <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
         </div>
       </div>
@@ -242,15 +242,15 @@ export function ImbaPayables() {
         <Kpi label="Approved on hold" value={moneyFull(metrics.heldTotal)} note={`${metrics.heldCount} awaiting release`} tone="amber" />
       </div>
 
-      <section className="rounded-[22px] border border-white/[0.08] bg-[#111b1a]/90">
-        <div className="border-b border-white/[0.07] px-5 py-4">
-          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#718981]">Cash conversion · approval control</p>
-          <h2 className="mt-1 text-base font-semibold text-white">Accounts payable — approve &amp; pay</h2>
+      <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)]">
+        <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Cash conversion · approval control</p>
+          <h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Accounts payable — approve &amp; pay</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[940px] text-left">
             <thead>
-              <tr className="border-b border-white/[0.07] text-[9px] font-black uppercase tracking-[0.16em] text-[#6f8981]">
+              <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
                 <th className="px-5 py-3">Vendor / invoice</th>
                 <th className="px-3 py-3">Program &amp; GL</th>
                 <th className="px-3 py-3 text-right">Amount</th>
@@ -265,15 +265,15 @@ export function ImbaPayables() {
                 const step = currentStep(bill);
                 const awaiting = bill.status === 'In review' && step ? step.role : bill.status === 'On hold' ? 'Release' : '—';
                 return (
-                  <tr key={bill.id} className={`border-b border-white/[0.055] last:border-0 ${state.selectedId === bill.id ? 'bg-[rgb(var(--sa)/0.035)]' : 'hover:bg-white/[0.02]'}`}>
-                    <td className="px-5 py-3.5"><p className="text-xs font-semibold text-white">{bill.vendor}</p><p className="mt-1 text-[9px] text-[#718981]">{bill.invoiceNumber} · {bill.id}</p></td>
-                    <td className="px-3 py-3.5"><p className="text-[11px] font-semibold text-[#cdd8d4]">{bill.program}</p><p className="mt-0.5 text-[9px] text-[#718981]">{bill.glAccount}</p></td>
-                    <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-white">{moneyFull(billAmount(bill))}</td>
-                    <td className={`px-3 py-3.5 text-[10px] ${isOverdue(bill) ? 'text-rose-200' : 'text-[#a9bbb5]'}`}>{formatDate(bill.dueDate)}</td>
-                    <td className="px-3 py-3.5 text-[10px] text-[#a9bbb5]">{awaiting}</td>
+                  <tr key={bill.id} className={`border-b border-[rgb(var(--line)/0.055)] last:border-0 ${state.selectedId === bill.id ? 'bg-[rgb(var(--sa)/0.035)]' : 'hover:bg-[rgb(var(--line)/0.02)]'}`}>
+                    <td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{bill.vendor}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{bill.invoiceNumber} · {bill.id}</p></td>
+                    <td className="px-3 py-3.5"><p className="text-[11px] font-semibold text-[rgb(var(--text))]">{bill.program}</p><p className="mt-0.5 text-[11px] text-[rgb(var(--text-3))]">{bill.glAccount}</p></td>
+                    <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-[rgb(var(--text))]">{moneyFull(billAmount(bill))}</td>
+                    <td className={`px-3 py-3.5 text-[11px] ${isOverdue(bill) ? 'text-rose-700 dark:text-rose-200' : 'text-[rgb(var(--text-2))]'}`}>{formatDate(bill.dueDate)}</td>
+                    <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{awaiting}</td>
                     <td className="px-3 py-3.5"><StatusPill status={bill.status} /></td>
                     <td className="px-5 py-3.5 text-right">
-                      <button type="button" onClick={() => dispatch({ type: 'select', id: bill.id })} className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3 py-2 text-[9px] font-bold text-white hover:bg-white/[0.05]">
+                      <button type="button" onClick={() => dispatch({ type: 'select', id: bill.id })} className="inline-flex items-center gap-1.5 rounded-lg border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.05)]">
                         <Eye className="h-3 w-3" /> View
                       </button>
                     </td>
@@ -299,33 +299,33 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
   const final = isFinalApproval(bill);
   const closeNote = () => { setMode('idle'); setNote(''); };
 
-  const label9 = 'text-[9px] font-black uppercase tracking-wider text-[#718981]';
-  const primaryBtn = 'inline-flex items-center gap-1.5 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-[10px] font-black uppercase text-[rgb(var(--sa-ink))]';
-  const ghostBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-white/[0.12] px-4 py-2.5 text-[10px] font-black uppercase text-white hover:bg-white/[0.05]';
-  const dangerBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-rose-300/25 px-4 py-2.5 text-[10px] font-black uppercase text-rose-200 hover:bg-rose-300/[0.06]';
+  const label9 = 'text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]';
+  const primaryBtn = 'inline-flex items-center gap-1.5 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]';
+  const ghostBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-[rgb(var(--line)/0.12)] px-4 py-2.5 text-[11px] font-black uppercase text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.05)]';
+  const dangerBtn = 'inline-flex items-center gap-1.5 rounded-xl border border-rose-300/25 px-4 py-2.5 text-[11px] font-black uppercase text-rose-700 dark:text-rose-200 hover:bg-rose-300/[0.06]';
 
   return (
     <>
       <button className="fixed inset-0 z-[70] bg-black/60" aria-label="Close invoice" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-[940px] flex-col bg-[#0d1614] shadow-[-20px_0_55px_rgba(0,0,0,.5)]">
-        <header className="flex items-start justify-between gap-4 border-b border-white/[0.08] bg-[#111b1a] px-6 py-5">
+      <aside className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-[940px] flex-col bg-[rgb(var(--panel))] shadow-[-20px_0_55px_rgba(0,0,0,.5)]">
+        <header className="flex items-start justify-between gap-4 border-b border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card))] px-6 py-5">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#718981]">{bill.id} · {bill.vendor}</p>
-            <p className="mt-1 font-mono text-3xl font-semibold tracking-[-0.04em] text-white">{moneyFull(amount)}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{bill.id} · {bill.vendor}</p>
+            <p className="mt-1 font-mono text-3xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">{moneyFull(amount)}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <StatusPill status={bill.status} />
-              {bill.restricted ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-300/10 px-2 py-1 text-[8px] font-black uppercase text-amber-100"><ShieldAlert className="h-3 w-3" /> Donor-restricted</span> : null}
-              {isOverdue(bill) ? <span className="inline-flex items-center gap-1 rounded-full bg-rose-300/10 px-2 py-1 text-[8px] font-black uppercase text-rose-100"><AlertTriangle className="h-3 w-3" /> Overdue</span> : null}
+              {bill.restricted ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-300/10 px-2 py-1 text-[11px] font-black uppercase text-amber-800 dark:text-amber-100"><ShieldAlert className="h-3 w-3" /> Donor-restricted</span> : null}
+              {isOverdue(bill) ? <span className="inline-flex items-center gap-1 rounded-full bg-rose-300/10 px-2 py-1 text-[11px] font-black uppercase text-rose-700 dark:text-rose-100"><AlertTriangle className="h-3 w-3" /> Overdue</span> : null}
             </div>
           </div>
-          <button type="button" aria-label="Close" onClick={onClose} className="rounded-xl border border-white/[0.1] p-2.5 text-[#94aaa3] hover:bg-white/[0.05]"><X className="h-4 w-4" /></button>
+          <button type="button" aria-label="Close" onClick={onClose} className="rounded-xl border border-[rgb(var(--line)/0.1)] p-2.5 text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]"><X className="h-4 w-4" /></button>
         </header>
 
         <div className="grid flex-1 gap-6 overflow-y-auto p-6 lg:grid-cols-[1.1fr_.9fr]">
           {/* Invoice facsimile */}
           <div>
-            <p className="mb-3 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#718981]"><FileText className="h-3.5 w-3.5" /> Source invoice</p>
-            <div className="rounded-2xl border border-white/[0.09] bg-white p-6 text-[#1f2937]">
+            <p className="mb-3 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><FileText className="h-3.5 w-3.5" /> Source invoice</p>
+            <div className="rounded-2xl border border-[rgb(var(--line)/0.09)] bg-white p-6 text-[#1f2937]">
               <div className="flex items-start justify-between gap-4">
                 <div><p className="font-serif text-lg font-semibold">{bill.vendor}</p><p className="mt-1 max-w-[190px] text-[11px] text-gray-500">{bill.vendorAddress}</p></div>
                 <div className="text-right"><p className="text-lg font-black tracking-[0.16em] text-gray-300">INVOICE</p>
@@ -338,9 +338,9 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                   </dl>
                 </div>
               </div>
-              <div className="mt-5 rounded-lg bg-gray-50 px-3 py-2.5"><p className="text-[9px] font-black uppercase tracking-wider text-gray-400">Bill to</p><p className="mt-0.5 text-sm font-semibold">International Mountain Bicycling Association</p><p className="text-[11px] text-gray-500">Accounts Payable Department</p></div>
+              <div className="mt-5 rounded-lg bg-gray-50 px-3 py-2.5"><p className="text-[11px] font-black uppercase tracking-wider text-gray-400">Bill to</p><p className="mt-0.5 text-sm font-semibold">International Mountain Bicycling Association</p><p className="text-[11px] text-gray-500">Accounts Payable Department</p></div>
               <table className="mt-4 w-full text-left text-[11px] tabular-nums">
-                <thead><tr className="border-b border-gray-300 text-[9px] uppercase text-gray-400"><th className="py-1.5">Description</th><th className="py-1.5 text-right">Qty</th><th className="py-1.5 text-right">Unit</th><th className="py-1.5 text-right">Amount</th></tr></thead>
+                <thead><tr className="border-b border-gray-300 text-[11px] uppercase text-gray-400"><th className="py-1.5">Description</th><th className="py-1.5 text-right">Qty</th><th className="py-1.5 text-right">Unit</th><th className="py-1.5 text-right">Amount</th></tr></thead>
                 <tbody>{bill.lineItems.map((li, i) => (<tr key={i} className="border-b border-gray-100"><td className="py-2">{li.description}</td><td className="py-2 text-right">{li.quantity}</td><td className="py-2 text-right">{moneyFull(li.unitPrice)}</td><td className="py-2 text-right">{moneyFull(li.quantity * li.unitPrice)}</td></tr>))}</tbody>
                 <tfoot><tr><td colSpan={3} className="border-t-2 border-gray-800 py-2 text-right font-black">Total due</td><td className="border-t-2 border-gray-800 py-2 text-right text-sm font-black">{moneyFull(amount)}</td></tr></tfoot>
               </table>
@@ -350,23 +350,23 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
           {/* Coding + approval + actions */}
           <div className="space-y-5">
             <div>
-              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#718981]">Coding</p>
-              <dl className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-[#142321] px-4">
+              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">Coding</p>
+              <dl className="divide-y divide-[rgb(var(--line)/0.06)] rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] px-4">
                 {[['GL account', bill.glAccount], ['Program / fund', bill.program], ...(bill.project ? [['Project', bill.project]] : []), ['Restriction', bill.restricted ? 'Donor-restricted' : 'Unrestricted'], ['Entered by', userById(bill.enteredById).name]].map(([k, v]) => (
-                  <div key={k} className="flex justify-between gap-3 py-2.5 text-[11px]"><dt className="text-[#82978f]">{k}</dt><dd className="text-right font-semibold text-white">{v}</dd></div>
+                  <div key={k} className="flex justify-between gap-3 py-2.5 text-[11px]"><dt className="text-[rgb(var(--text-3))]">{k}</dt><dd className="text-right font-semibold text-[rgb(var(--text))]">{v}</dd></div>
                 ))}
               </dl>
             </div>
 
             <div>
-              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#718981]">Approval chain</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">Approval chain</p>
               <div className="space-y-2">
                 {bill.approvals.map((step, i) => {
                   const done = step.status === 'approved';
                   return (
-                    <div key={i} className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 ${done ? 'border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa))]/[0.05]' : 'border-white/[0.08]'}`}>
-                      {done ? <CheckCircle2 className="h-4 w-4 text-[rgb(var(--sa))]" /> : <PauseCircle className="h-4 w-4 text-amber-200" />}
-                      <div><p className="text-[11px] font-semibold text-white">{step.role}</p><p className="text-[9px] text-[#82978f]">{done && step.approverId ? `${userById(step.approverId).name} · ${step.actedAt ? formatDate(step.actedAt) : ''}` : 'Pending'}</p></div>
+                    <div key={i} className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 ${done ? 'border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa))]/[0.05]' : 'border-[rgb(var(--line)/0.08)]'}`}>
+                      {done ? <CheckCircle2 className="h-4 w-4 text-[rgb(var(--sa-soft))]" /> : <PauseCircle className="h-4 w-4 text-amber-800 dark:text-amber-200" />}
+                      <div><p className="text-[11px] font-semibold text-[rgb(var(--text))]">{step.role}</p><p className="text-[11px] text-[rgb(var(--text-3))]">{done && step.approverId ? `${userById(step.approverId).name} · ${step.actedAt ? formatDate(step.actedAt) : ''}` : 'Pending'}</p></div>
                     </div>
                   );
                 })}
@@ -374,16 +374,16 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
             </div>
 
             <div>
-              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#718981]">History</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">History</p>
               <ul className="space-y-2">
                 {bill.events.map((e, i) => (
-                  <li key={i} className="flex gap-2.5"><span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${i === bill.events.length - 1 ? 'bg-[rgb(var(--sa))]' : 'bg-white/25'}`} /><div><p className="text-[11px] font-semibold text-white">{e.action}</p>{e.detail ? <p className="text-[10px] text-[#82978f]">{e.detail}</p> : null}<p className="text-[9px] text-[#5f736c]">{e.actor} · {formatDateTime(e.at)}</p></div></li>
+                  <li key={i} className="flex gap-2.5"><span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${i === bill.events.length - 1 ? 'bg-[rgb(var(--sa))]' : 'bg-white/25'}`} /><div><p className="text-[11px] font-semibold text-[rgb(var(--text))]">{e.action}</p>{e.detail ? <p className="text-[11px] text-[rgb(var(--text-3))]">{e.detail}</p> : null}<p className="text-[11px] text-[rgb(var(--text-4))]">{e.actor} · {formatDateTime(e.at)}</p></div></li>
                 ))}
               </ul>
             </div>
 
             {/* Actions */}
-            <div className="space-y-3 border-t border-white/[0.08] pt-4">
+            <div className="space-y-3 border-t border-[rgb(var(--line)/0.08)] pt-4">
               {bill.status === 'Coded' ? (
                 <button type="button" className={primaryBtn} onClick={() => act({ type: 'submit', id: bill.id })}><Send className="h-3.5 w-3.5" /> Submit for approval</button>
               ) : null}
@@ -398,7 +398,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                         <button type="button" className={ghostBtn} onClick={() => act({ type: 'hold', id: bill.id })}><PauseCircle className="h-3.5 w-3.5" /> Approve &amp; Hold</button>
                         <button type="button" className={dangerBtn} onClick={() => setMode('reject')}><Ban className="h-3.5 w-3.5" /> Reject</button>
                       </div>
-                      <p className="rounded-lg border-l-2 border-violet-300/40 bg-violet-300/[0.04] px-3 py-2 text-[10px] leading-4 text-[#9caaa6]">Approve &amp; Pay calls the Bill.com API to disburse and logs an outbound job on the IMBA-OS control plane. A person authorizes each payment.</p>
+                      <p className="rounded-lg border-l-2 border-violet-300/40 bg-violet-300/[0.04] px-3 py-2 text-[11px] leading-4 text-[rgb(var(--text-2))]">Approve &amp; Pay calls the Bill.com API to disburse and logs an outbound job on the IMBA-OS control plane. A person authorizes each payment.</p>
                     </>
                   ) : (
                     <div className="flex flex-wrap gap-2">
@@ -411,13 +411,13 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
               ) : null}
 
               {bill.status === 'In review' && !check.ok ? (
-                <p className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2.5 text-[11px] text-[#c2b3a0]"><Lock className="h-3.5 w-3.5" /> {check.reason}</p>
+                <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--line)/0.03)] px-3 py-2.5 text-[11px] text-[rgb(var(--text-2))]"><Lock className="h-3.5 w-3.5" /> {check.reason}</p>
               ) : null}
 
               {mode !== 'idle' ? (
                 <div className="space-y-2">
                   <label className={label9} htmlFor="ap-note">{mode === 'reject' ? 'Reason for rejection' : 'What needs to change?'}</label>
-                  <textarea id="ap-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full rounded-xl border border-white/[0.1] bg-[#14201e] px-3 py-2.5 text-xs text-white outline-none focus:border-[rgb(var(--sa)/0.35)]" placeholder={mode === 'reject' ? 'e.g. Duplicate of BILL-1998' : 'e.g. Reallocate to 6420 · Construction Materials'} />
+                  <textarea id="ap-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none focus:border-[rgb(var(--sa)/0.35)]" placeholder={mode === 'reject' ? 'e.g. Duplicate of BILL-1998' : 'e.g. Reallocate to 6420 · Construction Materials'} />
                   <div className="flex gap-2">
                     <button type="button" className={mode === 'reject' ? dangerBtn : primaryBtn} onClick={() => { act({ type: mode === 'reject' ? 'reject' : 'requestChanges', id: bill.id, note }); closeNote(); }}>Confirm {mode === 'reject' ? 'rejection' : 'change request'}</button>
                     <button type="button" className={ghostBtn} onClick={closeNote}>Cancel</button>
@@ -432,12 +432,12 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                     <button type="button" className={primaryBtn} onClick={() => act({ type: 'release', id: bill.id })}><CreditCard className="h-3.5 w-3.5" /> Release payment to Bill.com</button>
                   </>
                 ) : (
-                  <p className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2.5 text-[11px] text-[#c2b3a0]"><Lock className="h-3.5 w-3.5" /> {release.reason}</p>
+                  <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--line)/0.03)] px-3 py-2.5 text-[11px] text-[rgb(var(--text-2))]"><Lock className="h-3.5 w-3.5" /> {release.reason}</p>
                 )
               ) : null}
 
               {bill.status === 'Paid' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><CheckCircle2 className="h-3.5 w-3.5" /> Paid via Bill.com. Settlement synced back to IMBA-OS.</p> : null}
-              {bill.status === 'Rejected' ? <p className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2.5 text-[11px] text-[#c2b3a0]"><Ban className="h-3.5 w-3.5" /> Rejected. Return to the vendor or AP for correction.</p> : null}
+              {bill.status === 'Rejected' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--line)/0.03)] px-3 py-2.5 text-[11px] text-[rgb(var(--text-2))]"><Ban className="h-3.5 w-3.5" /> Rejected. Return to the vendor or AP for correction.</p> : null}
             </div>
           </div>
         </div>

@@ -5,11 +5,50 @@
 @tailwind utilities;
 
 /* Per-section accent (RGB channels). The cockpit overrides these on the content
-   container per active section; these defaults (Money emerald) are the fallback. */
+   container per active section; these defaults (Money emerald) are the fallback.
+   --sa-soft is the accent used for small eyebrow labels; the cockpit swaps in a
+   deeper value in light mode so it stays legible on white. */
 :root {
   --sa: 183 227 91;
-  --sa-soft: 223 247 168;
+  --sa-soft: 63 96 18;     /* dark lime — legible on white for chrome OUTSIDE the
+                              accented content area (e.g. sidebar pitch-safe note) */
   --sa-ink: 16 32 22;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cockpit theme tokens (RGB channels so Tailwind opacity works, e.g.  */
+/* text-[rgb(var(--text-3)/0.8)]). LIGHT is the default; .dark on <html> */
+/* flips to the original polished dark palette. Set by a no-FOUC script. */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Light palette echoes the dark "hunter green" base: white-dominant cards on a
+     pale-green canvas, with pale-green wells and a faintly green hairline. */
+  --app-bg: 242 246 243;   /* page canvas — pale green */
+  --panel: 236 242 238;    /* header / sidebar / footer chrome — pale green */
+  --card: 255 255 255;     /* raised cards — white, the dominant surface */
+  --card-2: 233 240 235;   /* inner tiles, inputs, KPI wells — pale green */
+  --line: 20 40 33;        /* green-tinted ink for borders/fills at low opacity */
+  --text: 23 37 45;        /* primary text (headings, emphasis) */
+  --text-2: 46 62 69;      /* secondary body text (~9:1 on white) */
+  --text-3: 74 90 95;      /* muted labels / eyebrows (~6:1) */
+  --text-4: 92 106 108;    /* faint captions (~5:1, legible at 8-10px) */
+  --info: 13 100 116;      /* teal accent text (illustrative/connector) */
+  --pos: 60 92 16;         /* lime/positive accent text */
+}
+
+html.dark {
+  --app-bg: 8 16 14;
+  --panel: 10 21 19;
+  --card: 17 27 26;
+  --card-2: 20 35 33;
+  --line: 255 255 255;
+  --text: 255 255 255;
+  --text-2: 175 192 187;
+  --text-3: 113 137 129;
+  --text-4: 97 121 113;
+  --info: 159 214 204;     /* = #9fd6cc, the original dark-theme teal */
+  --pos: 217 245 156;      /* = #d9f59c, the original dark-theme lime */
+  --sa-soft: 223 247 168;  /* light-lime fallback for chrome outside the accented area */
 }
 
 :root {
@@ -40,16 +79,14 @@
 }
 
 html {
-  background: var(--cream);
-  color: var(--ink);
+  background: rgb(var(--app-bg));
+  color: rgb(var(--text));
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 82% 0%, rgba(237, 107, 45, 0.09), transparent 28rem),
-    var(--cream);
+  background: rgb(var(--app-bg));
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
