@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   CalendarClock,
@@ -27,6 +27,14 @@ import {
   imbaReports,
 } from '@/lib/imba-detail-data';
 import { accounting, financialHistory, publicFinancialFacts } from '@/lib/imba-data';
+import {
+  qboFundAccountingCaveats,
+  qboLaneMeta,
+  qboReportCatalog,
+  qboReportCount,
+  type QboCatalogReport,
+  type QboReportLane,
+} from '@/lib/imba-report-catalog';
 import type { ImbaOsView } from '@/lib/imba-os-data';
 import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
@@ -1052,11 +1060,80 @@ function ApAr() {
   );
 }
 
+// ── Reporting period + QuickBooks source catalog ────────────────────────
+
+function isoDay(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function fmtDay(iso: string): string {
+  const date = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+type ReportPeriod = { from: string; to: string; preset: string };
+
+function buildPeriodPresets(): { key: string; label: string; from: string; to: string }[] {
+  const now = new Date();
+  const year = now.getFullYear();
+  const quarterStart = new Date(year, Math.floor(now.getMonth() / 3) * 3, 1);
+  return [
+    { key: 'this-month', label: 'This month', from: isoDay(new Date(year, now.getMonth(), 1)), to: isoDay(now) },
+    { key: 'this-quarter', label: 'This quarter', from: isoDay(quarterStart), to: isoDay(now) },
+    { key: 'ytd', label: 'Year to date', from: `${year}-01-01`, to: isoDay(now) },
+    { key: 'last-year', label: `FY${year - 1}`, from: `${year - 1}-01-01`, to: `${year - 1}-12-31` },
+    { key: 'fy2024', label: 'FY2024 · filed', from: '2024-01-01', to: '2024-12-31' },
+  ];
+}
+
+const laneBadgeCls: Record<QboReportLane, string> = {
+  'qbo-direct': 'bg-[rgb(var(--info)/0.12)] text-[rgb(var(--info))]',
+  'qbo-config': 'bg-amber-300/10 text-amber-800 dark:text-amber-200',
+  'imba-os': 'bg-[rgb(var(--sa)/0.12)] text-[rgb(var(--sa-soft))]',
+};
+
+function LaneBadge({ lane }: { lane: QboReportLane }) {
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${laneBadgeCls[lane]}`}>{qboLaneMeta[lane].label}</span>;
+}
+
 function Reports() {
+  const { addAuditEvent } = useImbaOsState();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
   const [selected, setSelected] = useState(imbaReports[0]);
   const [prepared, setPrepared] = useState('');
+  const presets = useMemo(buildPeriodPresets, []);
+  const ytd = presets.find((preset) => preset.key === 'ytd') ?? presets[0];
+  const [period, setPeriod] = useState<ReportPeriod>({ from: ytd.from, to: ytd.to, preset: 'ytd' });
+  const [qboQuery, setQboQuery] = useState('');
+  const [qboLane, setQboLane] = useState<'All' | QboReportLane>('All');
+  const [selectedQbo, setSelectedQbo] = useState<(QboCatalogReport & { category: string }) | null>(null);
+  const [queuedQbo, setQueuedQbo] = useState('');
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('imba-report-period-v1');
+      if (raw) setPeriod(JSON.parse(raw) as ReportPeriod);
+    } catch { /* stored period is optional */ }
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem('imba-report-period-v1', JSON.stringify(period)); } catch { /* persistence is best-effort */ }
+  }, [period]);
+  const laneCounts = useMemo(() => {
+    const counts: Record<QboReportLane, number> = { 'qbo-direct': 0, 'qbo-config': 0, 'imba-os': 0 };
+    for (const group of qboReportCatalog) for (const report of group.reports) counts[report.lane] += 1;
+    return counts;
+  }, []);
+  const qboGroups = qboReportCatalog
+    .map((group) => ({ ...group, reports: group.reports.filter((report) => (qboLane === 'All' || report.lane === qboLane) && `${report.name} ${report.note ?? ''} ${group.category}`.toLowerCase().includes(qboQuery.toLowerCase())) }))
+    .filter((group) => group.reports.length > 0);
+  const queueQboRun = () => {
+    if (!selectedQbo) return;
+    addAuditEvent({ action: 'Report run queued', record: selectedQbo.name, actor: 'Finance', detail: `Period ${period.from} → ${period.to} · ${qboLaneMeta[selectedQbo.lane].label}. Demo mode: request recorded locally; no live QuickBooks call.` });
+    setQueuedQbo(selectedQbo.name);
+  };
   const categories = ['All', ...Array.from(new Set(imbaReports.map((report) => report.category)))];
   const rows = imbaReports.filter((report) => (category === 'All' || report.category === category) && `${report.name} ${report.description}`.toLowerCase().includes(query.toLowerCase()));
   const prepareExport = () => {
@@ -1068,6 +1145,8 @@ function Reports() {
       ['Audience', selected.audience],
       ['Status', selected.status],
       ['Description', selected.description],
+      ['Period start', period.from],
+      ['Period end', period.to],
       ['Data classification', 'Prototype / illustrative'],
       ['Generated at', new Date().toISOString()],
     ];
@@ -1086,11 +1165,74 @@ function Reports() {
   };
   return (
     <div className="grid gap-5 xl:grid-cols-12">
+      <ShellCard className="xl:col-span-12">
+        <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-4">
+          <div>
+            <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]"><CalendarClock className="h-3.5 w-3.5" /> Reporting period <ImbaInfoTooltip label="Reporting period" text="Every report on this page runs for this date range. In production the range is passed to the QuickBooks Reports API as start_date / end_date; in demo mode it stamps the previews and CSV exports." /></p>
+            <h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{fmtDay(period.from)} – {fmtDay(period.to)}</h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {presets.map((preset) => <button key={preset.key} type="button" onClick={() => setPeriod({ from: preset.from, to: preset.to, preset: preset.key })} className={`rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider transition ${period.preset === preset.key ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.02)] text-[rgb(var(--text-2))] hover:bg-[rgb(var(--line)/0.05)]'}`}>{preset.label}</button>)}
+            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">From<input type="date" value={period.from} max={period.to} onChange={(event) => setPeriod({ ...period, from: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
+            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] text-[rgb(var(--text-3))]">To<input type="date" value={period.to} min={period.from} onChange={(event) => setPeriod({ ...period, to: event.target.value, preset: 'custom' })} className="bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
+          </div>
+        </div>
+      </ShellCard>
       <ShellCard className="xl:col-span-8">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Governed catalog</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Financial + management reports</h2></div><div className="flex gap-2"><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search reports" className="w-32 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none">{categories.map((item) => <option key={item}>{item}</option>)}</select></div></div>
         <div className="grid gap-3 p-5 md:grid-cols-2">{rows.map((report) => <button key={report.name} type="button" onClick={() => setSelected(report)} className={`rounded-2xl border p-4 text-left transition ${selected.name === report.name ? 'border-[rgb(var(--sa)/0.30)] bg-[rgb(var(--sa))]/[0.055]' : 'border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] hover:bg-[rgb(var(--line)/0.04)]'}`}><div className="flex items-start justify-between gap-3"><span className="rounded-xl bg-[rgb(var(--sa)/0.10)] p-2 text-[rgb(var(--sa-soft))]"><FileBarChart className="h-4 w-4" /></span><span className="rounded-full border border-[rgb(var(--line)/0.08)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--text-2))]">{report.status}</span></div><h3 className="mt-3 text-xs font-semibold text-[rgb(var(--text))]">{report.name}</h3><p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">{report.description}</p><div className="mt-3 flex justify-between border-t border-[rgb(var(--line)/0.06)] pt-3 text-[11px] text-[rgb(var(--text-3))]"><span>{report.cadence}</span><span>{report.audience}</span></div></button>)}</div>
       </ShellCard>
-      <ShellCard className="xl:col-span-4"><Heading eyebrow="Report preview" title={selected.name} /><div className="space-y-4 p-5"><p className="text-xs leading-5 text-[rgb(var(--text-2))]">{selected.description}</p><div className="grid grid-cols-2 gap-3"><Kpi label="Cadence" value={selected.cadence} note="Refresh rhythm" tone="teal" /><Kpi label="Status" value={selected.status.replace('Prototype ', '')} note="Build maturity" /></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Report controls</p><div className="mt-3 space-y-2">{['Data refreshed and reconciled', 'Owner certification attached', 'Material variances annotated', 'Distribution list permissioned'].map((item, index) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">{index < 2 ? <ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> : <ClipboardCheck className="h-3.5 w-3.5 text-[rgb(var(--info))]" />}{item}</div>)}</div></div><button type="button" onClick={prepareExport} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" /> Download board-ready CSV</button>{prepared ? <p className="flex items-center gap-2 text-[11px] text-[rgb(var(--sa-soft))]"><Check className="h-3.5 w-3.5" /> {prepared} downloaded with a prototype-data classification.</p> : null}</div></ShellCard>
+      <ShellCard className="xl:col-span-4"><Heading eyebrow="Report preview" title={selected.name} /><div className="space-y-4 p-5"><p className="text-xs leading-5 text-[rgb(var(--text-2))]">{selected.description}</p><p className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><CalendarClock className="h-3.5 w-3.5" /> Reporting period: {fmtDay(period.from)} – {fmtDay(period.to)}</p><div className="grid grid-cols-2 gap-3"><Kpi label="Cadence" value={selected.cadence} note="Refresh rhythm" tone="teal" /><Kpi label="Status" value={selected.status.replace('Prototype ', '')} note="Build maturity" /></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Report controls</p><div className="mt-3 space-y-2">{['Data refreshed and reconciled', 'Owner certification attached', 'Material variances annotated', 'Distribution list permissioned'].map((item, index) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">{index < 2 ? <ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> : <ClipboardCheck className="h-3.5 w-3.5 text-[rgb(var(--info))]" />}{item}</div>)}</div></div><button type="button" onClick={prepareExport} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" /> Download board-ready CSV</button>{prepared ? <p className="flex items-center gap-2 text-[11px] text-[rgb(var(--sa-soft))]"><Check className="h-3.5 w-3.5" /> {prepared} downloaded with a prototype-data classification.</p> : null}</div></ShellCard>
+      <ShellCard className="xl:col-span-12">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+          <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Source-system catalog</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">QuickBooks nonprofit report library · {qboReportCount} reports</h2></div>
+          <div className="flex flex-wrap gap-2">
+            <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={qboQuery} onChange={(event) => setQboQuery(event.target.value)} placeholder="Search QBO reports" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" /></label>
+            <select value={qboLane} onChange={(event) => setQboLane(event.target.value as 'All' | QboReportLane)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none"><option value="All">All lanes</option><option value="qbo-direct">Direct from QBO</option><option value="qbo-config">After QBO configuration</option><option value="imba-os">Calculated by IMBA-OS</option></select>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-3">
+          {(['qbo-direct', 'qbo-config', 'imba-os'] as const).map((lane) => <span key={lane} className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--text-2))]"><LaneBadge lane={lane} /> {laneCounts[lane]} reports <ImbaInfoTooltip label={qboLaneMeta[lane].label} text={qboLaneMeta[lane].explain} /></span>)}
+        </div>
+        <div className="grid gap-5 p-5 lg:grid-cols-2">
+          {qboGroups.map((group) => (
+            <div key={group.category} className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-4">
+              <div className="flex items-baseline justify-between gap-3"><h3 className="text-xs font-semibold text-[rgb(var(--text))]">{group.category}</h3><span className="text-[11px] text-[rgb(var(--text-3))]">{group.reports.length}</span></div>
+              {group.caveat ? <p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">{group.caveat}</p> : null}
+              <div className="mt-3 space-y-1">
+                {group.reports.map((report) => (
+                  <button key={report.name} type="button" onClick={() => { setSelectedQbo({ ...report, category: group.category }); setQueuedQbo(''); }} className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition ${selectedQbo?.name === report.name ? 'bg-[rgb(var(--sa))]/[0.055] ring-1 ring-[rgb(var(--sa)/0.30)]' : 'hover:bg-[rgb(var(--line)/0.04)]'}`}>
+                    <span className="text-[11px] text-[rgb(var(--text-2))]">{report.name}</span>
+                    <LaneBadge lane={report.lane} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        {selectedQbo ? (
+          <div className="grid gap-4 border-t border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa)/0.025)] p-5 lg:grid-cols-[1.6fr_1fr_auto]">
+            <div>
+              <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--sa-soft))]">{selectedQbo.category} <LaneBadge lane={selectedQbo.lane} /></p>
+              <h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{selectedQbo.name}</h3>
+              <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">{qboLaneMeta[selectedQbo.lane].explain}{selectedQbo.note ? ` ${selectedQbo.note}` : ''}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2"><Kpi label="From" value={fmtDay(period.from)} note="Report start date" tone="teal" /><Kpi label="To" value={fmtDay(period.to)} note="Report end date" tone="teal" /></div>
+            <div className="flex items-start gap-2">
+              <button type="button" disabled={queuedQbo === selectedQbo.name} onClick={queueQboRun} className="rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))] disabled:bg-[rgb(var(--sa)/0.10)] disabled:text-[rgb(var(--sa-soft))]">{queuedQbo === selectedQbo.name ? 'Run queued' : 'Queue report run'}</button>
+              <ImbaInfoTooltip label="Queue report run · demo only" text={selectedQbo.lane === 'imba-os' ? 'In production IMBA-OS computes this report itself from synced QBO, PEO, and ADP data for the selected period. In demo mode the request is recorded locally and stamped into the audit trail — nothing external is called.' : 'In production this calls the QuickBooks Reports API with start_date and end_date set to the selected period and renders the result. In demo mode the request is recorded locally and stamped into the audit trail — nothing external is called.'} />
+              <button type="button" aria-label="Close report detail" onClick={() => setSelectedQbo(null)} className="rounded-xl border border-[rgb(var(--line)/0.1)] p-3 text-[rgb(var(--text-2))]"><X className="h-4 w-4" /></button>
+            </div>
+          </div>
+        ) : null}
+        <div className="border-t border-[rgb(var(--line)/0.07)] p-5">
+          <div className="rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-800 dark:text-amber-200">What QuickBooks does not do by itself</p>
+            <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">Selecting “nonprofit” at setup does not create fund accounting. These depend entirely on how the chart of accounts, classes, donors, projects, and locations are structured and maintained — which is why every report above is tagged with its lane:</p>
+            <div className="mt-3 flex flex-wrap gap-2">{qboFundAccountingCaveats.map((item) => <span key={item} className="rounded-full border border-amber-300/25 px-2.5 py-1 text-[11px] text-[rgb(var(--text-2))]">{item}</span>)}</div>
+          </div>
+        </div>
+      </ShellCard>
     </div>
   );
 }
