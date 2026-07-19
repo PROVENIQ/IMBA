@@ -853,11 +853,11 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const sidebarOrder = [
     "Mission",
     "Money",
+    "Management",
+    "Governance",
     "People",
     "Development",
-    "Governance",
     "Collaboration",
-    "Management",
     "Platform",
     "System",
   ];
