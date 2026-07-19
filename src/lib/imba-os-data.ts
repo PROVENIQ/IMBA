@@ -111,7 +111,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "operations",
     label: "Mission",
     subtitle: "Community progress + mission delivery",
-    accent: "bg-blue-400/10 text-blue-200",
+    accent: "bg-blue-400/10 text-blue-700 dark:text-blue-200",
     border: "border-blue-400/25",
     icon: "route",
     thesis:
@@ -172,7 +172,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "money",
     label: "Money",
     subtitle: "Airtight books + foresight",
-    accent: "bg-emerald-400/10 text-emerald-200",
+    accent: "bg-emerald-400/10 text-emerald-700 dark:text-emerald-200",
     border: "border-emerald-400/25",
     icon: "money",
     thesis:
@@ -226,7 +226,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "people",
     label: "People",
     subtitle: "Capacity against pipeline",
-    accent: "bg-cyan-400/10 text-cyan-200",
+    accent: "bg-cyan-400/10 text-cyan-700 dark:text-cyan-200",
     border: "border-cyan-400/25",
     icon: "people",
     thesis:
@@ -284,7 +284,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "development",
     label: "Development",
     subtitle: "Philanthropy + membership",
-    accent: "bg-amber-300/10 text-amber-100",
+    accent: "bg-amber-300/10 text-amber-700 dark:text-amber-100",
     border: "border-amber-300/25",
     icon: "development",
     thesis:
@@ -342,7 +342,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "platform",
     label: "Platform",
     subtitle: "Technology leverage",
-    accent: "bg-violet-400/10 text-violet-200",
+    accent: "bg-violet-400/10 text-violet-700 dark:text-violet-200",
     border: "border-violet-400/25",
     icon: "platform",
     thesis:
@@ -400,7 +400,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "governance",
     label: "Governance",
     subtitle: "Board + audit readiness",
-    accent: "bg-rose-400/10 text-rose-200",
+    accent: "bg-rose-400/10 text-rose-700 dark:text-rose-200",
     border: "border-rose-400/25",
     icon: "governance",
     thesis:
@@ -458,7 +458,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "communications",
     label: "Collaboration",
     subtitle: "Context + institutional memory",
-    accent: "bg-indigo-400/10 text-indigo-200",
+    accent: "bg-indigo-400/10 text-indigo-700 dark:text-indigo-200",
     border: "border-indigo-400/25",
     icon: "communications",
     thesis:
@@ -514,7 +514,7 @@ export const imbaOsSections: ImbaOsSection[] = [
     id: "system",
     label: "System",
     subtitle: "Controls + continuity",
-    accent: "bg-slate-400/10 text-slate-200",
+    accent: "bg-slate-400/10 text-slate-700 dark:text-slate-200",
     border: "border-slate-400/25",
     icon: "system",
     thesis:
