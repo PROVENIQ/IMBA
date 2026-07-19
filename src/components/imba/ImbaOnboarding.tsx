@@ -5,17 +5,51 @@ import { createPortal } from "react-dom";
 import {
   ArrowRight,
   BookOpen,
+  Calculator,
   CheckCircle2,
   CircleHelp,
+  Database,
+  Gauge,
+  Layers3,
   MousePointer2,
   RotateCcw,
   ShieldCheck,
+  Sparkles,
   X,
 } from "lucide-react";
 import type { ImbaOsView } from "@/lib/imba-os-data";
 import { imbaRoleProfiles, type ImbaRoleKey } from "@/lib/imba-intelligence-data";
+import {
+  dataStatusGuide,
+  metricGuides,
+  roleGuides,
+  type MetricGuide,
+} from "@/lib/imba-user-guide-data";
 
 const TOUR_STORAGE_KEY = "imba-os-onboarding-complete-v1";
+
+const systemSteps = [
+  { label: "Connect once", detail: "Authorize QuickBooks, ADP/PEO, CRM, project, bank, and collaboration systems once through governed connectors." },
+  { label: "Sync into IMBA-OS", detail: "Scheduled and on-demand syncs bring approved fields into the operating layer. Users do not log into each source for every question." },
+  { label: "Normalize and calculate", detail: "IMBA-OS applies canonical project, grant, customer, role, account, and period definitions before calculating management measures." },
+  { label: "Show provenance", detail: "Every consequential number should expose its definition, formula, source systems, refresh time, and whether it is public, synced, derived, or illustrative." },
+  { label: "Act with control", detail: "Decisions and approvals stay visible in IMBA-OS; controlled transactions execute in the authoritative system such as QuickBooks or Bill.com." },
+] as const;
+
+// Provenance badge styling, matched to the Prov lanes used across the Money
+// workspace so the guide's status labels read the same as the live figures.
+const STATUS_BADGE: Record<MetricGuide["status"], string> = {
+  "Public / filed": "bg-[rgb(var(--info)/0.12)] text-[rgb(var(--info))]",
+  "Synced in production": "bg-[rgb(var(--sa)/0.12)] text-[rgb(var(--sa-soft))]",
+  Derived: "bg-[rgb(var(--line)/0.08)] text-[rgb(var(--text-2))]",
+  Illustrative: "bg-amber-300/10 text-amber-800 dark:text-amber-200",
+};
+
+const GUIDE_TABS: Array<{ key: GuideTab; label: string; icon: typeof Sparkles }> = [
+  { key: "role", label: "Your role", icon: Sparkles },
+  { key: "numbers", label: "The numbers", icon: Calculator },
+  { key: "system", label: "How it works", icon: Layers3 },
+];
 
 type TourStep = {
   eyebrow: string;
@@ -26,74 +60,9 @@ type TourStep = {
   actionLabel?: string;
 };
 
-type GuideLink = {
-  label: string;
-  description: string;
-  view: ImbaOsView;
-};
-
-const roleGuides: Partial<Record<ImbaRoleKey, { summary: string; links: GuideLink[] }>> = {
-  executive: {
-    summary: "Start with the small set of enterprise signals, scenarios, and decisions that require the CEO's attention.",
-    links: [
-      { label: "Executive Brief", description: "See what changed, why it matters, and what needs a decision.", view: "brief" },
-      { label: "WHAT_IF Lab", description: "Test an idea's fully loaded cost and cash effect before committing.", view: "whatif" },
-      { label: "12-month Roadmap", description: "Review the proposed implementation sequence and milestones.", view: "roadmap" },
-    ],
-  },
-  finance: {
-    summary: "Run the close, reporting, liquidity, and controlled transaction workflows from the Money pillar.",
-    links: [
-      { label: "Organization Snapshot", description: "Begin with financial performance, deployable cash, and close status.", view: "finance-snapshot" },
-      { label: "Reports", description: "Produce governed financial statements and supporting reports.", view: "finance-reports" },
-      { label: "Accounts Payable", description: "Review the illustrative approval workflow and its controls.", view: "finance-payables" },
-    ],
-  },
-  hr: {
-    summary: "Coordinate workforce records, payroll handoffs, hiring, onboarding, and compliance.",
-    links: [
-      { label: "People Directory", description: "Open the role's workforce home and employee record view.", view: "people-directory" },
-      { label: "People Reports", description: "Review headcount, capacity, and workforce signals.", view: "people-reports" },
-    ],
-  },
-  "trail-solutions": {
-    summary: "Manage project delivery, backlog, margin, field capacity, and operating risk.",
-    links: [
-      { label: "Trail Solutions", description: "Open the delivery portfolio and its operating signals.", view: "trail-solutions" },
-      { label: "Project Board", description: "Move from portfolio signals into project-level work.", view: "project-board" },
-    ],
-  },
-  development: {
-    summary: "Connect pipeline, campaigns, partnerships, grants, and revenue handoffs.",
-    links: [
-      { label: "Development Engine", description: "Open the development portfolio and current momentum.", view: "development" },
-      { label: "Campaigns", description: "Review campaign progress and next actions.", view: "development-campaigns" },
-    ],
-  },
-  board: {
-    summary: "Review the board-level performance, governance, evidence, and decisions package.",
-    links: [
-      { label: "Board Portal", description: "Open the board's governed information and packet view.", view: "governance-board" },
-      { label: "Executive Brief", description: "Review the leadership narrative behind the key signals.", view: "brief" },
-    ],
-  },
-};
-
-function guideForRole(role: ImbaRoleKey) {
-  const profile = imbaRoleProfiles[role];
-  return roleGuides[role] ?? {
-    summary: profile.purpose,
-    links: [{
-      label: `Open ${profile.label} home`,
-      description: "Begin in the workspace configured for this role, then use the filtered navigation to explore.",
-      view: profile.home,
-    }],
-  };
-}
-
 function tourForRole(role: ImbaRoleKey): TourStep[] {
   const profile = imbaRoleProfiles[role];
-  const guide = guideForRole(role);
+  const guide = roleGuides[role];
   const firstLink = guide.links[0];
   const secondLink = guide.links[1];
 
@@ -146,12 +115,19 @@ function tourForRole(role: ImbaRoleKey): TourStep[] {
   ];
 }
 
-export function ImbaOnboarding({ role, currentView, onNavigate }: {
+type GuideTab = "role" | "numbers" | "system";
+
+export function ImbaOnboarding({
+  role,
+  currentView,
+  onNavigate,
+}: {
   role: ImbaRoleKey;
   currentView: ImbaOsView;
   onNavigate: (view: ImbaOsView) => void;
 }) {
   const [helpOpen, setHelpOpen] = useState(false);
+  const [guideTab, setGuideTab] = useState<GuideTab>("role");
   const [tourOpen, setTourOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -161,7 +137,12 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const steps = useMemo(() => tourForRole(role), [role]);
-  const guide = useMemo(() => guideForRole(role), [role]);
+  const guide = roleGuides[role];
+  const profile = imbaRoleProfiles[role];
+  const relevantMetrics = useMemo(
+    () => metricGuides.filter((metric) => metric.relevantSections.some((section) => profile.sections.includes(section))),
+    [profile.sections],
+  );
   const step = steps[Math.min(stepIndex, steps.length - 1)];
 
   useEffect(() => {
@@ -261,48 +242,157 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
       {mounted && helpOpen ? createPortal(
         <div className="fixed inset-0 z-[150] flex justify-end bg-black/55 backdrop-blur-sm">
           <button type="button" className="absolute inset-0 cursor-default" aria-label="Close Help" onClick={() => setHelpOpen(false)} />
-          <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] p-6 text-left shadow-2xl sm:p-8">
-            <div className="flex items-start justify-between gap-4">
+          <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative flex h-full w-full max-w-[500px] flex-col border-l border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] text-left shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--line)/0.08)] p-6 pb-5 sm:px-8">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--sa-soft))]">Role-based user guide</p>
-                <h2 id="imba-help-title" className="mt-2 text-2xl font-semibold text-[rgb(var(--text))]">Help for {imbaRoleProfiles[role].label}</h2>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--sa-soft))]">IMBA-OS user guide</p>
+                <h2 id="imba-help-title" className="mt-2 text-2xl font-semibold text-[rgb(var(--text))]">Guide for {profile.label}</h2>
+                <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">How the system works · where the numbers come from · what your role does with it</p>
               </div>
-              <button type="button" onClick={() => setHelpOpen(false)} className="rounded-xl border border-[rgb(var(--line)/0.1)] p-2 text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.05)] hover:text-[rgb(var(--text))]" aria-label="Close Help">
+              <button type="button" onClick={() => setHelpOpen(false)} className="shrink-0 rounded-xl border border-[rgb(var(--line)/0.1)] p-2 text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.05)] hover:text-[rgb(var(--text))]" aria-label="Close Help">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-4 text-sm leading-6 text-[rgb(var(--text-2))]">{guide.summary}</p>
 
-            <button type="button" onClick={replayTour} className="mt-6 flex w-full items-center justify-between rounded-2xl border border-[rgb(var(--sa)/0.28)] bg-[rgb(var(--sa)/0.10)] px-4 py-4 text-left transition hover:bg-[rgb(var(--sa)/0.16)]">
-              <span className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[rgb(var(--sa)/0.18)] text-[rgb(var(--sa-soft))]"><RotateCcw className="h-4 w-4" /></span>
-                <span>
-                  <span className="block text-sm font-bold text-[rgb(var(--text))]">Replay guided tour</span>
-                  <span className="mt-0.5 block text-[11px] text-[rgb(var(--text-3))]">About two minutes · skippable</span>
-                </span>
-              </span>
-              <ArrowRight className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
-            </button>
-
-            <div className="mt-8">
-              <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><h3 className="text-sm font-bold text-[rgb(var(--text))]">Start here</h3></div>
-              <div className="mt-3 space-y-2">
-                {guide.links.map((link, index) => (
-                  <button key={link.view} type="button" onClick={() => { onNavigate(link.view); setHelpOpen(false); }} className="group flex w-full items-start gap-3 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.025)] p-4 text-left transition hover:border-[rgb(var(--sa)/0.2)] hover:bg-[rgb(var(--line)/0.05)]">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--line)/0.06)] text-[11px] font-black text-[rgb(var(--text-2))]">{index + 1}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-[rgb(var(--text))]">{link.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-3))]">{link.description}</span>
-                    </span>
-                    <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--text-4))] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--sa-soft))]" />
+            <div className="flex gap-1 border-b border-[rgb(var(--line)/0.08)] px-4 sm:px-6" role="tablist" aria-label="Guide sections">
+              {GUIDE_TABS.map((tab) => {
+                const TabIcon = tab.icon;
+                const active = guideTab === tab.key;
+                return (
+                  <button key={tab.key} type="button" role="tab" aria-selected={active} onClick={() => setGuideTab(tab.key)} className={`-mb-px flex items-center gap-1.5 border-b-2 px-3 py-3 text-xs font-bold transition ${active ? "border-[rgb(var(--sa))] text-[rgb(var(--text))]" : "border-transparent text-[rgb(var(--text-3))] hover:text-[rgb(var(--text-2))]"}`}>
+                    <TabIcon className="h-3.5 w-3.5" />{tab.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            <div className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4">
-              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-bold">Prototype boundary</p></div>
-              <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">Public Form 990 and annual-report history is identified where used. Current projects, bills, people, workflows, and forecasts are illustrative until IMBA&apos;s systems are connected. No live credentials, records, or payments are used here.</p>
+            <div className="flex-1 overflow-y-auto p-6 sm:px-8">
+              {guideTab === "role" ? (
+                <div className="space-y-6">
+                  <p className="text-sm leading-6 text-[rgb(var(--text-2))]">{guide.summary}</p>
+
+                  <div>
+                    <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><h3 className="text-sm font-bold text-[rgb(var(--text))]">What good looks like</h3></div>
+                    <ul className="mt-3 space-y-2">
+                      {guide.outcomes.map((outcome) => (
+                        <li key={outcome} className="flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-2))]"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[rgb(var(--sa))]" />{outcome}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2"><Gauge className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><h3 className="text-sm font-bold text-[rgb(var(--text))]">Your cadence</h3></div>
+                    <div className="mt-3 space-y-2">
+                      {guide.cadence.map((item) => (
+                        <div key={item.label} className="flex gap-3 rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.02)] p-3">
+                          <span className="w-20 shrink-0 text-[11px] font-black uppercase tracking-wide text-[rgb(var(--sa-soft))]">{item.label}</span>
+                          <span className="text-xs leading-5 text-[rgb(var(--text-2))]">{item.action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-amber-700 dark:text-amber-200" /><h3 className="text-sm font-bold text-[rgb(var(--text))]">Watch for</h3></div>
+                    <ul className="mt-3 space-y-2">
+                      {guide.watchFor.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-xs leading-5 text-[rgb(var(--text-2))]"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><h3 className="text-sm font-bold text-[rgb(var(--text))]">Start here</h3></div>
+                    <div className="mt-3 space-y-2">
+                      {guide.links.map((link, index) => (
+                        <button key={link.view} type="button" onClick={() => { onNavigate(link.view); setHelpOpen(false); }} className="group flex w-full items-start gap-3 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.025)] p-4 text-left transition hover:border-[rgb(var(--sa)/0.2)] hover:bg-[rgb(var(--line)/0.05)]">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--line)/0.06)] text-[11px] font-black text-[rgb(var(--text-2))]">{index + 1}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-[rgb(var(--text))]">{link.label}</span>
+                            <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-3))]">{link.description}</span>
+                          </span>
+                          <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--text-4))] transition group-hover:translate-x-0.5 group-hover:text-[rgb(var(--sa-soft))]" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button type="button" onClick={replayTour} className="flex w-full items-center justify-between rounded-2xl border border-[rgb(var(--sa)/0.28)] bg-[rgb(var(--sa)/0.10)] px-4 py-4 text-left transition hover:bg-[rgb(var(--sa)/0.16)]">
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[rgb(var(--sa)/0.18)] text-[rgb(var(--sa-soft))]"><RotateCcw className="h-4 w-4" /></span>
+                      <span>
+                        <span className="block text-sm font-bold text-[rgb(var(--text))]">Replay guided tour</span>
+                        <span className="mt-0.5 block text-[11px] text-[rgb(var(--text-3))]">About two minutes · skippable</span>
+                      </span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
+                  </button>
+                </div>
+              ) : null}
+
+              {guideTab === "numbers" ? (
+                <div className="space-y-6">
+                  <p className="text-sm leading-6 text-[rgb(var(--text-2))]">Every consequential number in IMBA-OS carries its definition, formula, source systems, refresh timing, and a status showing how trustworthy it is today. These are the measures most relevant to {profile.label}.</p>
+
+                  <div className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.02)] p-4">
+                    <h3 className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">What the status labels mean</h3>
+                    <div className="mt-3 space-y-2">
+                      {dataStatusGuide.map((item) => (
+                        <div key={item.label} className="flex items-start gap-2.5">
+                          <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${STATUS_BADGE[item.label]}`}>{item.label}</span>
+                          <span className="text-[11px] leading-5 text-[rgb(var(--text-3))]">{item.detail}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {relevantMetrics.map((metric) => (
+                      <div key={metric.label} className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.02)] p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-sm font-semibold text-[rgb(var(--text))]">{metric.label}</h3>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${STATUS_BADGE[metric.status]}`}>{metric.status}</span>
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-2))]">{metric.definition}</p>
+                        <div className="mt-3 flex items-start gap-2 rounded-xl bg-[rgb(var(--line)/0.03)] p-3">
+                          <Calculator className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--sa-soft))]" />
+                          <p className="text-[11px] leading-5 text-[rgb(var(--text-2))]"><span className="font-semibold text-[rgb(var(--text))]">How it&apos;s calculated: </span>{metric.calculation}</p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                          <Database className="h-3 w-3 text-[rgb(var(--text-4))]" />
+                          {metric.sources.map((source) => (
+                            <span key={source} className="rounded-full border border-[rgb(var(--line)/0.09)] px-2 py-0.5 text-[10px] text-[rgb(var(--text-3))]">{source}</span>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[11px] text-[rgb(var(--text-4))]">Refresh: {metric.refresh}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {guideTab === "system" ? (
+                <div className="space-y-6">
+                  <p className="text-sm leading-6 text-[rgb(var(--text-2))]">IMBA-OS is one operating layer over IMBA&apos;s systems of record. You connect a source once; from then on IMBA-OS keeps a synced copy, calculates management measures from it, and shows where every figure came from — so you don&apos;t log into five systems to answer one question.</p>
+
+                  <div className="space-y-2">
+                    {systemSteps.map((stepItem, index) => (
+                      <div key={stepItem.label} className="flex gap-3 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.02)] p-4">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.12)] text-[11px] font-black text-[rgb(var(--sa-soft))]">{index + 1}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[rgb(var(--text))]">{stepItem.label}</p>
+                          <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-2))]">{stepItem.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-bold">Prototype boundary</p></div>
+                    <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">Public Form 990 and annual-report history is identified where used. Current projects, bills, people, workflows, and forecasts are illustrative until IMBA&apos;s systems are connected. No live credentials, records, or payments are used here.</p>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </aside>
         </div>,
