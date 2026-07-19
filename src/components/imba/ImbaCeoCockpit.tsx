@@ -60,6 +60,7 @@ import {
   type ImbaProjectStatus,
   type ImbaScenarioKey,
 } from "@/lib/imba-cockpit-data";
+import { imbaEmployees } from "@/lib/imba-detail-data";
 import {
   imbaNextTwelveMonthRoadmap,
   imbaOsSections,
@@ -118,6 +119,14 @@ import {
 } from "@/lib/imba-intelligence-data";
 
 type DecisionStatus = "approved" | "delegated" | "deferred";
+type DecisionRecord = {
+  status: DecisionStatus;
+  actor: string;
+  at: string;
+  assignee?: string; // "Name · Role"
+  deadline?: string; // yyyy-mm-dd
+  routedTo?: string; // owning team an approval routes to
+};
 
 const metricDefinitions: Record<string, string> = {
   "Deployable cash":
@@ -1177,19 +1186,74 @@ function CashRunwayChart({ series }: { series: number[] }) {
   );
 }
 
+// Delegate candidates for a decision: leaders (directors / managers) on the
+// team(s) the decision touches, falling back to org-wide leadership.
+function delegateCandidates(decision: ImbaDecision): Array<{ name: string; role: string }> {
+  const owner = decision.owner.toLowerCase();
+  const isLeader = (e: (typeof imbaEmployees)[number]) =>
+    e.type === "Leadership" || /director|manager|vice president|\blead\b/i.test(e.role);
+  const inTeams = (teams: string[]) => imbaEmployees.filter((e) => teams.includes(e.team));
+  let pool: (typeof imbaEmployees)[number][] = [];
+  if (/trail|project|construction|delivery|design/.test(owner)) pool = inTeams(["Construction & Ops", "Planning & Design", "Trail Field"]);
+  else if (/people|talent|hr|workforce|staff/.test(owner)) pool = inTeams(["People & Culture"]);
+  else if (/finance|budget|cash|grant/.test(owner)) pool = inTeams(["Development & Grants", "Executive"]);
+  let candidates = pool.filter(isLeader);
+  if (candidates.length < 2) candidates = imbaEmployees.filter(isLeader);
+  return candidates.map((e) => ({ name: e.name, role: e.role }));
+}
+
+function nextBusinessDays(count: number): string {
+  const d = new Date();
+  let added = 0;
+  while (added < count) {
+    d.setDate(d.getDate() + 1);
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) added += 1;
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDeadline(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function DecisionCard({
   decision,
-  status,
-  onSetStatus,
+  record,
+  candidates,
+  onApprove,
+  onDelegate,
+  onDefer,
 }: {
   decision: ImbaDecision;
-  status?: DecisionStatus;
-  onSetStatus: (status: DecisionStatus) => void;
+  record?: DecisionRecord;
+  candidates: Array<{ name: string; role: string }>;
+  onApprove: () => void;
+  onDelegate: (assignee: string, deadline: string) => void;
+  onDefer: () => void;
 }) {
+  const [delegating, setDelegating] = useState(false);
+  const [assignee, setAssignee] = useState(
+    candidates[0] ? `${candidates[0].name} · ${candidates[0].role}` : "",
+  );
+  const [deadline, setDeadline] = useState(() => nextBusinessDays(3));
+
   const urgencyClass =
     decision.urgency === "Now"
       ? "bg-rose-400/10 text-rose-700 dark:text-rose-200 border-rose-400/20"
       : "bg-amber-300/10 text-amber-800 dark:text-amber-100 border-amber-300/20";
+
+  const statusLine =
+    record?.status === "approved"
+      ? `Approved by ${record.actor} · routed to ${record.routedTo ?? decision.owner} to execute`
+      : record?.status === "delegated"
+        ? `Delegated to ${record.assignee} · respond by ${formatDeadline(record.deadline ?? "")}`
+        : record?.status === "deferred"
+          ? `Deferred by ${record.actor}`
+          : "";
 
   return (
     <article className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
@@ -1212,13 +1276,13 @@ function DecisionCard({
             {decision.context}
           </p>
         </div>
-        {status ? (
+        {record ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--sa)/0.25)] bg-[rgb(var(--sa)/0.10)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[rgb(var(--pos))]">
-            <Check className="h-3.5 w-3.5" /> {status}
+            <Check className="h-3.5 w-3.5" /> {record.status}
           </span>
         ) : null}
       </div>
-      <div className="mt-4 grid gap-3 rounded-2xl border border-[rgb(var(--line)/0.06)] bg-black/10 p-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 rounded-2xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.03)] p-3 md:grid-cols-2">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
             Finance recommendation
@@ -1243,27 +1307,71 @@ function DecisionCard({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => onSetStatus("approved")}
+            onClick={onApprove}
             className="rounded-xl bg-[rgb(var(--sa))] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
           >
             Approve path
           </button>
           <button
             type="button"
-            onClick={() => onSetStatus("delegated")}
-            className="rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))] transition hover:bg-[rgb(var(--line)/0.08)]"
+            onClick={() => setDelegating((value) => !value)}
+            className={`rounded-xl border px-3 py-2 text-[11px] font-black uppercase tracking-wider transition ${delegating ? "border-[rgb(var(--sa)/0.4)] bg-[rgb(var(--sa)/0.08)] text-[rgb(var(--sa-soft))]" : "border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.04)] text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.08)]"}`}
           >
             Delegate
           </button>
           <button
             type="button"
-            onClick={() => onSetStatus("deferred")}
+            onClick={onDefer}
             className="rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-2))] transition hover:text-[rgb(var(--text))]"
           >
             Defer
           </button>
         </div>
       </div>
+
+      {delegating ? (
+        <div className="mt-3 grid gap-3 rounded-2xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.02)] p-3 sm:grid-cols-[1.5fr_1fr_auto] sm:items-end">
+          <label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
+            Delegate to
+            <select
+              value={assignee}
+              onChange={(event) => setAssignee(event.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-2 text-xs text-[rgb(var(--text))] outline-none"
+            >
+              {candidates.map((candidate) => (
+                <option key={candidate.name} value={`${candidate.name} · ${candidate.role}`}>
+                  {candidate.name} — {candidate.role}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
+            Respond by
+            <input
+              type="date"
+              value={deadline}
+              onChange={(event) => setDeadline(event.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-2 text-xs text-[rgb(var(--text))] outline-none"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              if (assignee) onDelegate(assignee, deadline);
+              setDelegating(false);
+            }}
+            className="rounded-xl bg-[rgb(var(--sa))] px-4 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]"
+          >
+            Send
+          </button>
+        </div>
+      ) : null}
+
+      {statusLine ? (
+        <p className="mt-3 flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">
+          <Check className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> {statusLine} · logged to the audit trail
+        </p>
+      ) : null}
     </article>
   );
 }
@@ -1646,7 +1754,7 @@ function ImbaRoadmapView({
 }
 
 export function ImbaCeoCockpit() {
-  const { connectors, syncJobs } = useImbaOsState();
+  const { connectors, syncJobs, addAuditEvent } = useImbaOsState();
   const [view, setView] = useState<ImbaOsView>("brief");
   const [scenarioKey, setScenarioKey] = useState<ImbaScenarioKey>("base");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -1654,9 +1762,24 @@ export function ImbaCeoCockpit() {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({ Management: true });
-  const [decisionStatuses, setDecisionStatuses] = useState<
-    Record<string, DecisionStatus>
+  const [decisionRecords, setDecisionRecords] = useState<
+    Record<string, DecisionRecord>
   >({});
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("imba-decisions-v1");
+      if (saved) setDecisionRecords(JSON.parse(saved) as Record<string, DecisionRecord>);
+    } catch {
+      /* ignore corrupt cache */
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("imba-decisions-v1", JSON.stringify(decisionRecords));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [decisionRecords]);
   const [role, setRole] = useState<ImbaRoleKey>("executive");
   const [filters, setFilters] = useState<ImbaFilterState>(initialImbaFilters);
   const [savedViews, setSavedViews] = useState<ImbaSavedView[]>([]);
@@ -2086,6 +2209,33 @@ export function ImbaCeoCockpit() {
     setExpandedSections(homeSection ? { [homeSection.label]: true } : {});
   };
 
+  // Decision queue actions — persist the outcome and log it to the append-only
+  // audit trail (System → Activity), so approvals and delegations are real.
+  const decisionActor = imbaRoleProfiles[role].label;
+  const stampNow = () =>
+    new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const approveDecision = (decision: ImbaDecision) => {
+    setDecisionRecords((current) => ({
+      ...current,
+      [decision.id]: { status: "approved", actor: decisionActor, at: stampNow(), routedTo: decision.owner },
+    }));
+    addAuditEvent({ action: "Decision approved", record: decision.title, actor: decisionActor, detail: `Approved; routed to ${decision.owner} to execute.` });
+  };
+  const delegateDecision = (decision: ImbaDecision, assignee: string, deadline: string) => {
+    setDecisionRecords((current) => ({
+      ...current,
+      [decision.id]: { status: "delegated", actor: decisionActor, at: stampNow(), assignee, deadline },
+    }));
+    addAuditEvent({ action: "Decision delegated", record: decision.title, actor: decisionActor, detail: `Delegated to ${assignee}; respond by ${formatDeadline(deadline)}.` });
+  };
+  const deferDecision = (decision: ImbaDecision) => {
+    setDecisionRecords((current) => ({
+      ...current,
+      [decision.id]: { status: "deferred", actor: decisionActor, at: stampNow() },
+    }));
+    addAuditEvent({ action: "Decision deferred", record: decision.title, actor: decisionActor, detail: "Deferred for later review." });
+  };
+
   const saveCurrentView = () => {
     const scope =
       filters.project !== "All projects"
@@ -2448,7 +2598,7 @@ export function ImbaCeoCockpit() {
                 >
                   {
                     imbaDecisions.filter(
-                      (decision) => !decisionStatuses[decision.id],
+                      (decision) => !decisionRecords[decision.id],
                     ).length
                   }{" "}
                   open decisions{" "}
@@ -3351,13 +3501,11 @@ export function ImbaCeoCockpit() {
                       <DecisionCard
                         key={decision.id}
                         decision={decision}
-                        status={decisionStatuses[decision.id]}
-                        onSetStatus={(status) =>
-                          setDecisionStatuses((current) => ({
-                            ...current,
-                            [decision.id]: status,
-                          }))
-                        }
+                        record={decisionRecords[decision.id]}
+                        candidates={delegateCandidates(decision)}
+                        onApprove={() => approveDecision(decision)}
+                        onDelegate={(assignee, deadline) => delegateDecision(decision, assignee, deadline)}
+                        onDefer={() => deferDecision(decision)}
                       />
                     ))}
                   </div>
