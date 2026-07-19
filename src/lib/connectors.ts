@@ -60,12 +60,12 @@ export const connectors: Connector[] = [
     flows: 'Sync employees, roles, labor cost, and approval limits',
   },
   {
-    key: 'expense',
-    name: 'Expense & cards',
+    key: 'expensify',
+    name: 'Expensify',
     category: 'Employee spend',
-    systemOfRecordFor: 'Card transactions & reimbursements',
+    systemOfRecordFor: 'Card spend, receipts & reimbursements',
     status: 'planned',
-    flows: 'Sync receipts and card spend into coding & approvals',
+    flows: 'Import card transactions + receipts · code to project/grant/account · reconcile to card statement · post to the GL and reimburse',
   },
 ];
 

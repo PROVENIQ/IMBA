@@ -17,6 +17,7 @@ import {
   CircleDollarSign,
   Clock3,
   Compass,
+  CreditCard,
   Database,
   FileText,
   Gauge,
@@ -316,6 +317,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Bills + invoices",
         description: "Controlled transaction entry",
         icon: BookOpen,
+      },
+      {
+        id: "finance-expenses",
+        label: "Expenses",
+        description: "Expensify card spend + reconciliation",
+        icon: CreditCard,
       },
       {
         id: "liquidity",
@@ -762,6 +769,7 @@ const financeViews: ImbaFinanceView[] = [
   "finance-ap-ar",
   "finance-reports",
   "finance-transactions",
+  "finance-expenses",
 ];
 const operationsViews: ImbaOperationsView[] = [
   "project-command",

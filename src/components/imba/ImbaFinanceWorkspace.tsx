@@ -6,6 +6,7 @@ import {
   CalendarClock,
   Check,
   ClipboardCheck,
+  CreditCard,
   Download,
   Eye,
   FileBarChart,
@@ -39,7 +40,8 @@ export type ImbaFinanceView =
   | 'finance-payables'
   | 'finance-ap-ar'
   | 'finance-reports'
-  | 'finance-transactions';
+  | 'finance-transactions'
+  | 'finance-expenses';
 
 function money(value: number): string {
   const sign = value < 0 ? '-' : '';
@@ -86,6 +88,7 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
   'finance-ap-ar': { eyebrow: 'Money · collections', title: 'Accounts receivable', description: 'Open invoices, unbilled milestones, aging, and collection follow-ups. Vendor bills and approvals live in Accounts payable.' },
   'finance-reports': { eyebrow: 'Money · reporting library', title: 'Reports', description: 'A governed catalog for leadership, Board, project accounting, treasury, grants, and compliance.' },
   'finance-transactions': { eyebrow: 'Money · transaction control', title: 'Bills + invoices', description: 'Controlled entry for vendor bills, client invoices, chapter obligations, project milestones, and coding evidence.' },
+  'finance-expenses': { eyebrow: 'Money · employee spend', title: 'Expenses (Expensify)', description: 'Card spend and receipts flow from Expensify into coding, reconcile to the card statement, and post to the GL and reimbursements.' },
 };
 
 export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void; role?: ImbaRoleKey; filters?: ImbaFilterState }) {
@@ -105,7 +108,103 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
         </div>
       ) : null}
       {view === 'finance-transactions' ? <TransactionsIntegrated onNavigate={onNavigate} /> : null}
+      {view === 'finance-expenses' ? <ExpenseTracking /> : null}
     </div>
+  );
+}
+
+// Expensify expense tracking + reconciliation. Card spend and receipts import
+// from Expensify, get coded to project/grant/account, reconcile to the card
+// statement, and post to the GL + reimbursements. Illustrative data.
+function ExpenseTracking() {
+  const expenses = [
+    { id: 'EXP-4471', date: 'Jul 15', card: 'Trail Field · crew card', merchant: 'Home Depot — materials', amount: 842.16, account: '6200 · Field materials', coding: 'Great Lakes Buildout', status: 'Posted' },
+    { id: 'EXP-4468', date: 'Jul 14', card: 'Planning & Design · card', merchant: 'Adobe Creative Cloud', amount: 79.99, account: '6500 · Software', coding: 'Shared services', status: 'Reconciled' },
+    { id: 'EXP-4462', date: 'Jul 12', card: 'Programs & Community · card', merchant: 'Delta Air Lines', amount: 418.20, account: '6300 · Travel', coding: 'Education program', status: 'Approved' },
+    { id: 'EXP-4459', date: 'Jul 11', card: 'Trail Field · crew card', merchant: 'Shell — fuel', amount: 96.44, account: '6250 · Crew travel', coding: 'Coastal Access Network', status: 'Coded' },
+    { id: 'EXP-4455', date: 'Jul 10', card: 'Development & Grants · card', merchant: 'Zoom Events', amount: 210.00, account: '6420 · Fundraising events', coding: 'Fundraising', status: 'Coded' },
+    { id: 'EXP-4451', date: 'Jul 9', card: 'Communications · card', merchant: 'Meta Ads', amount: 350.00, account: '6410 · Advertising', coding: 'Membership campaign', status: 'Imported' },
+    { id: 'EXP-4448', date: 'Jul 8', card: 'Programs & Community · card', merchant: 'REI — field supplies', amount: 264.87, account: '6200 · Field materials', coding: 'Chapters & programs', status: 'Imported' },
+  ];
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const uncoded = expenses.filter((e) => e.status === 'Imported').length;
+  const posted = expenses.filter((e) => e.status === 'Posted' || e.status === 'Reconciled').reduce((s, e) => s + e.amount, 0);
+  const statementTotal = 2626.7; // illustrative card statement
+  const unreconciled = statementTotal - posted;
+  const badge: Record<string, string> = {
+    Imported: 'bg-[rgb(var(--line)/0.08)] text-[rgb(var(--text-2))]',
+    Coded: 'bg-cyan-300/10 text-cyan-700 dark:text-cyan-100',
+    Approved: 'bg-amber-300/10 text-amber-800 dark:text-amber-100',
+    Reconciled: 'bg-violet-300/10 text-violet-700 dark:text-violet-100',
+    Posted: 'bg-[rgb(var(--sa)/0.12)] text-[rgb(var(--sa-soft))]',
+  };
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="rounded-lg bg-[rgb(var(--sa)/0.10)] p-1.5 text-[rgb(var(--sa-soft))]"><CreditCard className="h-4 w-4" /></span>
+          <span className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))]">Expensify</span>
+          <span className="text-[11px] text-[rgb(var(--text-3))]">card + receipt connector · demo</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+        </div>
+        <span className="text-[11px] text-[rgb(var(--text-3))]">Import → code → reconcile → post · illustrative data</span>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi label="Card spend · period" value={money(total)} note={`${expenses.length} transactions imported from Expensify`} tone="teal" />
+        <Kpi label="Awaiting coding" value={String(uncoded)} note="Receipts imported, not yet project/grant-coded" tone={uncoded ? 'amber' : 'lime'} />
+        <Kpi label="Posted / reconciled" value={money(posted)} note="Matched to statement and posted to the GL" tone="lime" />
+        <Kpi label="Unreconciled" value={money(unreconciled)} note="Statement vs posted — clears before close" tone={Math.abs(unreconciled) > 1 ? 'amber' : 'lime'} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-12">
+        <ShellCard className="xl:col-span-8">
+          <Heading eyebrow="Expensify feed" title="Card spend + receipts" detail="Coded to project / grant / account" />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left">
+              <thead>
+                <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                  <th className="px-5 py-3">Date · cardholder</th>
+                  <th className="px-3 py-3">Merchant</th>
+                  <th className="px-3 py-3 text-right">Amount</th>
+                  <th className="px-3 py-3">Coding</th>
+                  <th className="px-5 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((e) => (
+                  <tr key={e.id} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                    <td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{e.date}</p><p className="mt-0.5 text-[11px] text-[rgb(var(--text-3))]">{e.card}</p></td>
+                    <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{e.merchant}</td>
+                    <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(e.amount)}</td>
+                    <td className="px-3 py-3.5"><p className="text-[11px] text-[rgb(var(--text-2))]">{e.coding}</p><p className="mt-0.5 text-[11px] text-[rgb(var(--text-3))]">{e.account}</p></td>
+                    <td className="px-5 py-3.5"><span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${badge[e.status]}`}>{e.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ShellCard>
+
+        <ShellCard className="xl:col-span-4">
+          <Heading eyebrow="Card reconciliation" title="Expensify → statement → GL" />
+          <div className="space-y-3 p-5">
+            <div className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="text-[11px] text-[rgb(var(--text-2))]">Expensify export</span><span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(total)}</span></div>
+            <div className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="text-[11px] text-[rgb(var(--text-2))]">Card statement</span><span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(statementTotal)}</span></div>
+            <div className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="text-[11px] text-[rgb(var(--text-2))]">Posted to GL</span><span className="font-mono text-xs font-semibold text-[rgb(var(--sa-soft))]">{money(posted)}</span></div>
+            <div className="flex items-center justify-between rounded-xl border border-amber-300/20 bg-amber-300/[0.05] px-3 py-2.5"><span className="text-[11px] font-semibold text-amber-800 dark:text-amber-100">In-transit / uncoded</span><span className="font-mono text-xs font-semibold text-amber-800 dark:text-amber-100">{money(statementTotal - posted)}</span></div>
+            <div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4">
+              <p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Reconciliation controls</p>
+              <div className="mt-3 space-y-2">
+                {['Every transaction carries a receipt', 'Coded to project / grant / account', 'Statement matched line-by-line', 'Reimbursements approved before payout'].map((item, index) => (
+                  <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">{index < 2 ? <Check className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> : <ClipboardCheck className="h-3.5 w-3.5 text-[rgb(var(--info))]" />}{item}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ShellCard>
+      </div>
+    </>
   );
 }
 
