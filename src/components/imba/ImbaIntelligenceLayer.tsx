@@ -84,6 +84,7 @@ export function ImbaIntelligenceBar({
   onApplySavedView,
   onOpenAlerts,
   onResetFilters,
+  condensed = false,
 }: {
   role: ImbaRoleKey;
   filters: ImbaFilterState;
@@ -99,8 +100,24 @@ export function ImbaIntelligenceBar({
   onApplySavedView: (id: string) => void;
   onOpenAlerts: () => void;
   onResetFilters: () => void;
+  condensed?: boolean;
 }) {
   const activeFilters = Object.values(filters).filter((value) => !value.startsWith('All ')).length;
+  const [expanded, setExpanded] = useState(!condensed);
+
+  if (!expanded) {
+    return (
+      <section className="flex min-h-12 flex-wrap items-center gap-3 rounded-2xl border border-violet-300/15 bg-[linear-gradient(110deg,rgba(167,139,250,.06),rgba(104,185,170,.035))] px-3 py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-300/10 text-violet-700 dark:text-violet-100"><Filter className="h-4 w-4" /></span>
+          <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-700 dark:text-violet-100/65">Context</p><p className="truncate text-[11px] text-[rgb(var(--text-2))]">{resultSummary}{activeFilters ? ` · ${activeFilters} active filter${activeFilters === 1 ? '' : 's'}` : ''}</p></div>
+        </div>
+        <button type="button" onClick={() => setExpanded(true)} className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card))] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.04)]"><Filter className="h-3.5 w-3.5" /> Filters <ChevronDown className="h-3 w-3" /></button>
+        <button type="button" onClick={onOpenAlerts} className="relative inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-3 py-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]"><Bell className="h-3.5 w-3.5" /> Alerts{activeAlertCount ? <span className="rounded-full bg-[rgb(var(--sa-ink))]/15 px-1.5 py-0.5">{activeAlertCount}</span> : null}</button>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-[20px] border border-violet-300/15 bg-[linear-gradient(110deg,rgba(167,139,250,.075),rgba(104,185,170,.045))] p-3.5">
       <div className="flex flex-wrap items-center gap-2.5">
@@ -114,6 +131,7 @@ export function ImbaIntelligenceBar({
         <SelectControl label="Project" value={filters.project} options={['All projects', ...projects]} onChange={(project) => onFilterChange({ project })} />
         {activeFilters ? <button type="button" onClick={onResetFilters} className="rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-2.5 text-[11px] font-black uppercase text-[rgb(var(--text-2))] hover:text-[rgb(var(--text))]">Clear {activeFilters}</button> : null}
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setExpanded(false)} className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-2.5 text-[11px] font-black uppercase text-[rgb(var(--text-2))] hover:text-[rgb(var(--text))]">Collapse <ChevronDown className="h-3 w-3 rotate-180" /></button>
           {savedViews.length ? (
             <div className="flex items-center gap-1 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card))] p-1">
               <Bookmark className="ml-2 h-3.5 w-3.5 text-violet-700 dark:text-violet-100" />
@@ -135,18 +153,35 @@ export function ImbaIntelligenceBar({
   );
 }
 
-export function ImbaInsightStrip({ insights, onSelect }: { insights: ImbaInsight[]; onSelect: (insight: ImbaInsight) => void }) {
+export function ImbaInsightStrip({ insights, onSelect, condensed = false }: { insights: ImbaInsight[]; onSelect: (insight: ImbaInsight) => void; condensed?: boolean }) {
+  const [expanded, setExpanded] = useState(!condensed);
   const tone = { positive: 'border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] text-[rgb(var(--sa-soft))]', warning: 'border-amber-300/15 bg-amber-300/[0.045] text-amber-800 dark:text-amber-100', risk: 'border-rose-300/15 bg-rose-300/[0.045] text-rose-700 dark:text-rose-100' };
+
+  if (!expanded) {
+    return (
+      <button type="button" onClick={() => setExpanded(true)} className="flex w-full items-center gap-3 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/0.72)] px-4 py-2.5 text-left transition hover:border-[rgb(var(--sa)/0.22)] hover:bg-[rgb(var(--card))]" aria-label={`Show ${insights.length} contextual signals`}>
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-[rgb(var(--sa-soft))]" />
+        <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[rgb(var(--text-3))]">{insights.length} contextual signals</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] text-[rgb(var(--text-2))]">{insights.map((insight) => insight.title).join(' · ')}</span>
+        <span className="text-[10px] font-bold uppercase text-[rgb(var(--sa-soft))]">Show</span>
+        <ChevronDown className="h-3 w-3 text-[rgb(var(--sa-soft))]" />
+      </button>
+    );
+  }
+
   return (
-    <section className="grid gap-2 lg:grid-cols-3" aria-label="Automated variance and anomaly narrative">
-      {insights.map((insight) => (
-        <button key={insight.id} type="button" onClick={() => onSelect(insight)} className={`group flex items-start gap-3 rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 ${tone[insight.tone]}`}>
-          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span className="min-w-0 flex-1">{insight.scope ? <span className="mb-1 block text-[10px] font-semibold uppercase text-[rgb(var(--text-3))]">{insight.scope}</span> : null}<span className="block text-[11px] font-black uppercase tracking-wider">{insight.title}</span><span className="mt-1 block text-[11px] leading-4 text-[rgb(var(--text-2))]">{insight.detail}</span></span>
-          <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
-        </button>
-      ))}
-    </section>
+    <div className="space-y-2">
+      {condensed ? <div className="flex justify-end"><button type="button" onClick={() => setExpanded(false)} className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-[rgb(var(--text-3))] hover:text-[rgb(var(--text))]">Collapse signals <ChevronDown className="h-3 w-3 rotate-180" /></button></div> : null}
+      <section className="grid gap-2 lg:grid-cols-3" aria-label="Automated variance and anomaly narrative">
+        {insights.map((insight) => (
+          <button key={insight.id} type="button" onClick={() => onSelect(insight)} className={`group flex items-start gap-3 rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 ${tone[insight.tone]}`}>
+            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 flex-1">{insight.scope ? <span className="mb-1 block text-[10px] font-semibold uppercase text-[rgb(var(--text-3))]">{insight.scope}</span> : null}<span className="block text-[11px] font-black uppercase tracking-wider">{insight.title}</span><span className="mt-1 block text-[11px] leading-4 text-[rgb(var(--text-2))]">{insight.detail}</span></span>
+            <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-50 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+          </button>
+        ))}
+      </section>
+    </div>
   );
 }
 

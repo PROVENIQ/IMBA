@@ -102,7 +102,6 @@ import type { ImbaCollaborationView } from "@/lib/imba-collaboration-data";
 import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
 import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
-import { ImbaSectionHero } from "@/components/imba/ImbaSectionHero";
 import { ImbaOnboarding } from "@/components/imba/ImbaOnboarding";
 import {
   ImbaAlertsDrawer,
@@ -1991,8 +1990,8 @@ export function ImbaCeoCockpit() {
 
   const visibleNavSections = useMemo(() => navSectionsForRole(role), [role]);
   const [dismissedHeroes, setDismissedHeroes] = useState<Set<string>>(() => new Set());
-  // Section hero shows only on the section's landing (first role-allowed) view,
-  // so subsections stay distinct.
+  // The large workspace introduction belongs only on the pillar landing.
+  // Detail views open directly into their working surface.
   const landingSection = visibleNavSections.find((s) => s.items.some((item) => item.id === view));
   const isSectionLanding = Boolean(landingSection) && landingSection?.items[0]?.id === view;
   const regions = useMemo(
@@ -2678,6 +2677,7 @@ export function ImbaCeoCockpit() {
         <div className="relative z-20 shrink-0 border-b border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel)/85%)] px-4 py-3 sm:px-6 xl:px-8" data-tour="intelligence-context">
           <div className="mx-auto max-w-[1580px]">
             <ImbaIntelligenceBar
+              condensed
               role={role}
               filters={filters}
               regions={regions}
@@ -2704,16 +2704,13 @@ export function ImbaCeoCockpit() {
 
         <main className={`workspace-shell workspace-shell--${activeWorkspaceSlug} workspace-mode--${activeWorkspaceMode} min-w-0 flex-1 overflow-y-auto`} data-tour="workspace">
           <div className="workspace-canvas mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
-            <ImbaWorkspaceSignature
-              section={activeSectionLabel}
-              viewId={view}
-              title={currentView.label}
-              description={currentView.description}
-              icon={currentView.icon}
-            />
             {isSectionLanding && !dismissedHeroes.has(activeSectionLabel) ? (
-              <ImbaSectionHero
+              <ImbaWorkspaceSignature
                 section={activeSectionLabel}
+                viewId={view}
+                title={currentView.label}
+                description={currentView.description}
+                icon={currentView.icon}
                 onClose={() =>
                   setDismissedHeroes((prev) => new Set(prev).add(activeSectionLabel))
                 }
@@ -2769,7 +2766,9 @@ export function ImbaCeoCockpit() {
             ) : null}
 
             <ImbaInsightStrip
+              key={`insights-${view}`}
               insights={intelligenceInsights}
+              condensed={!isSectionLanding}
               onSelect={(insight) => {
                 if (insight.project)
                   setFilters((current) => ({

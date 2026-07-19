@@ -23,6 +23,7 @@ import {
   Target,
   UsersRound,
   Workflow,
+  X,
 } from 'lucide-react';
 
 export type WorkspaceMode =
@@ -193,6 +194,7 @@ interface ImbaWorkspaceSignatureProps {
   title: string;
   description: string;
   icon: LucideIcon;
+  onClose?: () => void;
 }
 
 export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
@@ -201,6 +203,7 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
   title,
   description,
   icon: ViewIcon,
+  onClose,
 }: ImbaWorkspaceSignatureProps) {
   const mode = workspaceModeForView(viewId);
   const ModeIcon = modeLanguage[mode].icon;
@@ -208,6 +211,11 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
 
   return (
     <section className={`workspace-signature workspace-signature--${section.toLowerCase()} workspace-signature-mode--${mode}`}>
+      {onClose ? (
+        <button type="button" onClick={onClose} aria-label={`Dismiss ${section} workspace introduction`} className="workspace-signature-close">
+          <X />
+        </button>
+      ) : null}
       <div className="workspace-signature-copy">
         <div className="workspace-signature-kicker"><span><ViewIcon /></span>{section} workspace <ChevronRight /> {modeLanguage[mode].label}</div>
         <div className="workspace-signature-title-row">

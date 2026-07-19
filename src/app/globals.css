@@ -2357,6 +2357,30 @@ tbody tr:last-child td {
   background: rgb(var(--sa));
 }
 
+.workspace-signature-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: rgb(var(--text-3));
+  border: 1px solid rgb(var(--line) / 0.12);
+  border-radius: 10px;
+  background: rgb(var(--card) / 0.8);
+  transition: 140ms ease;
+}
+
+.workspace-signature-close:hover {
+  color: rgb(var(--text));
+  border-color: rgb(var(--sa) / 0.36);
+  background: rgb(var(--card));
+}
+
+.workspace-signature-close svg { width: 15px; height: 15px; }
+
 .workspace-signature-copy {
   position: relative;
   z-index: 2;
