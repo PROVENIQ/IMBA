@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowRight,
   BookOpen,
@@ -154,6 +155,11 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
   const [tourOpen, setTourOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  // Overlays must portal to <body>: this component renders inside the app
+  // header, whose backdrop-blur creates a containing block that would trap
+  // position:fixed children (the tour card drifted off-screen otherwise).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const steps = useMemo(() => tourForRole(role), [role]);
   const guide = useMemo(() => guideForRole(role), [role]);
   const step = steps[Math.min(stepIndex, steps.length - 1)];
@@ -226,11 +232,14 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
       return { left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
     }
     const cardWidth = Math.min(390, window.innerWidth - 32);
+    const cardHeight = Math.min(420, window.innerHeight - 32);
     const fitsRight = targetRect.right + cardWidth + 28 < window.innerWidth;
-    const left = fitsRight ? targetRect.right + 18 : Math.max(16, Math.min(targetRect.left, window.innerWidth - cardWidth - 16));
-    const top = fitsRight
-      ? Math.max(16, Math.min(targetRect.top, window.innerHeight - 390))
-      : Math.max(16, Math.min(targetRect.bottom + 16, window.innerHeight - 390));
+    // Whichever side is chosen, the card must stay fully inside the viewport —
+    // header targets sit at the far right, so clamp both axes unconditionally.
+    const rawLeft = fitsRight ? targetRect.right + 18 : targetRect.left;
+    const left = Math.max(16, Math.min(rawLeft, window.innerWidth - cardWidth - 16));
+    const rawTop = fitsRight ? targetRect.top : targetRect.bottom + 16;
+    const top = Math.max(16, Math.min(rawTop, window.innerHeight - cardHeight - 16));
     return { left, top, transform: "none" };
   })();
 
@@ -247,7 +256,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
         <span className="hidden text-[11px] font-bold xl:inline">Help</span>
       </button>
 
-      {helpOpen ? (
+      {mounted && helpOpen ? createPortal(
         <div className="fixed inset-0 z-[90] flex justify-end bg-black/55 backdrop-blur-sm">
           <button type="button" className="absolute inset-0 cursor-default" aria-label="Close Help" onClick={() => setHelpOpen(false)} />
           <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-white/10 bg-[rgb(var(--panel))] p-6 text-left shadow-2xl sm:p-8">
@@ -294,10 +303,11 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
               <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">Public Form 990 and annual-report history is identified where used. Current projects, bills, people, workflows, and forecasts are illustrative until IMBA&apos;s systems are connected. No live credentials, records, or payments are used here.</p>
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body,
       ) : null}
 
-      {tourOpen ? (
+      {mounted && tourOpen ? createPortal(
         <div className="fixed inset-0 z-[100]">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
           {targetRect ? (
@@ -321,7 +331,8 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
               </button>
             </div>
           </section>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
