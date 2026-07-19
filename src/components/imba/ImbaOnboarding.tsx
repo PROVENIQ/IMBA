@@ -256,8 +256,10 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
         <span className="hidden text-[11px] font-bold xl:inline">Help</span>
       </button>
 
+      {/* The app shell is itself a fixed body-level container at z-[100], so
+          portaled overlays must clear it: drawer 150, tour 160, tooltips 200. */}
       {mounted && helpOpen ? createPortal(
-        <div className="fixed inset-0 z-[90] flex justify-end bg-black/55 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[150] flex justify-end bg-black/55 backdrop-blur-sm">
           <button type="button" className="absolute inset-0 cursor-default" aria-label="Close Help" onClick={() => setHelpOpen(false)} />
           <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-white/10 bg-[rgb(var(--panel))] p-6 text-left shadow-2xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
@@ -308,7 +310,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
       ) : null}
 
       {mounted && tourOpen ? createPortal(
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[160]">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
           {targetRect ? (
             <div className="pointer-events-none fixed rounded-2xl border-2 border-[rgb(var(--sa-soft))] shadow-[0_0_0_6px_rgb(var(--sa)/0.18),0_18px_60px_rgba(0,0,0,0.45)]" style={{ left: targetRect.left - 6, top: targetRect.top - 6, width: targetRect.width + 12, height: targetRect.height + 12 }} />
