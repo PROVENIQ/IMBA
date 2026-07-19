@@ -94,6 +94,10 @@ import {
   type ImbaIntegrationView,
 } from "@/components/imba/ImbaIntegrationWorkspace";
 import { ImbaCollaborationWorkspace } from "@/components/imba/ImbaCollaborationWorkspace";
+import {
+  ImbaWorkspaceSignature,
+  workspaceModeForView,
+} from "@/components/imba/ImbaWorkspaceSignature";
 import type { ImbaCollaborationView } from "@/lib/imba-collaboration-data";
 import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
@@ -1925,6 +1929,8 @@ export function ImbaCeoCockpit() {
     '--sa-ink': accent.ink,
   } as React.CSSProperties;
   const activeSectionLabel = sectionForView(view);
+  const activeWorkspaceSlug = activeSectionLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const activeWorkspaceMode = workspaceModeForView(view);
   const activeSectionInfo = sectionInfo[activeSectionLabel];
   const isScenarioAware = [
     "brief",
@@ -2696,8 +2702,15 @@ export function ImbaCeoCockpit() {
           </div>
         </div>
 
-        <main className="min-w-0 flex-1 overflow-y-auto" data-tour="workspace">
-          <div className="mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
+        <main className={`workspace-shell workspace-shell--${activeWorkspaceSlug} workspace-mode--${activeWorkspaceMode} min-w-0 flex-1 overflow-y-auto`} data-tour="workspace">
+          <div className="workspace-canvas mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
+            <ImbaWorkspaceSignature
+              section={activeSectionLabel}
+              viewId={view}
+              title={currentView.label}
+              description={currentView.description}
+              icon={currentView.icon}
+            />
             {isSectionLanding && !dismissedHeroes.has(activeSectionLabel) ? (
               <ImbaSectionHero
                 section={activeSectionLabel}

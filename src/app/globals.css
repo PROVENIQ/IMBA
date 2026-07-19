@@ -2323,6 +2323,389 @@ tbody tr:last-child td {
   .ap-drawer-body { grid-template-columns: 1fr; }
 }
 
+/* ------------------------------------------------------------------ */
+/* Workspace identities                                                */
+/* Each operating area keeps the same shell while using a distinct     */
+/* canvas, surface geometry, and task-specific visual metaphor.         */
+/* ------------------------------------------------------------------ */
+
+.workspace-shell {
+  transition: background-color 180ms ease;
+}
+
+.workspace-canvas {
+  min-height: 100%;
+  isolation: isolate;
+}
+
+.workspace-signature {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(460px, 1.1fr);
+  min-height: 228px;
+  overflow: hidden;
+  border: 1px solid rgb(var(--sa) / 0.24);
+  background: rgb(var(--card) / 0.96);
+  box-shadow: 0 18px 46px rgb(10 25 20 / 0.07);
+}
+
+.workspace-signature::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  content: "";
+  background: rgb(var(--sa));
+}
+
+.workspace-signature-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 26px;
+  padding: 28px 30px 26px 34px;
+}
+
+.workspace-signature-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(var(--sa-soft));
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.workspace-signature-kicker > span {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  color: rgb(var(--sa-soft));
+  border: 1px solid rgb(var(--sa) / 0.28);
+  background: rgb(var(--sa) / 0.1);
+}
+
+.workspace-signature-kicker svg { width: 14px; height: 14px; }
+.workspace-signature-kicker > svg { width: 12px; height: 12px; color: rgb(var(--text-4)); }
+
+.workspace-signature-title-row {
+  display: grid;
+  gap: 24px;
+}
+
+.workspace-signature h1 {
+  margin: 0;
+  max-width: 620px;
+  color: rgb(var(--text));
+  font-size: clamp(1.75rem, 2.4vw, 2.65rem);
+  font-weight: 680;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.workspace-signature-title-row > div:first-child > p {
+  max-width: 610px;
+  margin: 13px 0 0;
+  color: rgb(var(--text-2));
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.workspace-signature-mode {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  max-width: 390px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(var(--line) / 0.09);
+}
+
+.workspace-signature-mode svg {
+  grid-row: 1 / span 2;
+  width: 17px;
+  height: 17px;
+  color: rgb(var(--sa-soft));
+}
+
+.workspace-signature-mode span {
+  color: rgb(var(--text-4));
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.workspace-signature-mode strong {
+  margin-top: 2px;
+  color: rgb(var(--text));
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.workspace-signature-visual {
+  position: relative;
+  min-width: 0;
+  padding: 26px;
+}
+
+/* Mission: a landscape-like journey rather than a dashboard row. */
+.workspace-shell--mission {
+  background:
+    radial-gradient(circle at 78% 6%, rgb(96 165 250 / 0.13), transparent 34%),
+    rgb(var(--app-bg));
+}
+
+.workspace-signature--mission {
+  border-radius: 34px 8px 34px 8px;
+  background:
+    radial-gradient(circle at 88% 12%, rgb(147 197 253 / 0.3), transparent 25%),
+    linear-gradient(135deg, rgb(var(--card)) 0 49%, rgb(225 239 229) 100%);
+}
+
+.signature-journey {
+  position: relative;
+  display: grid;
+  height: 100%;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  padding: 26px 10px 6px;
+}
+
+.signature-journey::before,
+.signature-journey::after {
+  position: absolute;
+  right: -34px;
+  bottom: -52px;
+  width: 78%;
+  height: 140px;
+  content: "";
+  border: 1px solid rgb(35 94 67 / 0.17);
+  border-radius: 50%;
+  transform: rotate(-7deg);
+}
+
+.signature-journey::after { right: -72px; bottom: -77px; width: 92%; }
+.signature-journey-line { position: absolute; top: 49%; left: 11%; right: 9%; height: 2px; background: linear-gradient(90deg, rgb(var(--sa)), rgb(52 113 92 / 0.35)); }
+
+.signature-journey-stop {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 11px;
+  text-align: center;
+}
+
+.signature-journey-stop > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: rgb(var(--text-3));
+  background: rgb(var(--card));
+  border: 2px solid rgb(var(--line) / 0.16);
+  border-radius: 50%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.signature-journey-stop > span svg { width: 14px; }
+.signature-journey-stop.is-complete > span { color: #fff; border-color: #34715c; background: #34715c; }
+.signature-journey-stop.is-active > span { color: rgb(var(--sa-ink)); border-color: rgb(var(--sa)); background: rgb(var(--sa)); box-shadow: 0 0 0 7px rgb(var(--sa) / 0.13); }
+.signature-journey-stop strong { display: block; color: rgb(var(--text)); font-size: 0.68rem; }
+.signature-journey-stop small { display: block; max-width: 92px; margin-top: 3px; color: rgb(var(--text-4)); font-size: 0.57rem; line-height: 1.3; }
+.signature-journey-mark { position: absolute; right: 1px; bottom: 0; width: 31px; height: 31px; color: #34715c; }
+
+.workspace-shell--mission .workspace-canvas section:not(.workspace-signature) { border-radius: 24px 7px 24px 7px !important; }
+
+/* Money: ruled-paper geometry and compact ledger hierarchy. */
+.workspace-shell--money {
+  background-color: rgb(var(--app-bg));
+  background-image: repeating-linear-gradient(0deg, transparent 0 31px, rgb(47 88 67 / 0.025) 31px 32px);
+}
+
+.workspace-signature--money { border-radius: 3px; box-shadow: 8px 8px 0 rgb(63 96 18 / 0.07); }
+.workspace-signature--money::after { position: absolute; top: 0; bottom: 0; left: 49%; width: 1px; content: ""; background: rgb(var(--line) / 0.08); }
+
+.signature-ledger { height: 100%; overflow: hidden; border: 1px solid rgb(var(--line) / 0.14); background: rgb(var(--card)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.signature-ledger-head, .signature-ledger-row { display: grid; grid-template-columns: 1fr 1.45fr 0.8fr; align-items: center; gap: 14px; }
+.signature-ledger-head { padding: 9px 13px; color: rgb(var(--sa-ink)); background: rgb(var(--sa) / 0.78); font-size: 0.52rem; font-weight: 900; letter-spacing: 0.1em; }
+.signature-ledger-head span:last-child, .signature-ledger-row span:last-child { text-align: right; }
+.signature-ledger-row { min-height: 48px; padding: 10px 13px; border-bottom: 1px solid rgb(var(--line) / 0.09); color: rgb(var(--text-3)); font-size: 0.6rem; }
+.signature-ledger-row:last-child { border-bottom: 0; }
+.signature-ledger-row strong { color: rgb(var(--text)); font-size: 0.68rem; font-weight: 750; }
+.signature-ledger-row .is-positive { color: rgb(var(--pos)); font-weight: 900; }
+.workspace-shell--money .workspace-canvas section:not(.workspace-signature) { border-radius: 7px !important; }
+
+/* People: a soft, spatial studio with a roster as the dominant object. */
+.workspace-shell--people { background: radial-gradient(circle at 88% 0%, rgb(34 211 238 / 0.1), transparent 34%), rgb(var(--app-bg)); }
+.workspace-signature--people { border: 0; border-radius: 42px; background: linear-gradient(125deg, rgb(var(--card)) 0 52%, rgb(222 245 242) 100%); box-shadow: 0 22px 60px rgb(14 105 128 / 0.1); }
+.workspace-signature--people::before { top: auto; left: 34px; bottom: 0; width: 92px; height: 5px; border-radius: 5px 5px 0 0; }
+.signature-roster { display: flex; height: 100%; flex-direction: column; justify-content: center; gap: 30px; }
+.signature-roster-copy { display: flex; align-items: center; gap: 12px; }
+.signature-roster-copy > svg { width: 24px; color: rgb(var(--sa-soft)); }
+.signature-roster-copy strong, .signature-roster-copy span { display: block; }
+.signature-roster-copy strong { color: rgb(var(--text)); font-size: 0.76rem; }
+.signature-roster-copy span { margin-top: 3px; color: rgb(var(--text-3)); font-size: 0.61rem; }
+.signature-roster-team { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+.signature-roster-team > div { display: grid; justify-items: center; gap: 7px; padding: 12px 4px; border: 1px solid rgb(var(--line) / 0.09); border-radius: 18px; background: rgb(var(--card) / 0.78); }
+.signature-roster-team > div > span { display: grid; width: 36px; height: 36px; place-items: center; color: rgb(var(--text-2)); border-radius: 50%; background: rgb(var(--card-2)); font-size: 0.61rem; font-weight: 900; }
+.signature-roster-team > div > small { color: rgb(var(--text-4)); font-size: 0.52rem; }
+.signature-roster-team > div.is-active { border-color: rgb(var(--sa) / 0.55); background: rgb(var(--sa) / 0.11); transform: translateY(-5px); }
+.signature-roster-team > div.is-active > span { color: rgb(var(--sa-ink)); background: rgb(var(--sa)); }
+.workspace-shell--people .workspace-canvas section:not(.workspace-signature) { border-radius: 28px !important; }
+
+/* Development: relationship movement is expressed as a narrowing funnel. */
+.workspace-shell--development { background: linear-gradient(155deg, rgb(251 191 36 / 0.07), transparent 32%), rgb(var(--app-bg)); }
+.workspace-signature--development { border-radius: 8px 38px 8px 38px; background: linear-gradient(100deg, rgb(var(--card)) 0 55%, rgb(255 246 218) 100%); }
+.signature-funnel { display: flex; height: 100%; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+.signature-funnel > div { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 7px 14px; color: rgb(var(--text-3)); border: 1px solid rgb(140 92 8 / 0.15); background: rgb(var(--card) / 0.76); clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%); }
+.signature-funnel .funnel-stage-1 { width: 100%; }
+.signature-funnel .funnel-stage-2 { width: 92%; }
+.signature-funnel .funnel-stage-3 { width: 84%; }
+.signature-funnel .funnel-stage-4 { width: 76%; }
+.signature-funnel .funnel-stage-5 { width: 68%; }
+.signature-funnel > div span { font-size: 0.61rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.signature-funnel > div strong { color: rgb(var(--text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.73rem; }
+.signature-funnel > div small { grid-column: 1 / span 2; margin-top: 2px; color: rgb(var(--text-4)); font-size: 0.51rem; }
+.signature-funnel > div.is-active { color: rgb(var(--sa-ink)); background: rgb(var(--sa) / 0.7); transform: scale(1.025); }
+.signature-funnel > div.is-active strong, .signature-funnel > div.is-active small { color: rgb(var(--sa-ink)); }
+.workspace-shell--development .workspace-canvas section:not(.workspace-signature) { border-radius: 8px 24px 8px 24px !important; }
+
+/* Platform: an angular control plane on a technical grid. */
+.workspace-shell--platform { background-color: rgb(var(--app-bg)); background-image: linear-gradient(rgb(88 52 191 / 0.045) 1px, transparent 1px), linear-gradient(90deg, rgb(88 52 191 / 0.045) 1px, transparent 1px); background-size: 28px 28px; }
+.workspace-signature--platform { border-radius: 10px; background: linear-gradient(118deg, rgb(var(--card)) 0 48%, rgb(238 234 255) 100%); box-shadow: 10px 10px 0 rgb(88 52 191 / 0.07); }
+.signature-topology { position: relative; display: grid; height: 100%; grid-template-columns: repeat(3, 1fr); align-content: center; gap: 16px; }
+.signature-topology::before, .signature-topology::after { position: absolute; content: ""; background: rgb(var(--sa) / 0.35); }
+.signature-topology::before { top: 50%; left: 12%; right: 12%; height: 1px; }
+.signature-topology::after { top: 18%; bottom: 18%; left: 50%; width: 1px; }
+.signature-topology-node { position: relative; z-index: 2; display: grid; min-height: 72px; place-items: center; padding: 9px; color: rgb(var(--text-3)); border: 1px solid rgb(var(--line) / 0.14); border-radius: 8px; background: rgb(var(--card) / 0.92); box-shadow: 0 8px 18px rgb(30 20 60 / 0.06); }
+.signature-topology-node svg { width: 17px; height: 17px; }
+.signature-topology-node span { color: rgb(var(--text)); font-size: 0.63rem; font-weight: 800; }
+.signature-topology-node small { font-size: 0.49rem; }
+.signature-topology-node.is-core { grid-row: 1 / span 2; align-self: center; min-height: 94px; color: #fff; background: #30235a; border-color: #30235a; }
+.signature-topology-node.is-core span, .signature-topology-node.is-core small { color: #fff; }
+.signature-topology-node.is-active { outline: 3px solid rgb(var(--sa) / 0.19); border-color: rgb(var(--sa)); }
+.signature-topology-pulse { position: absolute; right: 5px; top: 5px; color: rgb(var(--sa-soft)); }
+.signature-topology-pulse svg { width: 15px; }
+.workspace-shell--platform .workspace-canvas section:not(.workspace-signature) { border-radius: 9px !important; }
+
+/* Governance: a board docket and paper record, not another dashboard. */
+.workspace-shell--governance { background: linear-gradient(90deg, rgb(190 33 60 / 0.025) 1px, transparent 1px), rgb(var(--app-bg)); background-size: 56px 100%; }
+.workspace-signature--governance { border-radius: 2px; border-color: rgb(190 33 60 / 0.22); background: #fffdfa; box-shadow: 0 14px 38px rgb(70 25 28 / 0.09); }
+.workspace-signature--governance::before { left: 17px; width: 2px; background: #be213c; }
+.signature-docket { display: grid; height: 100%; grid-template-columns: 64px 1fr; gap: 14px; padding: 4px; }
+.signature-docket-seal { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: #fff; background: #632638; }
+.signature-docket-seal svg { width: 19px; }
+.signature-docket-seal span { font-size: 0.55rem; font-weight: 900; letter-spacing: 0.16em; }
+.signature-docket ol { align-self: center; margin: 0; padding: 0; list-style: none; }
+.signature-docket li { display: grid; grid-template-columns: 31px 1fr 15px; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eadde0; color: #6d5960; }
+.signature-docket li > span { font-family: Georgia, serif; font-size: 0.6rem; }
+.signature-docket li strong { font-size: 0.64rem; font-weight: 650; }
+.signature-docket li svg { width: 12px; }
+.signature-docket li.is-active { color: #632638; background: #f9e9ec; border-bottom-color: #e9bec7; }
+.signature-docket-status { grid-column: 1 / span 2; display: grid; grid-template-columns: 24px 1fr; align-items: center; padding-top: 9px; border-top: 2px solid #632638; color: #632638; }
+.signature-docket-status svg { grid-row: 1 / span 2; width: 15px; }
+.signature-docket-status span { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.11em; }
+.signature-docket-status strong { font-family: Georgia, serif; font-size: 0.66rem; }
+.workspace-shell--governance .workspace-canvas section:not(.workspace-signature) { border-radius: 3px !important; border-left: 3px solid rgb(var(--sa) / 0.28) !important; }
+
+/* Collaboration: channels and threads establish a split-pane language. */
+.workspace-shell--collaboration { background: radial-gradient(circle at 92% 5%, rgb(129 140 248 / 0.11), transparent 32%), rgb(var(--app-bg)); }
+.workspace-signature--collaboration { border-radius: 18px; background: linear-gradient(105deg, rgb(var(--card)) 0 49%, rgb(238 239 255) 100%); }
+.signature-channels { display: grid; height: 100%; grid-template-columns: 116px 1fr 38px; overflow: hidden; border: 1px solid rgb(var(--line) / 0.1); border-radius: 13px; background: rgb(var(--card)); }
+.signature-channel-rail { display: flex; flex-direction: column; gap: 4px; padding: 12px 8px; background: #2f315a; }
+.signature-channel-rail span { padding: 7px 8px; color: #c9ccef; border-radius: 7px; font-size: 0.53rem; }
+.signature-channel-rail span.is-active { color: #fff; background: #555a9e; font-weight: 800; }
+.signature-thread { display: flex; flex-direction: column; justify-content: center; gap: 15px; padding: 15px; }
+.signature-thread > div { display: grid; grid-template-columns: 29px 1fr; gap: 9px; align-items: start; }
+.signature-avatar { display: grid; width: 28px; height: 28px; place-items: center; color: #fff; border-radius: 8px; background: #555a9e; font-size: 0.48rem; font-weight: 900; }
+.signature-avatar.is-alt { color: #2f315a; background: #c7cbff; }
+.signature-thread p { margin: 0; }
+.signature-thread strong, .signature-thread small { display: block; }
+.signature-thread strong { color: rgb(var(--text)); font-size: 0.61rem; }
+.signature-thread small { margin-top: 3px; color: rgb(var(--text-3)); font-size: 0.51rem; line-height: 1.35; }
+.signature-channel-tools { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #555a9e; border-left: 1px solid #e1e2f4; }
+.signature-channel-tools svg { width: 14px; }
+.workspace-shell--collaboration .workspace-canvas section:not(.workspace-signature) { border-radius: 16px !important; }
+
+/* System: local dark console regardless of the global theme. */
+.workspace-shell--system {
+  --card: 18 27 39;
+  --card-2: 25 37 52;
+  --text: 238 244 251;
+  --text-2: 190 204 218;
+  --text-3: 145 163 181;
+  --text-4: 113 133 153;
+  --line: 196 214 232;
+  color-scheme: dark;
+  background-color: #0d1520;
+  background-image: linear-gradient(rgb(148 163 184 / 0.055) 1px, transparent 1px), linear-gradient(90deg, rgb(148 163 184 / 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.workspace-signature--system { border-radius: 6px; background: #101a27; box-shadow: 0 18px 50px rgb(0 0 0 / 0.22); }
+.signature-console { height: 100%; overflow: hidden; border: 1px solid #34465a; border-radius: 6px; background: #09111b; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.signature-console-bar { display: flex; align-items: center; gap: 6px; padding: 9px 11px; border-bottom: 1px solid #26384b; background: #162334; }
+.signature-console-bar > span { width: 7px; height: 7px; border-radius: 50%; background: #cf6679; }
+.signature-console-bar > span:nth-child(2) { background: #dfb45a; }
+.signature-console-bar > span:nth-child(3) { background: #72c798; }
+.signature-console-bar strong { margin-left: 7px; color: #9db0c3; font-size: 0.52rem; font-weight: 600; }
+.signature-console-lines { padding: 17px; }
+.signature-console-lines p { display: grid; grid-template-columns: 62px 44px 1fr; gap: 8px; margin: 0 0 12px; color: #dce7f2; font-size: 0.59rem; }
+.signature-console-lines p span { color: #607a94; }
+.signature-console-lines p b { color: #d3e57a; }
+.signature-console-lines p em { color: #72c798; font-style: normal; }
+.workspace-shell--system .workspace-canvas section:not(.workspace-signature) { border-radius: 5px !important; border-color: rgb(148 163 184 / 0.2) !important; box-shadow: none !important; }
+
+/* Management: an executive sequence centered on decisions. */
+.workspace-shell--management { background: radial-gradient(circle at 85% 0%, rgb(163 230 53 / 0.12), transparent 34%), rgb(var(--app-bg)); }
+.workspace-signature--management { border-radius: 28px 28px 7px 7px; background: linear-gradient(120deg, rgb(var(--card)) 0 50%, rgb(236 247 218) 100%); }
+.signature-decisions { display: grid; height: 100%; grid-template-columns: repeat(3, 1fr); align-items: center; gap: 10px; }
+.signature-decisions > div { position: relative; display: flex; min-height: 122px; flex-direction: column; justify-content: center; padding: 16px; border: 1px solid rgb(var(--line) / 0.1); border-radius: 18px; background: rgb(var(--card) / 0.78); }
+.signature-decisions svg { width: 17px; color: rgb(var(--sa-soft)); }
+.signature-decisions span { margin-top: 14px; color: rgb(var(--text-4)); font-size: 0.52rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+.signature-decisions strong { margin-top: 4px; color: rgb(var(--text)); font-size: 0.68rem; }
+.signature-decisions small { position: absolute; top: 10px; right: 11px; color: rgb(var(--text-4)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.55rem; }
+.signature-decisions > div.is-active { color: rgb(var(--sa-ink)); background: rgb(var(--sa) / 0.68); transform: translateY(-7px); }
+.signature-decisions > div.is-active svg, .signature-decisions > div.is-active span, .signature-decisions > div.is-active strong, .signature-decisions > div.is-active small { color: rgb(var(--sa-ink)); }
+.workspace-shell--management .workspace-canvas section:not(.workspace-signature) { border-radius: 22px 22px 7px 7px !important; }
+
+/* Mode changes are intentionally subtle; section identity remains dominant. */
+.workspace-mode--document .workspace-signature { grid-template-columns: minmax(320px, 1.05fr) minmax(430px, 0.95fr); }
+.workspace-mode--document .workspace-signature h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 600; letter-spacing: -0.035em; }
+.workspace-mode--queue .workspace-signature::after { position: absolute; top: 0; right: 0; width: 9px; height: 100%; content: ""; background: repeating-linear-gradient(180deg, rgb(var(--sa)) 0 9px, transparent 9px 16px); opacity: 0.5; }
+.workspace-mode--studio .workspace-signature { box-shadow: 0 18px 54px rgb(var(--sa) / 0.1); }
+.workspace-mode--timeline .workspace-signature-copy { border-bottom: 4px solid rgb(var(--sa) / 0.2); }
+
+@media (max-width: 1050px) {
+  .workspace-signature { grid-template-columns: 1fr; }
+  .workspace-signature-copy { padding-bottom: 20px; }
+  .workspace-signature-visual { min-height: 190px; padding-top: 10px; }
+  .workspace-signature--money::after { display: none; }
+}
+
+@media (max-width: 640px) {
+  .workspace-signature { border-radius: 18px !important; }
+  .workspace-signature-copy { padding: 22px 20px 18px 24px; }
+  .workspace-signature-visual { min-height: 175px; padding: 14px; }
+  .workspace-signature-kicker { flex-wrap: wrap; }
+  .workspace-signature h1 { font-size: 1.7rem; }
+  .signature-journey-stop small, .signature-roster-team small { display: none; }
+  .signature-roster-team { gap: 5px; }
+  .signature-topology { gap: 7px; }
+  .signature-channel-rail { display: none; }
+  .signature-channels { grid-template-columns: 1fr 34px; }
+  .signature-decisions { gap: 6px; }
+  .signature-decisions > div { min-height: 105px; padding: 10px; }
+  .signature-decisions strong { font-size: 0.58rem; }
+}
+
 @media print {
   .sidebar,
   .mobile-menu-button,
