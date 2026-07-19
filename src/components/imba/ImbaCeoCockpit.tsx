@@ -779,11 +779,11 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
     "Money",
     "People",
     "Development",
-    "Platform",
-    "System",
     "Governance",
     "Collaboration",
     "Management",
+    "Platform",
+    "System",
   ];
   return imbaNavSections
     .filter((section) => profile.sections.includes(section.label))
