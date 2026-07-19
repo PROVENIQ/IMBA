@@ -95,7 +95,7 @@ function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: stri
   );
 }
 
-const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; description: string }> = {
+export const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; description: string }> = {
   'finance-snapshot': { eyebrow: 'Money · command center', title: 'Organization snapshot', description: 'The accounting, liquidity, budget, grants, and working-capital picture in one finance home.' },
   'finance-calendar': { eyebrow: 'Money · control calendar', title: 'Finance calendar', description: 'Close, payroll, billing, grant, chapter settlement, audit, filing, and Board deadlines in one owned schedule.' },
   'finance-coa': { eyebrow: 'Money · data standard', title: 'Canonical chart of accounts', description: 'One reporting vocabulary across IMBA, Trail Solutions projects, restricted funds, and chapter submissions.' },

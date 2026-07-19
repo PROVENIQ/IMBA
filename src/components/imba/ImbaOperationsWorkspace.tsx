@@ -38,16 +38,7 @@ function Kpi({ label, value, note, tone = 'blue' }: { label: string; value: stri
   return <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p><p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>;
 }
 
-const meta: Record<ImbaOperationsView, { title: string; description: string }> = {
-  'project-command': { title: 'Project command center', description: 'Scope, schedule, labor, commitments, billing, and estimate-to-complete joined in the same operating record.' },
-  'project-board': { title: 'Project delivery board', description: 'A finance-aware Kanban: each task carries the project, owner, due date, and financial or grant consequence.' },
-  'chapter-network': { title: 'Chapter network', description: 'Parent-association visibility across chapter onboarding, membership, settlements, reporting, financial standards, and support.' },
-  'chapter-standards': { title: 'Chapter standards + compliance', description: 'Uniform monthly packets, canonical mappings, certifications, deadlines, exception handling, and evidence.' },
-  'data-exchange': { title: 'Data exchange + reconciliation hub', description: 'Synthesize inflows and outflows from chapters, membership, projects, payroll, expenses, banking, and the ledger.' },
-};
-
 export function ImbaOperationsWorkspace({ view, onNavigate }: { view: ImbaOperationsView; onNavigate: (view: ImbaOsView) => void }) {
-  const viewMeta = meta[view];
   return <div className="space-y-5">{view === 'project-command' ? <ProjectCommand onNavigate={onNavigate} /> : null}{view === 'project-board' ? <ProjectBoard /> : null}{view === 'chapter-network' ? <ChapterNetwork onNavigate={onNavigate} /> : null}{view === 'chapter-standards' ? <ChapterStandards /> : null}{view === 'data-exchange' ? <DataExchange /> : null}</div>;
 }
 

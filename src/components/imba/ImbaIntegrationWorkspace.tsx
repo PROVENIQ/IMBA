@@ -60,17 +60,7 @@ function StatusBadge({ status }: { status: SyncStatus }) {
   return <span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${style}`}>{status.replace('-', ' ')}</span>;
 }
 
-const meta: Record<ImbaIntegrationView, { title: string; description: string }> = {
-  'integration-control': { title: 'Integration control plane', description: 'One governed exchange layer between IMBA-OS, QuickBooks Online, ADP, project delivery, chapters, grants, and leadership reporting.' },
-  'integration-qbo': { title: 'QuickBooks Online connector', description: 'QuickBooks remains the accounting system of record. IMBA-OS stages, validates, approves, posts, and reconciles controlled transactions.' },
-  'integration-adp': { title: 'ADP workforce connector', description: 'ADP remains the worker and payroll authority. IMBA-OS adds project, grant, function, capacity, and approval context around payroll time.' },
-  'integration-mappings': { title: 'Canonical mapping center', description: 'Translate IMBA projects, chapters, grants, accounts, phases, and labor dimensions into the codes required by each source system.' },
-  'integration-sync': { title: 'Synchronization queue', description: 'Human approval, retries, exception handling, and reconciliation make every inbound or outbound record observable.' },
-  'integration-audit': { title: 'Operating audit trail', description: 'A durable history of edits, approvals, mappings, connector runs, and posting results across the operating system.' },
-};
-
 export function ImbaIntegrationWorkspace({ view, onNavigate }: { view: ImbaIntegrationView; onNavigate: (view: ImbaOsView) => void }) {
-  const viewMeta = meta[view];
   return <div className="space-y-5">{view === 'integration-control' ? <ControlPlane onNavigate={onNavigate} /> : null}{view === 'integration-qbo' ? <Connector system="qbo" onNavigate={onNavigate} /> : null}{view === 'integration-adp' ? <Connector system="adp" onNavigate={onNavigate} /> : null}{view === 'integration-mappings' ? <MappingCenter /> : null}{view === 'integration-sync' ? <SyncQueue /> : null}{view === 'integration-audit' ? <AuditTrail /> : null}</div>;
 }
 
