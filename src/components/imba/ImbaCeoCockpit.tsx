@@ -761,10 +761,10 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
   },
   Management: {
     sources: [
-      'Aggregated from every pillar above',
+      'Rolls up the eight operating pillars: Mission, Money, People, Development, Platform, Governance, Collaboration, and System',
       'Executive brief, decisions, and the next 12-month roadmap',
     ],
-    note: 'A synthesis layer — it reflects the other sections rather than a system of its own.',
+    note: 'A synthesis layer — it reflects the eight operating sections rather than being a system of its own.',
   },
 };
 
