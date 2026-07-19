@@ -2261,30 +2261,6 @@ export function ImbaCeoCockpit() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
-              onClick={() => setCurrentView("integration-control")}
-              className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 2xl:flex"
-              title="Open integration control plane"
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-300" />
-              <span className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-100">
-                QBO {connectors.qbo.mode}
-              </span>
-              <span className="h-3 w-px bg-[rgb(var(--line)/0.12)]" />
-              <span
-                className={`h-2 w-2 rounded-full ${connectors.adp.syncHealth === "healthy" ? "bg-cyan-300" : "bg-amber-300"}`}
-              />
-              <span className="text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">
-                ADP {connectors.adp.mode}
-              </span>
-              {syncJobs.some((job) => job.status === "error") ? (
-                <span className="rounded-full bg-rose-300/10 px-2 py-1 text-[11px] font-black text-rose-700 dark:text-rose-100">
-                  {syncJobs.filter((job) => job.status === "error").length}{" "}
-                  exception
-                </span>
-              ) : null}
-            </button>
-            <button
-              type="button"
               onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
