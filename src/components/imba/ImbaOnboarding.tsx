@@ -261,7 +261,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
       {mounted && helpOpen ? createPortal(
         <div className="fixed inset-0 z-[150] flex justify-end bg-black/55 backdrop-blur-sm">
           <button type="button" className="absolute inset-0 cursor-default" aria-label="Close Help" onClick={() => setHelpOpen(false)} />
-          <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-white/10 bg-[rgb(var(--panel))] p-6 text-left shadow-2xl sm:p-8">
+          <aside role="dialog" aria-modal="true" aria-labelledby="imba-help-title" className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] p-6 text-left shadow-2xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--sa-soft))]">Role-based user guide</p>
@@ -301,7 +301,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
             </div>
 
             <div className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4">
-              <div className="flex items-center gap-2 text-amber-200"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-bold">Prototype boundary</p></div>
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-bold">Prototype boundary</p></div>
               <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">Public Form 990 and annual-report history is identified where used. Current projects, bills, people, workflows, and forecasts are illustrative until IMBA&apos;s systems are connected. No live credentials, records, or payments are used here.</p>
             </div>
           </aside>
@@ -315,7 +315,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
           {targetRect ? (
             <div className="pointer-events-none fixed rounded-2xl border-2 border-[rgb(var(--sa-soft))] shadow-[0_0_0_6px_rgb(var(--sa)/0.18),0_18px_60px_rgba(0,0,0,0.45)]" style={{ left: targetRect.left - 6, top: targetRect.top - 6, width: targetRect.width + 12, height: targetRect.height + 12 }} />
           ) : null}
-          <section role="dialog" aria-modal="true" aria-label="IMBA-OS guided tour" className="fixed w-[min(390px,calc(100vw-32px))] rounded-3xl border border-white/10 bg-[rgb(var(--panel))] p-5 text-left shadow-2xl sm:p-6" style={cardPosition}>
+          <section role="dialog" aria-modal="true" aria-label="IMBA-OS guided tour" className="fixed w-[min(390px,calc(100vw-32px))] rounded-3xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] p-5 text-left shadow-2xl sm:p-6" style={cardPosition}>
             <div className="flex items-center justify-between gap-4">
               <span className="rounded-full bg-[rgb(var(--sa)/0.12)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[rgb(var(--sa-soft))]">Step {stepIndex + 1} of {steps.length}</span>
               <button type="button" onClick={closeTour} className="text-[11px] font-bold text-[rgb(var(--text-3))] hover:text-[rgb(var(--text))]">Skip tour</button>
@@ -328,7 +328,7 @@ export function ImbaOnboarding({ role, currentView, onNavigate }: {
             <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-2))]">{step.body}</p>
             <div className="mt-6 flex items-center justify-between gap-3">
               <button type="button" onClick={() => setStepIndex((current) => Math.max(0, current - 1))} disabled={stepIndex === 0} className="rounded-xl px-3 py-2 text-xs font-bold text-[rgb(var(--text-3))] disabled:invisible">Back</button>
-              <button type="button" onClick={advanceTour} className="inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-xs font-black text-white transition hover:brightness-110">
+              <button type="button" onClick={advanceTour} className="inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-xs font-black text-[rgb(var(--sa-ink))] transition hover:brightness-110">
                 {stepIndex === steps.length - 1 ? "Finish" : step.actionLabel ?? "Next"}<ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
