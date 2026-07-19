@@ -48,20 +48,56 @@ export const imbaReports = [
   { name: '13-Week Cash Forecast', category: 'Treasury', cadence: 'Weekly', audience: 'Kent + Finance', status: 'Prototype live', description: 'Collections, disbursements, restrictions, and minimum cash.' },
 ];
 
+// Current IMBA staff (names + titles from IMBA's public staff page). Locations
+// are IMBA-stated where confirmed; inferred ones are flagged "(probable)" and
+// the rest "Not stated". Team + status are real; allocation and loadedCost are
+// illustrative planning overlays (identity + pay are authoritative in ADP).
 export const imbaEmployees = [
-  { id: 'E-014', name: 'Avery Morgan', role: 'Director, Trail Planning', team: 'Trail Solutions', location: 'Colorado', type: 'Core', allocation: 78, loadedCost: 142_000, status: 'Active' },
-  { id: 'E-021', name: 'Jordan Lee', role: 'Senior Trail Designer', team: 'Trail Solutions', location: 'Oregon', type: 'Core', allocation: 91, loadedCost: 128_000, status: 'Active' },
-  { id: 'E-026', name: 'Casey Rivera', role: 'Construction Project Manager', team: 'Trail Solutions', location: 'North Carolina', type: 'Core', allocation: 84, loadedCost: 136_000, status: 'Active' },
-  { id: 'E-031', name: 'Morgan Patel', role: 'Chapter Services Manager', team: 'Programs', location: 'Minnesota', type: 'Core', allocation: 62, loadedCost: 111_000, status: 'Active' },
-  { id: 'E-038', name: 'Taylor Brooks', role: 'Development Operations', team: 'Development', location: 'Nebraska', type: 'Core', allocation: 44, loadedCost: 104_000, status: 'Active' },
-  { id: 'E-044', name: 'Riley Chen', role: 'Seasonal Field Lead', team: 'Trail Solutions', location: 'Field based', type: 'Seasonal', allocation: 96, loadedCost: 82_000, status: 'Seasonal' },
-  { id: 'C-012', name: 'Summit Design Bench', role: 'Contract design capacity', team: 'Trail Solutions', location: 'Remote', type: 'Contractor', allocation: 35, loadedCost: 96_000, status: 'Available' },
+  { id: 'E-001', name: 'Aaron Clark', role: 'Policy Manager', team: 'Policy & Government', location: 'Colorado (probable)', type: 'Core', allocation: 82, loadedCost: 104000, status: 'Active' },
+  { id: 'E-002', name: 'Ama Koenigshof', role: 'Director of Planning & Design', team: 'Planning & Design', location: 'Not stated', type: 'Core', allocation: 74, loadedCost: 149000, status: 'Active' },
+  { id: 'E-003', name: 'Anthony Duncan', role: 'Director of Local Programs', team: 'Programs & Community', location: 'Tennessee', type: 'Core', allocation: 88, loadedCost: 145000, status: 'Active' },
+  { id: 'E-004', name: 'Brice Shirbach', role: 'Communications Manager', team: 'Communications & Marketing', location: 'Northern Delaware', type: 'Core', allocation: 69, loadedCost: 110000, status: 'Active' },
+  { id: 'E-005', name: 'Cale Mason', role: 'Trail Specialist', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 91, loadedCost: 82000, status: 'Active' },
+  { id: 'E-006', name: 'Chris Orr', role: 'Community Engagement Specialist', team: 'Programs & Community', location: 'Eastern Sierra, CA (probable)', type: 'Core', allocation: 77, loadedCost: 87000, status: 'Active' },
+  { id: 'E-007', name: 'Coleman Haskell', role: 'Trail Specialist', team: 'Trail Field', location: 'Northern Maine (probable)', type: 'Core', allocation: 85, loadedCost: 83000, status: 'Active' },
+  { id: 'E-008', name: 'Cory Callahan', role: 'Trail Care Specialist', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 63, loadedCost: 88000, status: 'Active' },
+  { id: 'E-009', name: 'David Wiens', role: 'Executive Director', team: 'Executive', location: 'Not stated', type: 'Leadership', allocation: 72, loadedCost: 195000, status: 'Active' },
+  { id: 'E-010', name: 'Eleanor Blick', role: 'Director of Communications', team: 'Communications & Marketing', location: 'Not stated', type: 'Core', allocation: 90, loadedCost: 144000, status: 'Active' },
+  { id: 'E-011', name: 'Forrest Town', role: 'Staff Planner', team: 'Planning & Design', location: 'Not stated', type: 'Core', allocation: 66, loadedCost: 85000, status: 'Active' },
+  { id: 'E-012', name: 'Geoff Chain', role: 'Project Manager and Planner', team: 'Planning & Design', location: 'Prescott, Arizona', type: 'Core', allocation: 79, loadedCost: 105000, status: 'Active' },
+  { id: 'E-013', name: 'George Chevalier', role: 'Promotions Manager', team: 'Communications & Marketing', location: 'Western New Jersey', type: 'Core', allocation: 86, loadedCost: 110000, status: 'Active' },
+  { id: 'E-014', name: 'Harrison Dixon', role: 'Trail Builder', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 71, loadedCost: 82000, status: 'Active' },
+  { id: 'E-015', name: 'Heather Alessandro', role: 'Director of Talent and Culture', team: 'People & Culture', location: 'Greater Cincinnati', type: 'Core', allocation: 68, loadedCost: 151000, status: 'Active' },
+  { id: 'E-016', name: 'Heather Bonewitz', role: 'Member Services Manager', team: 'Programs & Community', location: 'Boulder area, Colorado', type: 'Core', allocation: 80, loadedCost: 107000, status: 'Active' },
+  { id: 'E-017', name: 'Jenine Estlick', role: 'Planner', team: 'Planning & Design', location: 'Park City, Utah (probable)', type: 'Core', allocation: 64, loadedCost: 88000, status: 'Active' },
+  { id: 'E-018', name: 'Jess Didion', role: 'Signage and Design', team: 'Planning & Design', location: 'Not stated', type: 'Core', allocation: 83, loadedCost: 84000, status: 'Active' },
+  { id: 'E-019', name: 'Jillian Olson', role: 'Community Progress Manager', team: 'Programs & Community', location: 'Driftless, Wisconsin (probable)', type: 'Core', allocation: 76, loadedCost: 104000, status: 'Active' },
+  { id: 'E-020', name: 'Joanna Fetherolf', role: 'Education Manager', team: 'Programs & Community', location: 'Fort Collins, Colorado', type: 'Core', allocation: 89, loadedCost: 109000, status: 'Active' },
+  { id: 'E-021', name: 'Joe Vadeboncoeur', role: 'Vice President', team: 'Executive', location: 'Boulder, Colorado', type: 'Leadership', allocation: 70, loadedCost: 192000, status: 'Active' },
+  { id: 'E-022', name: 'Joey Klein', role: 'Trail Care Specialist', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 87, loadedCost: 86000, status: 'Active' },
+  { id: 'E-023', name: 'Josh Olson', role: 'Director of Construction and Operations', team: 'Construction & Ops', location: 'Colorado (probable)', type: 'Core', allocation: 62, loadedCost: 146000, status: 'Active' },
+  { id: 'E-024', name: 'Kate Noelke', role: 'Agreements and Grants Manager', team: 'Development & Grants', location: 'Salida, Colorado', type: 'Core', allocation: 75, loadedCost: 111000, status: 'Active' },
+  { id: 'E-025', name: 'Kent McNeill', role: 'CEO', team: 'Executive', location: 'Nebraska', type: 'Leadership', allocation: 81, loadedCost: 194000, status: 'Active' },
+  { id: 'E-026', name: 'Lea Wehrle-Garsh', role: 'Digital Projects Manager', team: 'Communications & Marketing', location: 'Salt Lake City, Utah', type: 'Core', allocation: 67, loadedCost: 112000, status: 'Active' },
+  { id: 'E-027', name: 'Liz Chrisman', role: 'Content Marketing Manager', team: 'Communications & Marketing', location: 'Not stated', type: 'Core', allocation: 84, loadedCost: 108000, status: 'Active' },
+  { id: 'E-028', name: 'Liz Grades', role: 'Project Manager and Planner', team: 'Planning & Design', location: 'Adirondacks, New York', type: 'Core', allocation: 73, loadedCost: 104000, status: 'Active' },
+  { id: 'E-029', name: 'Marty Caivano', role: 'Community Engagement & Programs Manager', team: 'Programs & Community', location: 'Not stated', type: 'Core', allocation: 92, loadedCost: 109000, status: 'Active' },
+  { id: 'E-030', name: 'Matt Brabender', role: 'Staff Planner', team: 'Planning & Design', location: 'Vermont (probable)', type: 'Core', allocation: 65, loadedCost: 81000, status: 'Active' },
+  { id: 'E-031', name: 'Matthew Podraza', role: 'Trail Builder', team: 'Trail Field', location: 'Vermont (probable)', type: 'Core', allocation: 78, loadedCost: 86000, status: 'Active' },
+  { id: 'E-032', name: 'Patrick Kell', role: 'Senior Partnerships Manager', team: 'Development & Grants', location: 'Prescott, Arizona', type: 'Core', allocation: 88, loadedCost: 106000, status: 'Active' },
+  { id: 'E-033', name: 'Roxanne Marianito', role: 'Navajo Nation Coordinator', team: 'Programs & Community', location: 'Window Rock, Arizona', type: 'Core', allocation: 61, loadedCost: 87000, status: 'Active' },
+  { id: 'E-034', name: 'Stephen Mullins', role: 'Trail Specialist', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 86, loadedCost: 83000, status: 'Active' },
+  { id: 'E-035', name: 'Tara Alcantara', role: 'Local Engagement Manager', team: 'Programs & Community', location: 'Tucson, Arizona', type: 'Core', allocation: 74, loadedCost: 112000, status: 'Active' },
+  { id: 'E-036', name: 'Tim Halbaken', role: 'Project Manager and Planner', team: 'Planning & Design', location: 'Western Slope, Colorado', type: 'Core', allocation: 80, loadedCost: 108000, status: 'Active' },
+  { id: 'E-037', name: 'Todd Keller', role: 'Director of Government Affairs', team: 'Policy & Government', location: 'Washington, D.C.', type: 'Core', allocation: 69, loadedCost: 144000, status: 'Active' },
+  { id: 'E-038', name: 'Tylor Brackett', role: 'Trail Specialist', team: 'Trail Field', location: 'Missouri (probable)', type: 'Core', allocation: 90, loadedCost: 85000, status: 'Active' },
+  { id: 'E-039', name: 'Zachary Davis', role: 'Trail Specialist', team: 'Trail Field', location: 'New Mexico', type: 'Core', allocation: 72, loadedCost: 81000, status: 'Active' },
 ];
 
 export const imbaOnboarding = [
-  { person: 'Finance Director', role: 'Finance leadership', start: 'Target: August', progress: 35, owner: 'Heather', blockers: 'Final selection + system access' },
-  { person: 'Seasonal Field Technician', role: 'Construction', start: 'Jul 29', progress: 72, owner: 'Riley', blockers: 'Equipment certification' },
-  { person: 'Contract Design Partner', role: 'Design bench', start: 'On demand', progress: 58, owner: 'Avery', blockers: 'Rate card + MSA' },
+  { person: 'Finance Director', role: 'Finance leadership', start: 'Target: August', progress: 35, owner: 'Talent & Culture', blockers: 'Final selection + system access' },
+  { person: 'Seasonal Field Technician', role: 'Construction', start: 'Jul 29', progress: 72, owner: 'Construction & Ops', blockers: 'Equipment certification' },
+  { person: 'Contract Design Partner', role: 'Design bench', start: 'On demand', progress: 58, owner: 'Planning & Design', blockers: 'Rate card + MSA' },
 ];
 
 export const imbaCompliance = [

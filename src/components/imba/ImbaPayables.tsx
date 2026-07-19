@@ -270,7 +270,7 @@ export function ImbaPayables({ role, filters }: { role?: ImbaRoleKey; filters?: 
                 }`}
               >
                 <span className={`flex h-6 w-6 items-center justify-center rounded-lg font-mono text-[11px] font-black ${user.id === state.actingUserId ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'bg-white/10 text-[rgb(var(--text))]'}`}>{user.initials}</span>
-                <span className="text-left"><span className="block text-[11px] font-semibold text-[rgb(var(--text))]">{user.name}</span><span className="block text-[11px] text-[rgb(var(--text-3))]">{user.role}</span></span>
+                <span className="text-left text-[11px] font-semibold text-[rgb(var(--text))]">{user.role}</span>
               </button>
             ))}
           </div>

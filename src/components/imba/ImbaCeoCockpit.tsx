@@ -1888,19 +1888,7 @@ export function ImbaCeoCockpit() {
         </div>
 
         <div className="shrink-0 border-t border-[rgb(var(--line)/0.07)] p-3">
-          <div className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card))] p-3">
-            <div className="flex items-center gap-2 text-[rgb(var(--sa-soft))]">
-              <ShieldCheck className="h-4 w-4" />
-              <span className="text-[11px] font-black uppercase tracking-[0.18em]">
-                Pitch-safe data
-              </span>
-            </div>
-            <p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">
-              Public baseline + illustrative operating model. No claim of access
-              to IMBA systems.
-            </p>
-          </div>
-          <div className="mt-3 flex items-center justify-between px-2 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
+          <div className="flex items-center justify-between px-2 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
             <span>IMBA-OS Prototype</span>
             <span>Technology × Mission</span>
           </div>

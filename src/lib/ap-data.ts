@@ -23,10 +23,12 @@ export type ApUser = {
   initials: string;
 };
 
+// Role-based demo actors — no personal names, so nothing implies a specific
+// person holds a given seat. `name` mirrors the role for audit-trail display.
 export const apUsers: ApUser[] = [
-  { id: 'u-dana', name: 'Dana Reyes', role: 'AP Specialist', approvalLimit: 0, initials: 'DR' },
-  { id: 'u-terry', name: 'Terry Holliday', role: 'Finance Director', approvalLimit: 25_000, initials: 'TH' },
-  { id: 'u-kent', name: 'Kent McNeill', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'KM' },
+  { id: 'u-dana', name: 'AP Specialist', role: 'AP Specialist', approvalLimit: 0, initials: 'AP' },
+  { id: 'u-terry', name: 'Finance Director', role: 'Finance Director', approvalLimit: 25_000, initials: 'FD' },
+  { id: 'u-kent', name: 'Executive', role: 'Executive', approvalLimit: Number.POSITIVE_INFINITY, initials: 'EX' },
 ];
 
 export const userById = (id: string): ApUser =>
@@ -184,9 +186,9 @@ export const seedBills: Bill[] = [
     ],
     approvals: chain(3480, false),
     events: [
-      { at: '2026-07-09T08:30:00', actor: 'Dana Reyes', action: 'Invoice captured', detail: 'Received via vendor email' },
-      { at: '2026-07-09T08:41:00', actor: 'Dana Reyes', action: 'Coded', detail: '6200 · Trail Solutions · PO-TS-0142' },
-      { at: '2026-07-09T08:42:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
+      { at: '2026-07-09T08:30:00', actor: 'AP Specialist', action: 'Invoice captured', detail: 'Received via vendor email' },
+      { at: '2026-07-09T08:41:00', actor: 'AP Specialist', action: 'Coded', detail: '6200 · Trail Solutions · PO-TS-0142' },
+      { at: '2026-07-09T08:42:00', actor: 'AP Specialist', action: 'Submitted for approval' },
     ],
   },
   {
@@ -209,10 +211,10 @@ export const seedBills: Bill[] = [
     ],
     approvals: chain(8750, false, ['Finance Director']),
     events: [
-      { at: '2026-07-03T10:05:00', actor: 'Dana Reyes', action: 'Invoice captured' },
-      { at: '2026-07-03T10:12:00', actor: 'Dana Reyes', action: 'Coded', detail: '6410 · Education' },
-      { at: '2026-07-03T10:13:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-07-14T15:10:00', actor: 'Terry Holliday', action: 'Approved (Finance Director)', detail: 'Within threshold; routed to Executive' },
+      { at: '2026-07-03T10:05:00', actor: 'AP Specialist', action: 'Invoice captured' },
+      { at: '2026-07-03T10:12:00', actor: 'AP Specialist', action: 'Coded', detail: '6410 · Education' },
+      { at: '2026-07-03T10:13:00', actor: 'AP Specialist', action: 'Submitted for approval' },
+      { at: '2026-07-14T15:10:00', actor: 'Finance Director', action: 'Approved (Finance Director)', detail: 'Within threshold; routed to Executive' },
     ],
   },
   {
@@ -236,9 +238,9 @@ export const seedBills: Bill[] = [
     ],
     approvals: chain(22400, true),
     events: [
-      { at: '2026-06-29T09:00:00', actor: 'Dana Reyes', action: 'Invoice captured' },
-      { at: '2026-06-29T09:15:00', actor: 'Dana Reyes', action: 'Coded', detail: 'Donor-restricted trail grant — flagged' },
-      { at: '2026-06-29T09:16:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
+      { at: '2026-06-29T09:00:00', actor: 'AP Specialist', action: 'Invoice captured' },
+      { at: '2026-06-29T09:15:00', actor: 'AP Specialist', action: 'Coded', detail: 'Donor-restricted trail grant — flagged' },
+      { at: '2026-06-29T09:16:00', actor: 'AP Specialist', action: 'Submitted for approval' },
     ],
   },
   {
@@ -257,8 +259,8 @@ export const seedBills: Bill[] = [
     lineItems: [{ description: 'Monthly payroll processing fee', quantity: 1, unitPrice: 2150 }],
     approvals: chain(2150, false),
     events: [
-      { at: '2026-07-01T11:20:00', actor: 'Dana Reyes', action: 'Invoice captured' },
-      { at: '2026-07-01T11:24:00', actor: 'Dana Reyes', action: 'Coded', detail: 'Awaiting submit for approval' },
+      { at: '2026-07-01T11:20:00', actor: 'AP Specialist', action: 'Invoice captured' },
+      { at: '2026-07-01T11:24:00', actor: 'AP Specialist', action: 'Coded', detail: 'Awaiting submit for approval' },
     ],
   },
   {
@@ -280,10 +282,10 @@ export const seedBills: Bill[] = [
     ],
     approvals: chain(6900, false, ['Finance Director']),
     events: [
-      { at: '2026-06-26T13:00:00', actor: 'Dana Reyes', action: 'Invoice captured' },
-      { at: '2026-06-26T13:10:00', actor: 'Dana Reyes', action: 'Coded', detail: '6500 · Administration' },
-      { at: '2026-06-26T13:11:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-07-10T09:30:00', actor: 'Terry Holliday', action: 'Approved (Finance Director)', detail: 'Routed to Kent for pay/hold decision' },
+      { at: '2026-06-26T13:00:00', actor: 'AP Specialist', action: 'Invoice captured' },
+      { at: '2026-06-26T13:10:00', actor: 'AP Specialist', action: 'Coded', detail: '6500 · Administration' },
+      { at: '2026-06-26T13:11:00', actor: 'AP Specialist', action: 'Submitted for approval' },
+      { at: '2026-07-10T09:30:00', actor: 'Finance Director', action: 'Approved (Finance Director)', detail: 'Routed to the Executive for pay/hold decision' },
     ],
   },
   {
@@ -302,9 +304,9 @@ export const seedBills: Bill[] = [
     lineItems: [{ description: '2025 annual report — print run of 2,000', quantity: 1, unitPrice: 4100 }],
     approvals: chain(4100, false, ['Finance Director']),
     events: [
-      { at: '2026-06-19T09:00:00', actor: 'Dana Reyes', action: 'Invoice captured' },
-      { at: '2026-06-19T09:08:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-30T10:00:00', actor: 'Terry Holliday', action: 'Approved & held (Finance Director)', detail: 'Holding payment until the print run ships' },
+      { at: '2026-06-19T09:00:00', actor: 'AP Specialist', action: 'Invoice captured' },
+      { at: '2026-06-19T09:08:00', actor: 'AP Specialist', action: 'Submitted for approval' },
+      { at: '2026-06-30T10:00:00', actor: 'Finance Director', action: 'Approved & held (Finance Director)', detail: 'Holding payment until the print run ships' },
     ],
   },
   {
@@ -324,8 +326,8 @@ export const seedBills: Bill[] = [
     lineItems: [{ description: 'Crew fuel & transport — June', quantity: 1, unitPrice: 1890 }],
     approvals: chain(1890, false, ['Finance Director']),
     events: [
-      { at: '2026-06-06T09:00:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-10T11:00:00', actor: 'Terry Holliday', action: 'Approved & paid (Finance Director)', detail: 'Payment initiated via Bill.com API' },
+      { at: '2026-06-06T09:00:00', actor: 'AP Specialist', action: 'Submitted for approval' },
+      { at: '2026-06-10T11:00:00', actor: 'Finance Director', action: 'Approved & paid (Finance Director)', detail: 'Payment initiated via Bill.com API' },
       { at: '2026-06-18T02:00:00', actor: 'Bill.com', action: 'Payment cleared', detail: 'ACH settled — synced back to IMBA-OS' },
     ],
   },
@@ -345,8 +347,8 @@ export const seedBills: Bill[] = [
     lineItems: [{ description: 'Strategy advisory retainer', quantity: 1, unitPrice: 12000 }],
     approvals: chain(12000, false),
     events: [
-      { at: '2026-06-02T10:00:00', actor: 'Dana Reyes', action: 'Submitted for approval' },
-      { at: '2026-06-09T14:30:00', actor: 'Terry Holliday', action: 'Rejected', detail: 'Duplicate of BILL-1998 — already paid' },
+      { at: '2026-06-02T10:00:00', actor: 'AP Specialist', action: 'Submitted for approval' },
+      { at: '2026-06-09T14:30:00', actor: 'Finance Director', action: 'Rejected', detail: 'Duplicate of BILL-1998 — already paid' },
     ],
   },
 ];
