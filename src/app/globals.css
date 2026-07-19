@@ -58,8 +58,8 @@ html.dark {
   --navy-deep: #10242c;
   --cream: #f5f1e8;
   --paper: #fffdf8;
-  --line: #dedbd2;
-  --line-strong: #c9c5ba;
+  --rule: #dedbd2;
+  --rule-strong: #c9c5ba;
   --orange: #ed6b2d;
   --orange-soft: #fff0e7;
   --green: #34715c;
@@ -287,7 +287,7 @@ select {
   justify-content: space-between;
   gap: 36px;
   padding-bottom: 27px;
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--rule-strong);
 }
 
 .page-header > div:first-child {
@@ -328,7 +328,7 @@ select {
   gap: 10px;
   padding: 13px 15px;
   background: rgba(255, 253, 248, 0.65);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 12px;
 }
 
@@ -383,7 +383,7 @@ select {
   min-height: 156px;
   padding: 19px;
   background: rgba(255, 253, 248, 0.82);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 15px;
   box-shadow: 0 10px 35px rgba(23, 37, 45, 0.035);
 }
@@ -545,7 +545,7 @@ select {
 .panel {
   padding: 23px;
   background: rgba(255, 253, 248, 0.88);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 16px;
   box-shadow: 0 11px 40px rgba(23, 37, 45, 0.035);
 }
@@ -708,7 +708,7 @@ select {
   align-items: center;
   gap: 14px;
   padding-top: 18px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--rule);
   color: var(--ink-soft);
   font-size: 0.68rem;
 }
@@ -744,7 +744,7 @@ table {
 th {
   padding: 10px 12px;
   color: var(--ink-soft);
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--rule-strong);
   font-size: 0.61rem;
   font-weight: 900;
   letter-spacing: 0.07em;
@@ -897,8 +897,8 @@ tbody tr:last-child td {
 .scenario-card {
   padding: 23px;
   background: var(--paper);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--line-strong);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--rule-strong);
   border-radius: 15px;
 }
 
@@ -956,13 +956,13 @@ tbody tr:last-child td {
   grid-template-columns: 1fr 1fr;
   margin: 0;
   padding: 12px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
 }
 
 .scenario-card dl div + div {
   padding-left: 16px;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--rule);
 }
 
 .scenario-card dt {
@@ -1193,7 +1193,7 @@ tbody tr:last-child td {
 .decision-brief-panel {
   overflow: hidden;
   background: var(--paper);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 16px;
   box-shadow: var(--shadow);
 }
@@ -1277,7 +1277,7 @@ tbody tr:last-child td {
   column-gap: 10px;
   padding: 17px;
   background: rgba(255, 253, 248, 0.76);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 13px;
 }
 
@@ -1308,7 +1308,7 @@ tbody tr:last-child td {
 .roadmap-card {
   padding: 21px;
   background: var(--paper);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 15px;
 }
 
@@ -1518,13 +1518,13 @@ tbody tr:last-child td {
   padding: 8px 13px;
   color: var(--ink-soft);
   background: rgba(255, 253, 248, 0.7);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 800;
 }
 
-.report-back:hover { color: var(--orange); border-color: var(--line-strong); }
+.report-back:hover { color: var(--orange); border-color: var(--rule-strong); }
 
 .report-center-grid {
   display: grid;
@@ -1538,7 +1538,7 @@ tbody tr:last-child td {
   gap: 15px;
   padding: 22px;
   background: rgba(255, 253, 248, 0.85);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 15px;
   box-shadow: 0 10px 35px rgba(23, 37, 45, 0.035);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -1546,7 +1546,7 @@ tbody tr:last-child td {
 
 .report-center-card:hover {
   transform: translateY(-3px);
-  border-color: var(--line-strong);
+  border-color: var(--rule-strong);
   box-shadow: 0 18px 40px rgba(23, 37, 45, 0.08);
 }
 
@@ -1668,7 +1668,7 @@ tbody tr:last-child td {
   padding: clamp(26px, 3.5vw, 46px) clamp(22px, 3.5vw, 48px);
   background: #fff;
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 14px;
   box-shadow: var(--shadow);
 }
@@ -1755,7 +1755,7 @@ tbody tr:last-child td {
 .report-table th .col-note {
   display: block;
   margin-top: 3px;
-  color: var(--line-strong);
+  color: var(--rule-strong);
   font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1789,7 +1789,7 @@ tbody tr:last-child td {
 
 .report-subtotal td {
   padding-top: 9px;
-  border-top: 1px solid var(--line-strong);
+  border-top: 1px solid var(--rule-strong);
   font-weight: 800;
 }
 
@@ -1809,13 +1809,13 @@ tbody tr:last-child td {
 .report-subtable {
   margin-top: 30px;
   padding-top: 6px;
-  border-top: 1px dashed var(--line-strong);
+  border-top: 1px dashed var(--rule-strong);
 }
 
 .report-foot {
   margin: 22px 0 0;
   padding-top: 14px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--rule);
   color: var(--ink-soft);
   font-size: 0.66rem;
   line-height: 1.55;
@@ -1832,7 +1832,7 @@ tbody tr:last-child td {
   color: inherit;
   background: none;
   border: 0;
-  border-bottom: 1px dotted var(--line-strong);
+  border-bottom: 1px dotted var(--rule-strong);
   font: inherit;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -1919,7 +1919,7 @@ tbody tr:last-child td {
   gap: 16px;
   padding: 14px 16px;
   background: rgba(255, 253, 248, 0.9);
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 14px;
 }
 
@@ -1946,13 +1946,13 @@ tbody tr:last-child td {
   gap: 9px;
   padding: 7px 12px 7px 8px;
   background: #fff;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 11px;
   cursor: pointer;
   transition: 140ms ease;
 }
 
-.ap-actas-btn:hover { border-color: var(--line-strong); }
+.ap-actas-btn:hover { border-color: var(--rule-strong); }
 
 .ap-actas-btn.is-active {
   border-color: var(--orange);
@@ -2015,7 +2015,7 @@ tbody tr:last-child td {
   padding: 6px 12px;
   color: var(--navy);
   background: #fff;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--rule-strong);
   border-radius: 8px;
   font-size: 0.68rem;
   font-weight: 800;
@@ -2160,7 +2160,7 @@ tbody tr:last-child td {
   overflow: hidden;
   padding: 26px 26px 22px;
   background: #fff;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 12px;
   box-shadow: 0 12px 34px rgba(23, 37, 45, 0.07);
 }
@@ -2184,7 +2184,7 @@ tbody tr:last-child td {
 .invoice-vendor-addr { margin: 5px 0 0; color: var(--ink-soft); font-size: 0.68rem; line-height: 1.4; max-width: 200px; }
 
 .invoice-meta { text-align: right; }
-.invoice-word { margin: 0 0 8px; color: var(--line-strong); font-size: 1.3rem; font-weight: 900; letter-spacing: 0.16em; }
+.invoice-word { margin: 0 0 8px; color: var(--rule-strong); font-size: 1.3rem; font-weight: 900; letter-spacing: 0.16em; }
 .invoice-meta dl { display: grid; gap: 4px; margin: 0; }
 .invoice-meta dl div { display: flex; justify-content: flex-end; gap: 10px; font-size: 0.68rem; }
 .invoice-meta dt { color: var(--ink-soft); }
@@ -2233,7 +2233,7 @@ tbody tr:last-child td {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rule);
   border-radius: 10px;
 }
 .ap-chain-step.is-done { background: var(--green-soft); border-color: #c6ddd2; }
@@ -2244,11 +2244,11 @@ tbody tr:last-child td {
 
 .ap-audit { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .ap-audit li { display: grid; grid-template-columns: 14px 1fr; gap: 9px; padding: 9px 0; }
-.ap-audit-dot { width: 8px; height: 8px; margin-top: 5px; background: var(--line-strong); border-radius: 50%; }
+.ap-audit-dot { width: 8px; height: 8px; margin-top: 5px; background: var(--rule-strong); border-radius: 50%; }
 .ap-audit li:first-child .ap-audit-dot { background: var(--orange); }
 .ap-audit strong { font-size: 0.7rem; }
 .ap-audit p { margin: 3px 0 0; color: var(--ink-soft); font-size: 0.66rem; line-height: 1.4; }
-.ap-audit-meta { display: block; margin-top: 3px; color: var(--line-strong); font-size: 0.6rem; font-weight: 700; }
+.ap-audit-meta { display: block; margin-top: 3px; color: var(--rule-strong); font-size: 0.6rem; font-weight: 700; }
 
 /* Actions */
 
@@ -2262,7 +2262,7 @@ tbody tr:last-child td {
   padding: 9px 14px;
   color: var(--ink);
   background: #fff;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--rule-strong);
   border-radius: 9px;
   font-size: 0.72rem;
   font-weight: 800;
@@ -2298,7 +2298,7 @@ tbody tr:last-child td {
   padding: 10px;
   color: var(--ink);
   background: #fff;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--rule-strong);
   border-radius: 9px;
   font-size: 0.72rem;
   resize: vertical;

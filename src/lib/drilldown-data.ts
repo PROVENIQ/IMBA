@@ -35,7 +35,7 @@ const otherRevenue = (year: number) => {
 export const DRILLABLE_LABELS = new Set([
   'Contributions and grants',
   'Program service revenue',
-  'Membership and other revenue',
+  'Investment and other revenue',
   'Total revenue and support',
   'Total operating expenses',
   'Change in net assets',
@@ -55,15 +55,17 @@ const compositions: Record<string, { label: string; weight: number }[]> = {
     { label: 'Education & events', weight: 0.12 },
     { label: 'Sponsorships', weight: 0.08 },
   ],
-  'Membership and other revenue': [
+  'Investment and other revenue': [
     { label: 'Investment income', weight: 0.5 },
     { label: 'Merchandise & royalties', weight: 0.3 },
     { label: 'Miscellaneous', weight: 0.2 },
   ],
+  // Filed FY2024 functional split (Form 990 Part IX): program 5,840,370 /
+  // M&G 712,130 / fundraising 461,859 of 7,014,359 total — 83.3 / 10.2 / 6.6.
   'Total operating expenses': [
-    { label: 'Program services', weight: 0.72 },
-    { label: 'Management & general', weight: 0.18 },
-    { label: 'Fundraising', weight: 0.1 },
+    { label: 'Program services', weight: 0.8326 },
+    { label: 'Management & general', weight: 0.1015 },
+    { label: 'Fundraising', weight: 0.0659 },
   ],
 };
 
@@ -85,7 +87,7 @@ function valueFor(label: string, year: number): number {
       return y.contributions;
     case 'Program service revenue':
       return y.programServices;
-    case 'Membership and other revenue':
+    case 'Investment and other revenue':
       return otherRevenue(year);
     case 'Total revenue and support':
       return y.revenue;
@@ -116,7 +118,7 @@ export function buildDrill(label: string, year: number): Drill | null {
       lines: [
         { label: 'Contributions and grants', amount: y.contributions },
         { label: 'Program service revenue', amount: y.programServices },
-        { label: 'Membership and other revenue', amount: otherRevenue(year) },
+        { label: 'Investment and other revenue', amount: otherRevenue(year) },
       ],
     };
   }

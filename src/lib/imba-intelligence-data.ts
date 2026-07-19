@@ -74,7 +74,7 @@ export interface ImbaMetricExplanation {
 
 export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
   executive: {
-    label: "CEO / Executive Director",
+    label: "CEO",
     initials: "CE",
     purpose: "Enterprise performance, risk, and decisions",
     home: "brief",

@@ -289,7 +289,7 @@ const imbaNavSections: ImbaNavSection[] = [
       },
       {
         id: "finance-snapshot",
-        label: "Company snapshot",
+        label: "Organization snapshot",
         description: "QuickBooks-style finance home",
         icon: Gauge,
       },
@@ -1517,6 +1517,9 @@ function ImbaOsSectionView({
     people: "people-directory",
     governance: "decisions",
     system: "roadmap",
+    development: "development-campaigns",
+    platform: "platform-health",
+    communications: "development-marketing",
   };
 
   return (
@@ -1868,6 +1871,20 @@ export function ImbaCeoCockpit() {
             setSavedViews(parsed.savedViews);
             setAlerts(parsed.alerts);
             setSubscriptions(parsed.subscriptions);
+            // View state is not persisted, so a reload would otherwise leave a
+            // restored non-executive role staring at the executive brief with no
+            // sidebar item selected. Land the role on its own home view instead
+            // (same logic as changeRole).
+            const restoredProfile = imbaRoleProfiles[parsed.role];
+            const restoredNavigation = navSectionsForRole(parsed.role);
+            const allowedViews = restoredNavigation.flatMap((section) => section.items.map((item) => item.id));
+            if (restoredProfile && !allowedViews.includes("brief")) {
+              setView(restoredProfile.home);
+              const homeSection = restoredNavigation.find((section) =>
+                section.items.some((item) => item.id === restoredProfile.home),
+              );
+              setExpandedSections(homeSection ? { [homeSection.label]: true } : {});
+            }
           }
         } catch {
           window.localStorage.removeItem(intelligenceStorageKey);
@@ -2092,7 +2109,7 @@ export function ImbaCeoCockpit() {
             id: "governance-attestations",
             scope,
             title: "2 conflict attestations remain open",
-            detail: "31 of 33 board and officer attestations are complete in the illustrative compliance register.",
+            detail: "11 of 12 attestations are complete in the illustrative compliance register (8 independent voting board members plus officers).",
             tone: "warning",
             targetView: target("governance-compliance"),
           },

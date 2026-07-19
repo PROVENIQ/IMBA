@@ -77,7 +77,7 @@ export const imbaEmployees = [
   { id: 'E-006', name: 'Chris Orr', role: 'Community Engagement Specialist', team: 'Programs & Community', location: 'Eastern Sierra, CA (probable)', type: 'Core', allocation: 77, loadedCost: 87000, status: 'Active' },
   { id: 'E-007', name: 'Coleman Haskell', role: 'Trail Specialist', team: 'Trail Field', location: 'Northern Maine (probable)', type: 'Core', allocation: 85, loadedCost: 83000, status: 'Active' },
   { id: 'E-008', name: 'Cory Callahan', role: 'Trail Care Specialist', team: 'Trail Field', location: 'Not stated', type: 'Core', allocation: 63, loadedCost: 88000, status: 'Active' },
-  { id: 'E-009', name: 'David Wiens', role: 'Executive Director', team: 'Executive', location: 'Not stated', type: 'Leadership', allocation: 72, loadedCost: 195000, status: 'Active' },
+  { id: 'E-009', name: 'David Wiens', role: 'Executive Director', team: 'Executive', location: 'Not stated', type: 'Leadership', allocation: 72, loadedCost: 186000, status: 'Active' },
   { id: 'E-010', name: 'Eleanor Blick', role: 'Director of Communications', team: 'Communications & Marketing', location: 'Not stated', type: 'Core', allocation: 90, loadedCost: 144000, status: 'Active' },
   { id: 'E-011', name: 'Forrest Town', role: 'Staff Planner', team: 'Planning & Design', location: 'Not stated', type: 'Core', allocation: 66, loadedCost: 85000, status: 'Active' },
   { id: 'E-012', name: 'Geoff Chain', role: 'Project Manager and Planner', team: 'Planning & Design', location: 'Prescott, Arizona', type: 'Core', allocation: 79, loadedCost: 105000, status: 'Active' },

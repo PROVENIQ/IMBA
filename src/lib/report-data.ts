@@ -47,7 +47,7 @@ export const activitiesRows: ReportRow[] = [
   },
   {
     kind: 'account',
-    label: 'Membership and other revenue',
+    label: 'Investment and other revenue',
     cells: activityCells(otherRevenue, (y) => (otherRevenue(y) / revenue2024) * 100),
   },
   {

@@ -96,7 +96,7 @@ function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: stri
 }
 
 const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; description: string }> = {
-  'finance-snapshot': { eyebrow: 'Money · command center', title: 'Company snapshot', description: 'The accounting, liquidity, budget, grants, and working-capital picture in one finance home.' },
+  'finance-snapshot': { eyebrow: 'Money · command center', title: 'Organization snapshot', description: 'The accounting, liquidity, budget, grants, and working-capital picture in one finance home.' },
   'finance-calendar': { eyebrow: 'Money · control calendar', title: 'Finance calendar', description: 'Close, payroll, billing, grant, chapter settlement, audit, filing, and Board deadlines in one owned schedule.' },
   'finance-coa': { eyebrow: 'Money · data standard', title: 'Canonical chart of accounts', description: 'One reporting vocabulary across IMBA, Trail Solutions projects, restricted funds, and chapter submissions.' },
   'finance-budget': { eyebrow: 'Money · planning', title: 'Budget + forecast', description: 'Plan, actual, variance, and expected year-end result by IMBA revenue engine and cost center.' },
@@ -152,14 +152,13 @@ function PartyNote({ children }: { children: React.ReactNode }) {
 function Vendors() {
   // Register data lives in imba-detail-data.ts (shared with the report renderers).
   const vendors = imbaVendors;
-  const total = vendors.reduce((s, v) => s + v.ytd, 0);
   const over100 = vendors.filter((v) => v.ytd >= 100_000).length;
   return (
     <>
       <PartyNote>Vendors are money-out parties. Each maps one-to-one to a <span className="font-semibold text-[rgb(var(--text))]">QuickBooks Vendor</span>. The five largest below are IMBA&#39;s <span className="font-semibold text-[rgb(var(--text))]">filed 2024 independent contractors</span> (Form 990 Part VII, Section B).</PartyNote>
       <div className="grid gap-3 sm:grid-cols-3">
         <Kpi label="Active vendors" value={String(vendors.length)} note="Subcontractors, suppliers, services" />
-        <Kpi label="Paid · illustrative + filed" value={money(total)} note="Top contractors are filed 990 figures" tone="teal" />
+        <Kpi label="Filed 990 contractor spend" value={money(vendors.filter((v) => v.prov === 'filed').reduce((s, v) => s + v.ytd, 0))} note={`Plus ${money(vendors.filter((v) => v.prov === 'illustrative').reduce((s, v) => s + v.ytd, 0))} illustrative operating vendors`} tone="teal" />
         <Kpi label="Over $100K contractors" value={String(over100)} note="Reported individually on the 990" tone="amber" />
       </div>
       <ShellCard>
@@ -887,7 +886,7 @@ function Snapshot({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
         <Kpi label="YTD revenue" value={money(revenue)} note="Membership, philanthropy, and Trail Solutions" />
         <Kpi label="YTD expense" value={money(expense)} note="Delivery, mission, and shared services" tone="teal" />
         <Kpi label="YTD result" value={money(revenue - expense)} note="Investment position before close adjustments" tone="amber" />
-        <Kpi label="Deployable cash" value="$1.74M" note="After modeled restrictions and obligations" tone="lime" />
+        <Kpi label="Deployable cash" value="$1.74M" note="Modeled · base scenario — see Liquidity runway for the bridge" tone="lime" />
         <Kpi label="Monthly close" value="24 / 28" note="Four control steps remain · target Jul 22" tone="amber" />
       </div>
 
@@ -895,7 +894,7 @@ function Snapshot({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
 
       <div className="grid gap-5 xl:grid-cols-12">
         <ShellCard className="xl:col-span-8">
-          <Heading eyebrow="Finance home" title="One click into every accounting workflow" detail="Not just a CEO dashboard" />
+          <Heading eyebrow="Finance home" title="One click into every accounting workflow" detail="Budget, grants, AP/AR, and reporting" />
           <div className="grid gap-3 p-5 md:grid-cols-2">
             {launchers.map((item) => {
               const Icon = item.icon;
@@ -931,7 +930,7 @@ function Snapshot({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
 
       <div className="grid gap-5 lg:grid-cols-3">
         <ShellCard><Heading eyebrow="Working capital" title="Cash conversion" /><div className="space-y-3 p-5"><Kpi label="Receivables + unbilled" value={money(ar)} note="$96K is over 60 days" tone="amber" /><Kpi label="Approved + pending payables" value={money(ap)} note="Includes chapter settlement reserve" tone="teal" /></div></ShellCard>
-        <ShellCard><Heading eyebrow="Restricted funding" title="Grant portfolio" /><div className="p-5"><p className="font-mono text-3xl font-semibold text-[rgb(var(--text))]">{money(grantRemaining)}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Unspent award balance across the illustrative active portfolio</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-[rgb(var(--line)/0.07)]"><div className="h-full w-[54%] rounded-full bg-[#68b9aa]" /></div><p className="mt-2 text-[11px] text-[rgb(var(--text-3))]">54% of awarded funds spent · $308K draws pending</p></div></ShellCard>
+        <ShellCard><Heading eyebrow="Restricted funding" title="Grant portfolio" /><div className="p-5"><p className="font-mono text-3xl font-semibold text-[rgb(var(--text))]">{money(grantRemaining)}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Unspent award balance across the illustrative active portfolio</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-[rgb(var(--line)/0.07)]"><div className="h-full rounded-full bg-[#68b9aa]" style={{ width: `${Math.round((imbaGrants.reduce((s, g) => s + g.spent, 0) / imbaGrants.reduce((s, g) => s + g.award, 0)) * 100)}%` }} /></div><p className="mt-2 text-[11px] text-[rgb(var(--text-3))]">{Math.round((imbaGrants.reduce((s, g) => s + g.spent, 0) / imbaGrants.reduce((s, g) => s + g.award, 0)) * 100)}% of awarded funds spent · {money(imbaGrants.reduce((s, g) => s + g.reimbursement, 0))} draws pending</p></div></ShellCard>
         <ShellCard><Heading eyebrow="Control signals" title="Finance action queue" /><div className="space-y-3 p-5">{['Collect Great Lakes invoice before next mobilization', 'Submit foundation reimbursement package by Jul 31', 'Resolve equipment invoice decision hold', 'Refresh three project estimates to complete'].map((item, index) => <div key={item} className="flex items-start gap-3"><span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${index < 2 ? 'bg-rose-300/10 text-rose-700 dark:text-rose-100' : 'bg-amber-300/10 text-amber-800 dark:text-amber-100'}`}>{index + 1}</span><p className="text-[11px] leading-5 text-[rgb(var(--text-2))]">{item}</p></div>)}</div></ShellCard>
       </div>
     </>
