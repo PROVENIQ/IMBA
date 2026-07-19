@@ -679,7 +679,7 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
       'Bank feeds — cash positions',
       'Public figures re-derived from IMBA Form 990 (EIN 47-1254119)',
     ],
-    note: 'Structure is production-minded; current-period values are illustrative until the GL and connectors are live. Money never moves inside IMBA-OS — payment executes in Bill.com.',
+    note: 'Structure is production-minded; current-period values are illustrative until the GL and connectors are live. Money never moves inside IMBA-OS — payment would execute in Bill.com once that connector is live.',
   },
   People: {
     sources: [
@@ -3104,6 +3104,8 @@ export function ImbaCeoCockpit() {
               <ImbaFinanceWorkspace
                 view={view as ImbaFinanceView}
                 onNavigate={setCurrentView}
+                role={role}
+                filters={filters}
               />
             ) : null}
 

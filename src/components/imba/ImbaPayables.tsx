@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import {
   AlertTriangle,
   Ban,
@@ -31,6 +31,7 @@ import {
   seedBills,
   userById,
 } from '@/lib/ap-data';
+import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
 
 /**
@@ -43,11 +44,14 @@ import { useImbaOsState } from '@/components/imba/ImbaOsState';
  * this file is only the cockpit-styled presentation.
  */
 
+const AP_STORAGE_KEY = 'imba-ap-bills-v1';
+
 type State = { bills: Bill[]; selectedId: string | null; actingUserId: string };
 type Action =
   | { type: 'select'; id: string }
   | { type: 'close' }
   | { type: 'setUser'; id: string }
+  | { type: 'hydrateBills'; bills: Bill[] }
   | { type: 'submit'; id: string }
   | { type: 'advance'; id: string }
   | { type: 'pay'; id: string }
@@ -86,6 +90,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, selectedId: null };
     case 'setUser':
       return { ...state, actingUserId: action.id };
+    case 'hydrateBills':
+      return { ...state, bills: action.bills };
     case 'submit':
       return update(action.id, (bill) =>
         withEvent({ ...bill, status: 'In review' }, { at: nowIso(), actor: actor.name, action: 'Submitted for approval' }),
@@ -105,7 +111,7 @@ function reducer(state: State, action: Action): State {
         const role = currentStep(bill)?.role ?? actor.role;
         return withEvent(
           { ...bill, approvals: approveCurrent(bill, actor), status: 'Paid', syncedToBillPay: true },
-          { at: nowIso(), actor: actor.name, action: `Approved & paid (${role})`, detail: 'Payment initiated via Bill.com API' },
+          { at: nowIso(), actor: actor.name, action: `Approved & paid (${role})`, detail: 'Payment authorized · queued for Bill.com disbursement (demo)' },
         );
       });
     case 'hold':
@@ -122,7 +128,7 @@ function reducer(state: State, action: Action): State {
         if (!releaseCheck(bill, actor).ok) return bill;
         return withEvent(
           { ...bill, status: 'Paid', syncedToBillPay: true },
-          { at: nowIso(), actor: actor.name, action: 'Payment released', detail: 'Released to Bill.com via API' },
+          { at: nowIso(), actor: actor.name, action: 'Payment released', detail: 'Payment released · queued for Bill.com disbursement (demo)' },
         );
       });
     case 'reject':
@@ -173,10 +179,51 @@ function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: stri
   );
 }
 
-export function ImbaPayables() {
+export function ImbaPayables({ role, filters }: { role?: ImbaRoleKey; filters?: ImbaFilterState } = {}) {
   const control = useImbaOsState();
   const [state, dispatch] = useReducer(reducer, { bills: seedBills, selectedId: null, actingUserId: 'u-kent' });
   const actingUser = userById(state.actingUserId);
+
+  // Persist bills so navigating away and back doesn't reset AP while its queued
+  // sync jobs live on — previously a split-brain where a paid bill reverted but
+  // its outbound job survived in the control plane.
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(AP_STORAGE_KEY);
+      if (saved) {
+        const bills = JSON.parse(saved) as Bill[];
+        if (Array.isArray(bills) && bills.length) dispatch({ type: 'hydrateBills', bills });
+      }
+    } catch {
+      /* ignore corrupt cache */
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(AP_STORAGE_KEY, JSON.stringify(state.bills));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [state.bills]);
+
+  // The acting approver follows the signed-in role. In production this is the
+  // authenticated identity, not a free choice; the switcher below is a demo lens.
+  useEffect(() => {
+    if (!role) return;
+    const mapped = role === 'executive' ? 'u-kent' : role === 'finance' ? 'u-terry' : 'u-dana';
+    dispatch({ type: 'setUser', id: mapped });
+  }, [role]);
+
+  const activeFilter = filters
+    ? [
+        filters.region !== 'All regions' ? filters.region : null,
+        filters.project !== 'All projects' ? filters.project : null,
+        filters.phase !== 'All phases' ? filters.phase : null,
+        filters.status !== 'All signals' ? filters.status : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
   const selected = state.bills.find((b) => b.id === state.selectedId) ?? null;
 
   const metrics = useMemo(() => {
@@ -234,6 +281,12 @@ export function ImbaPayables() {
           <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
         </div>
       </div>
+
+      {activeFilter ? (
+        <p className="rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.02)] px-3 py-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">
+          Global filter <span className="font-semibold text-[rgb(var(--text-2))]">{activeFilter}</span> scopes the portfolio and intelligence views. Accounts payable is the organization-wide operating queue and is not project-scoped.
+        </p>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi label="Open payables" value={moneyFull(metrics.openTotal)} note={`${metrics.openCount} bills in the pipeline`} tone="teal" />
@@ -398,7 +451,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                         <button type="button" className={ghostBtn} onClick={() => act({ type: 'hold', id: bill.id })}><PauseCircle className="h-3.5 w-3.5" /> Approve &amp; Hold</button>
                         <button type="button" className={dangerBtn} onClick={() => setMode('reject')}><Ban className="h-3.5 w-3.5" /> Reject</button>
                       </div>
-                      <p className="rounded-lg border-l-2 border-violet-300/40 bg-violet-300/[0.04] px-3 py-2 text-[11px] leading-4 text-[rgb(var(--text-2))]">Approve &amp; Pay calls the Bill.com API to disburse and logs an outbound job on the IMBA-OS control plane. A person authorizes each payment.</p>
+                      <p className="rounded-lg border-l-2 border-violet-300/40 bg-violet-300/[0.04] px-3 py-2 text-[11px] leading-4 text-[rgb(var(--text-2))]">Approve &amp; Pay records the authorization and queues an outbound job on the IMBA-OS control plane. Disbursement executes in Bill.com — a planned connector, not live in this demo — and no money moves inside IMBA-OS. A person authorizes each payment.</p>
                     </>
                   ) : (
                     <div className="flex flex-wrap gap-2">
@@ -436,7 +489,7 @@ function BillDrawer({ bill, actingUser, onClose, act }: { bill: Bill; actingUser
                 )
               ) : null}
 
-              {bill.status === 'Paid' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><CheckCircle2 className="h-3.5 w-3.5" /> Paid via Bill.com. Settlement synced back to IMBA-OS.</p> : null}
+              {bill.status === 'Paid' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))]/[0.06] px-3 py-2.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><CheckCircle2 className="h-3.5 w-3.5" /> Authorized. In production, Bill.com disburses and settlement syncs back to IMBA-OS.</p> : null}
               {bill.status === 'Rejected' ? <p className="flex items-center gap-2 rounded-xl bg-[rgb(var(--line)/0.03)] px-3 py-2.5 text-[11px] text-[rgb(var(--text-2))]"><Ban className="h-3.5 w-3.5" /> Rejected. Return to the vendor or AP for correction.</p> : null}
             </div>
           </div>

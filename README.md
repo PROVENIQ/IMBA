@@ -10,25 +10,21 @@ An isolated, IMBA-focused version of the SYSOP operating concept. This prototype
 - No copied `.env.local`, Supabase project, deployment metadata, build cache, or SYSOP runtime configuration
 - No imports or filesystem references back to the SYSOP project
 
-## Prototype views
+## Application shape
 
-| Route | Purpose |
-|---|---|
-| `/` | Executive overview and public financial trend |
-| `/projects` | Illustrative Trail Solutions job-costing and capacity view |
-| `/forecast` | Base, stretch, and downside operating scenarios |
-| `/liquidity` | Gross-to-deployable cash bridge |
-| `/leadership` | One-page CEO decision brief and 30/60/90-day plan |
+A single Next.js App Router route (`/`) renders the entire IMBA-OS cockpit; navigation is state-driven. It spans 9 business pillars — Mission, Money, People, Development, Platform, Governance, Collaboration, System, and Management — across ~66 views, scoped by role. Six role profiles (Executive, Finance, People / HR, Trail Solutions, Development, Board) determine which pillars and views are visible. Light theme is the default, with a one-click dark toggle.
+
+> This is a client-only pitch prototype: no server, database, authentication, or live integrations. Role-aware navigation demonstrates authorization intent; it is not an enforcement layer. State persists in the browser only.
 
 ## Data policy
 
-Published IMBA facts are labeled as public baselines. Project, capacity, pipeline, and forecast records are visibly labeled as illustrative scenarios until the application is connected to IMBA's internal systems.
+Published IMBA facts are labeled as public baselines. Historical financials come from IMBA's filed Forms 990 (2019–2024) and the 2025 Annual Report; current-period operating values, project economics, capacity, and pipeline records are visibly labeled as illustrative until the application is connected to IMBA's internal systems.
 
 Primary public sources:
 
+- IMBA public Form 990 filings, EIN 47-1254119 (2019–2024)
 - [IMBA 2025 Annual Report](https://www.imba.com/2025-annual-report)
 - [IMBA website](https://www.imba.com/)
-- National IMBA public Form 990 filings, EIN 47-1254119
 
 ## Run locally
 

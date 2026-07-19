@@ -25,6 +25,7 @@ import {
 } from '@/lib/imba-detail-data';
 import { financialHistory } from '@/lib/imba-data';
 import type { ImbaOsView } from '@/lib/imba-os-data';
+import type { ImbaFilterState, ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
 import { ImbaPayables } from '@/components/imba/ImbaPayables';
 import { ImbaStatements } from '@/components/imba/ImbaStatements';
@@ -81,13 +82,13 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
   'finance-coa': { eyebrow: 'Money · data standard', title: 'Canonical chart of accounts', description: 'One reporting vocabulary across IMBA, Trail Solutions projects, restricted funds, and chapter submissions.' },
   'finance-budget': { eyebrow: 'Money · planning', title: 'Budget + forecast', description: 'Plan, actual, variance, and expected year-end result by IMBA revenue engine and cost center.' },
   'finance-grants': { eyebrow: 'Money · restricted funds', title: 'Grant tracking', description: 'Award-to-close lifecycle: restrictions, allowable spend, draws, deadlines, and remaining capacity.' },
-  'finance-payables': { eyebrow: 'Money · approve & pay', title: 'Accounts payable', description: 'View the invoice, route by threshold, and Approve & Pay / Hold / Reject — the payment executes in Bill.com via API.' },
+  'finance-payables': { eyebrow: 'Money · approve & pay', title: 'Accounts payable', description: 'View the invoice, route by threshold, and Approve & Pay / Hold / Reject — the payment hands off to Bill.com for disbursement (planned connector).' },
   'finance-ap-ar': { eyebrow: 'Money · collections', title: 'Accounts receivable', description: 'Open invoices, unbilled milestones, aging, and collection follow-ups. Vendor bills and approvals live in Accounts payable.' },
   'finance-reports': { eyebrow: 'Money · reporting library', title: 'Reports', description: 'A governed catalog for leadership, Board, project accounting, treasury, grants, and compliance.' },
   'finance-transactions': { eyebrow: 'Money · transaction control', title: 'Bills + invoices', description: 'Controlled entry for vendor bills, client invoices, chapter obligations, project milestones, and coding evidence.' },
 };
 
-export function ImbaFinanceWorkspace({ view, onNavigate }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void }) {
+export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void; role?: ImbaRoleKey; filters?: ImbaFilterState }) {
   return (
     <div className="space-y-5">
       {view === 'finance-snapshot' ? <Snapshot onNavigate={onNavigate} /> : null}
@@ -95,7 +96,7 @@ export function ImbaFinanceWorkspace({ view, onNavigate }: { view: ImbaFinanceVi
       {view === 'finance-coa' ? <ChartOfAccounts /> : null}
       {view === 'finance-budget' ? <Budget /> : null}
       {view === 'finance-grants' ? <GrantsIntegrated onNavigate={onNavigate} /> : null}
-      {view === 'finance-payables' ? <ImbaPayables /> : null}
+      {view === 'finance-payables' ? <ImbaPayables role={role} filters={filters} /> : null}
       {view === 'finance-ap-ar' ? <ApAr /> : null}
       {view === 'finance-reports' ? (
         <div className="space-y-5">
