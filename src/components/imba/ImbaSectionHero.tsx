@@ -53,7 +53,7 @@ const sectionHeroMeta: Record<string, { title: string; description: string }> = 
   Management: {
     title: 'Executive management',
     description:
-      'The 15-minute executive view — brief, decisions, and the first-year roadmap, synthesized from every pillar.',
+      'The 15-minute executive view — brief, decisions, and the next 12-month roadmap, synthesized from every pillar.',
   },
 };
 

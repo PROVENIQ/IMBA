@@ -97,7 +97,7 @@ across every pillar for the few decisions only the CEO makes.
 | **Executive brief** | The 15-minute view — what changed, why it matters, what's forecast, what you decide | Start here each day. Use the filters to focus on a region/phase; click **Explain** on any KPI to see the story behind it. |
 | **WHAT_IF Lab** | Price the next idea before committing | Enter an idea's assumptions (new program, partnership, equipment); see cost fully loaded, the cash effect over 12–24 months, and the earned-revenue / subsidy needed to sustain it. |
 | **Decision room** | Approve, adjust, or pause | Review the open decisions; each states the objective, the financial/compliance boundary, and responsible options. Record a decision. |
-| **First-year roadmap** | Day 1 → Year 1 plan | Track the dated deliverables (close, job costing, portfolio visibility, liquidity, audit). |
+| **Next 12-month roadmap** | Day 1 → Month 12 plan | Track the dated deliverables (close, job costing, portfolio visibility, liquidity, audit). |
 
 ### 4.2 Reading across the pillars
 As CEO you can open any section for the executive cut:

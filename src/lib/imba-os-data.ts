@@ -574,7 +574,7 @@ export const imbaOsSections: ImbaOsSection[] = [
   },
 ];
 
-export const imbaFirstYearRoadmap = [
+export const imbaNextTwelveMonthRoadmap = [
   {
     milestone: "Day 1",
     title: "Listen first. Build second.",
@@ -625,7 +625,7 @@ export const imbaFirstYearRoadmap = [
     ],
   },
   {
-    milestone: "Year 1",
+    milestone: "Month 12",
     title: "Built to scale toward $10M",
     deliverables: [
       "Pipeline-driven annual budget",

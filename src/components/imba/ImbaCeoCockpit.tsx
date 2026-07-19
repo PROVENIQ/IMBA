@@ -59,7 +59,7 @@ import {
   type ImbaScenarioKey,
 } from "@/lib/imba-cockpit-data";
 import {
-  imbaFirstYearRoadmap,
+  imbaNextTwelveMonthRoadmap,
   imbaOsSections,
   type ImbaOsSection,
   type ImbaOsView,
@@ -638,8 +638,8 @@ const imbaNavSections: ImbaNavSection[] = [
       },
       {
         id: "roadmap",
-        label: "First-year roadmap",
-        description: "Day 1 through Year 1",
+        label: "Next 12-month roadmap",
+        description: "Day 1 through Month 12",
         icon: ListChecks,
       },
     ],
@@ -762,7 +762,7 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
   Management: {
     sources: [
       'Aggregated from every pillar above',
-      'Executive brief, decisions, and the first-year roadmap',
+      'Executive brief, decisions, and the next 12-month roadmap',
     ],
     note: 'A synthesis layer — it reflects the other sections rather than a system of its own.',
   },
@@ -1588,7 +1588,7 @@ function ImbaRoadmapView({
               Proposal translated into product
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[rgb(var(--text))]">
-              The first-year IMBA-OS roadmap
+              The next 12-month IMBA-OS roadmap
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-2))]">
               The software grows in the same order as the finance function:
@@ -1606,7 +1606,7 @@ function ImbaRoadmapView({
         </div>
       </section>
       <div className="relative space-y-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-gradient-to-b before:from-[rgb(var(--sa))] before:via-[#68b9aa] before:to-transparent sm:before:left-[83px]">
-        {imbaFirstYearRoadmap.map((step, index) => (
+        {imbaNextTwelveMonthRoadmap.map((step, index) => (
           <article
             key={step.milestone}
             className="relative grid gap-4 sm:grid-cols-[120px_1fr]"
@@ -2226,7 +2226,7 @@ export function ImbaCeoCockpit() {
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden" style={accentStyle}>
         <header className="relative z-30 flex h-[86px] shrink-0 items-center justify-between border-b border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel)/85%)] px-4 backdrop-blur-xl sm:px-6 xl:px-8">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
@@ -2258,11 +2258,11 @@ export function ImbaCeoCockpit() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setCurrentView("integration-control")}
-              className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 xl:flex"
+              className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 2xl:flex"
               title="Open integration control plane"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-300" />
@@ -2308,7 +2308,7 @@ export function ImbaCeoCockpit() {
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[rgb(var(--text-3))]" />
             </div>
             {isScenarioAware ? (
-              <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 md:flex">
+              <div className="hidden items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.03)] px-3 py-2 xl:flex">
                 <CalendarDays className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
                 <span className="text-[11px] font-semibold text-[rgb(var(--text))]">Rolling 12 + 13 weeks</span>
                 <ImbaInfoTooltip
