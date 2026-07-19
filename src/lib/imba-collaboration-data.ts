@@ -6,6 +6,7 @@ export type ImbaCollaborationView =
   | "collaboration-workspaces"
   | "collaboration-knowledge"
   | "collaboration-meetings"
+  | "collaboration-connectors"
   | "communications-inbox"
   | "communications-templates";
 

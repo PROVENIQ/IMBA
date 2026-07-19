@@ -229,6 +229,20 @@ engagement; the connectors keep it in agreement with the systems of record:
 cross-system codes), the **sync queue** (approvals, retries, errors), and an **integration
 audit** trail. Writes are **staged and require approval** before posting to a system of record.
 
+### 8.1 Collaboration connections
+
+**Where:** Collaboration → **Connected channels**. The prototype has no live external
+credentials. The connection register therefore shows Slack, Microsoft Teams, Notion,
+SharePoint, Gmail / Outlook, and Google Drive as **Not connected**.
+
+Select a provider and run its demo event to see how an authorized message, thread, meeting,
+page, or file maps into an IMBA-OS project, grant, chapter, task, or decision. The simulation
+does not contact the external provider.
+
+An MCP server can give an authorized AI assistant access to one of these tools. Persistent
+product synchronization still normally uses the provider's OAuth, API, and webhooks so
+IMBA-OS can enforce permissions, mappings, retries, and audit evidence.
+
 ---
 
 ## 9. Quick function reference (CEO + Finance)
@@ -248,6 +262,7 @@ audit** trail. Writes are **staged and require approval** before posting to a sy
 | Manage a grant | Money → Grant tracking | Select award; edit allowable spend/status (queues QBO tie-out). |
 | Enter a bill/invoice | Money → Bills + invoices | Fill required coding; submit to approval. |
 | Review connectors | Platform → Integration control | Mode, mappings, sync queue, audit. |
+| Review collaboration connections | Collaboration → Connected channels | Check connection status and run a safe local routing demonstration. |
 
 ---
 

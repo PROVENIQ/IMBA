@@ -36,6 +36,7 @@ import {
   PanelLeftOpen,
   Presentation,
   Route,
+  Search,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -398,6 +399,18 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: Users,
       },
       {
+        id: "people-volunteers",
+        label: "Volunteer hub",
+        description: "Recruit, screen + deploy",
+        icon: HeartHandshake,
+      },
+      {
+        id: "people-training",
+        label: "Learning + credentials",
+        description: "Training, safety + readiness",
+        icon: BookOpen,
+      },
+      {
         id: "people-reports",
         label: "People reports",
         description: "Hire dates + workforce controls",
@@ -420,6 +433,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Hiring + positions",
         description: "Backlog-gated staffing",
         icon: BriefcaseBusiness,
+      },
+      {
+        id: "people-role-studio",
+        label: "Role studio",
+        description: "Job descriptions + scorecards",
+        icon: FileText,
       },
       {
         id: "people-onboarding",
@@ -471,6 +490,12 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: FileText,
       },
       {
+        id: "development-grant-research",
+        label: "Grant research",
+        description: "Discover + qualify funders",
+        icon: Search,
+      },
+      {
         id: "finance-grantors",
         label: "Grantors",
         description: "Funders · QBO Customer, class Grantor",
@@ -483,6 +508,12 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: Presentation,
       },
       {
+        id: "development-donations",
+        label: "Donations + pledges",
+        description: "Gift intent through cash",
+        icon: CircleDollarSign,
+      },
+      {
         id: "development-trail-solutions",
         label: "Trail Solutions BD",
         description: "Lead through signed scope",
@@ -493,6 +524,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Marketing + communications",
         description: "Audience, content + attribution",
         icon: Mail,
+      },
+      {
+        id: "development-press",
+        label: "Press room",
+        description: "Media requests + releases",
+        icon: FileText,
       },
       {
         id: "development-partnerships",
@@ -610,6 +647,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Collaboration overview",
         description: "Context + conversation + knowledge",
         icon: Mail,
+      },
+      {
+        id: "collaboration-connectors",
+        label: "Connected channels",
+        description: "Slack, Teams, Notion + email",
+        icon: Network,
       },
       {
         id: "collaboration-inbox",
@@ -945,6 +988,9 @@ const peopleViews: ImbaPeopleView[] = [
   "people-onboarding",
   "people-compliance",
   "people-documents",
+  "people-volunteers",
+  "people-training",
+  "people-role-studio",
 ];
 const integrationViews: ImbaIntegrationView[] = [
   "integration-control",
@@ -960,6 +1006,7 @@ const collaborationViews: ImbaCollaborationView[] = [
   "collaboration-workspaces",
   "collaboration-knowledge",
   "collaboration-meetings",
+  "collaboration-connectors",
   "communications-inbox",
   "communications-templates",
 ];
@@ -971,6 +1018,9 @@ const enterpriseViews: ImbaEnterpriseView[] = [
   "development-trail-solutions",
   "development-marketing",
   "development-partnerships",
+  "development-grant-research",
+  "development-donations",
+  "development-press",
   "governance-board",
   "governance-compliance",
   "governance-vault",
@@ -1512,16 +1562,51 @@ function ImbaOsSectionView({
   onNavigate: (view: ImbaOsView) => void;
 }) {
   const Icon = osSectionIcons[section.icon];
-  const linkedView: Partial<Record<ImbaOsSection["id"], ImbaOsView>> = {
-    operations: "community-progress",
-    money: "finance-snapshot",
-    people: "people-directory",
-    governance: "decisions",
-    system: "roadmap",
-    development: "development-campaigns",
-    platform: "platform-health",
-    communications: "development-marketing",
+  const workspaceLinks: Partial<Record<ImbaOsSection["id"], Array<{ view: ImbaOsView; label: string; detail: string; icon: LucideIcon }>>> = {
+    operations: [
+      { view: "community-progress", label: "Community progress", detail: "Move a community from intake through designation.", icon: Compass },
+      { view: "trail-solutions", label: "Trail Solutions", detail: "Open delivery, economics, billing, and risk.", icon: Mountain },
+      { view: "programs-education", label: "Programs + education", detail: "Manage offerings, enrollment, delivery, and outcomes.", icon: BookOpen },
+      { view: "chapter-network", label: "Local network", detail: "See chapters, reporting, obligations, and compliance.", icon: Building2 },
+    ],
+    money: [
+      { view: "finance-snapshot", label: "Organization snapshot", detail: "Read performance, deployable cash, and close status.", icon: Gauge },
+      { view: "finance-reports", label: "Reports", detail: "Produce financial and management reports.", icon: FileText },
+      { view: "finance-payables", label: "Accounts payable", detail: "Review invoices and exercise approval controls.", icon: CircleDollarSign },
+      { view: "liquidity", label: "Liquidity runway", detail: "Inspect constrained cash and the 13-week outlook.", icon: TrendingUp },
+    ],
+    development: [
+      { view: "development-crm", label: "CRM workspace", detail: "Move relationships through owned next actions.", icon: Target },
+      { view: "development-grant-research", label: "Grant research", detail: "Qualify funders against mission and eligibility.", icon: Search },
+      { view: "development-donations", label: "Donations + pledges", detail: "Connect gift intent, restrictions, cash, and stewardship.", icon: CircleDollarSign },
+      { view: "development-press", label: "Press room", detail: "Manage media requests, releases, approvals, and outcomes.", icon: Mail },
+    ],
+    platform: [
+      { view: "integration-control", label: "Integration control", detail: "Inspect governed exchange across source systems.", icon: Workflow },
+      { view: "platform-systems", label: "Systems + integrations", detail: "See ownership, data domains, and sync patterns.", icon: Database },
+      { view: "platform-health", label: "System health", detail: "Review sync, quality, access, and incident signals.", icon: Gauge },
+      { view: "platform-federated-data", label: "Federated data", detail: "Govern local sharing and national rollup.", icon: Network },
+    ],
+    governance: [
+      { view: "governance-board", label: "Board portal", detail: "Open packets, decisions, and follow-through.", icon: Presentation },
+      { view: "governance-compliance", label: "Compliance", detail: "Work filings, deadlines, evidence, and exceptions.", icon: ShieldCheck },
+      { view: "governance-vault", label: "Governance vault", detail: "Open governed documents and review controls.", icon: BookOpen },
+      { view: "decisions", label: "Decision room", detail: "Record approvals, delegations, and deferrals.", icon: Gavel },
+    ],
+    system: [
+      { view: "system-activity", label: "Activity + decisions", detail: "Inspect the append-only operating trail.", icon: ListChecks },
+      { view: "system-runbooks", label: "Runbooks", detail: "Open institution-owned operating procedures.", icon: BookOpen },
+      { view: "platform-health", label: "System health", detail: "Review data quality, syncs, and access signals.", icon: Gauge },
+      { view: "roadmap", label: "Roadmap", detail: "Track implementation milestones and outcomes.", icon: Route },
+    ],
+    communications: [
+      { view: "collaboration-inbox", label: "My inbox", detail: "Work mentions, assignments, and decisions.", icon: ListChecks },
+      { view: "collaboration-workspaces", label: "Team workspaces", detail: "Keep conversation attached to operating records.", icon: Users },
+      { view: "collaboration-connectors", label: "Connected channels", detail: "Inspect Slack, Teams, Notion, SharePoint, and email seams.", icon: Network },
+      { view: "communications-inbox", label: "Stakeholder inbox", detail: "Turn external messages into owned commitments.", icon: Mail },
+    ],
   };
+  const workspaces = workspaceLinks[section.id] ?? [];
 
   return (
     <div className="space-y-5">
@@ -1549,10 +1634,10 @@ function ImbaOsSectionView({
           </div>
           <div className="rounded-2xl border border-[#68b9aa]/15 bg-[#68b9aa]/[0.05] px-4 py-3 text-right">
             <p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
-              Build posture
+              Operating status
             </p>
             <p className="mt-1 text-xs font-semibold text-[rgb(var(--text))]">
-              Integrate first · replace only with evidence
+              Working demo · source boundaries visible
             </p>
           </div>
         </div>
@@ -1578,44 +1663,33 @@ function ImbaOsSectionView({
       <div className="grid gap-5 xl:grid-cols-12">
         <Panel className="xl:col-span-8">
           <PanelTitle
-            eyebrow="Operating modules"
-            title={`What ${section.label} becomes inside IMBA-OS`}
+            eyebrow="Working views"
+            title={`${section.label} command center`}
             action={
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
-                Prototype architecture
+                Open a workspace
               </span>
             }
           />
           <div className="grid gap-3 p-5 md:grid-cols-2">
-            {section.modules.map((module) => {
-              const stageClass =
-                module.stage === "Demonstrated"
-                  ? "border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]"
-                  : module.stage === "Designed"
-                    ? "border-[#68b9aa]/20 bg-[#68b9aa]/10 text-[rgb(var(--info))]"
-                    : "border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.04)] text-[rgb(var(--text-2))]";
+            {workspaces.map((workspace) => {
+              const WorkspaceIcon = workspace.icon;
               return (
-                <article
-                  key={module.name}
-                  className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"
+                <button
+                  type="button"
+                  key={workspace.view}
+                  onClick={() => onNavigate(workspace.view)}
+                  className="group rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4 text-left transition hover:border-[rgb(var(--sa)/0.25)] hover:bg-[rgb(var(--sa)/0.045)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-[rgb(var(--text))]">
-                      {module.name}
-                    </h3>
-                    <span
-                      className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-wider ${stageClass}`}
-                    >
-                      {module.stage}
-                    </span>
+                    <span className="rounded-xl bg-[rgb(var(--sa)/0.10)] p-2 text-[rgb(var(--sa-soft))]"><WorkspaceIcon className="h-4 w-4" /></span>
+                    <ArrowRight className="h-4 w-4 text-[rgb(var(--text-4))] transition group-hover:translate-x-1 group-hover:text-[rgb(var(--sa-soft))]" />
                   </div>
+                  <h3 className="mt-4 text-sm font-semibold text-[rgb(var(--text))]">{workspace.label}</h3>
                   <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-3))]">
-                    {module.purpose}
+                    {workspace.detail}
                   </p>
-                  <div className="mt-4 flex items-center gap-2 border-t border-[rgb(var(--line)/0.06)] pt-3 text-[11px] font-semibold text-[rgb(var(--text-4))]">
-                    <Database className="h-3.5 w-3.5" /> {module.source}
-                  </div>
-                </article>
+                </button>
               );
             })}
           </div>
@@ -1623,8 +1697,8 @@ function ImbaOsSectionView({
 
         <Panel className="xl:col-span-4">
           <PanelTitle
-            eyebrow="First operating moves"
-            title="What I would validate before building"
+            eyebrow="Active operating controls"
+            title="What this command center enforces"
           />
           <div className="space-y-3 p-5">
             {section.priorities.map((priority, index) => (
@@ -1641,14 +1715,14 @@ function ImbaOsSectionView({
               </div>
             ))}
           </div>
-          {linkedView[section.id] ? (
+          {workspaces[0] ? (
             <div className="border-t border-[rgb(var(--line)/0.07)] p-4">
               <button
                 type="button"
-                onClick={() => onNavigate(linkedView[section.id]!)}
+                onClick={() => onNavigate(workspaces[0].view)}
                 className="flex w-full items-center justify-between rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-xs font-black text-[rgb(var(--sa-ink))] transition hover:bg-[#c9ef79]"
               >
-                Open working prototype <ArrowRight className="h-4 w-4" />
+                Open {workspaces[0].label} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           ) : null}
@@ -2667,24 +2741,17 @@ export function ImbaCeoCockpit() {
                   <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--sa-soft))]" />
                   <div>
                     <p className="text-xs font-semibold text-[rgb(var(--text))]">
-                      {activeOsSection.label} is one layer of a shared nonprofit
-                      operating system.
+                      {activeOsSection.label} command center
                     </p>
                     <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">
-                      {activeOsSection.modules.length} tailored modules ·
-                      existing systems preserved where they work · finance
-                      dimensions shared across the organization.
+                      Open the working views below to inspect records, make a
+                      decision, change status, or export the demonstrated data.
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView("roadmap")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.08)]"
-                >
-                  See implementation sequence{" "}
-                  <ArrowRight className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />
-                </button>
+                <span className="rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--line)/0.04)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text))]">
+                  Working demo · source boundaries visible
+                </span>
               </div>
             ) : null}
 

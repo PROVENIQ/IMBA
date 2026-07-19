@@ -2,9 +2,8 @@
  * IMBA-OS connector registry.
  *
  * IMBA-OS is the system of engagement; each connector below is a system of
- * record it draws from or writes to. Only Bill.com participates in the AP flow
- * today (as a stub); the rest are seeded so the Connected Systems hub and the
- * report `Connect GL` / `Connect PM` seams have a single source of truth.
+ * record it draws from or writes to. Every entry is a planned connection in
+ * this prototype; no production credential or external account is present.
  */
 
 export type ConnectorStatus = 'connected' | 'planned' | 'action-needed';
@@ -66,6 +65,46 @@ export const connectors: Connector[] = [
     systemOfRecordFor: 'Card spend, receipts & reimbursements',
     status: 'planned',
     flows: 'Import card transactions + receipts · code to project/grant/account · reconcile to card statement · post to the GL and reimburse',
+  },
+  {
+    key: 'slack',
+    name: 'Slack',
+    category: 'Collaboration',
+    systemOfRecordFor: 'Channels, threads, mentions, and reactions',
+    status: 'planned',
+    flows: 'Receive authorized events · map threads to records · post alerts and owned-action links',
+  },
+  {
+    key: 'teams',
+    name: 'Microsoft Teams',
+    category: 'Collaboration',
+    systemOfRecordFor: 'Channels, chats, meetings, and messages',
+    status: 'planned',
+    flows: 'Receive authorized events · map meeting context · post cards, alerts, and record links',
+  },
+  {
+    key: 'notion',
+    name: 'Notion',
+    category: 'Knowledge',
+    systemOfRecordFor: 'Pages, databases, owners, and versions',
+    status: 'planned',
+    flows: 'Sync governed page references · retain source links · create review work from changes',
+  },
+  {
+    key: 'microsoft-365',
+    name: 'Microsoft 365',
+    category: 'Email + knowledge',
+    systemOfRecordFor: 'Outlook mail, SharePoint files, and document versions',
+    status: 'planned',
+    flows: 'Route authorized messages · link governed files · retain versions and permission boundaries',
+  },
+  {
+    key: 'google-workspace',
+    name: 'Google Workspace',
+    category: 'Email + knowledge',
+    systemOfRecordFor: 'Gmail threads and Drive files',
+    status: 'planned',
+    flows: 'Route authorized messages · link files and versions · turn commitments into owned work',
   },
 ];
 

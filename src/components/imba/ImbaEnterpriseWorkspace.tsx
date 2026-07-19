@@ -20,6 +20,9 @@ export type ImbaEnterpriseView =
   | 'development-trail-solutions'
   | 'development-marketing'
   | 'development-partnerships'
+  | 'development-grant-research'
+  | 'development-donations'
+  | 'development-press'
   | 'governance-board'
   | 'governance-compliance'
   | 'governance-vault'
@@ -79,6 +82,16 @@ const configs: Record<ImbaEnterpriseOperatingView, WorkspaceConfig> = {
       { id: 'OPP-135', name: 'Trail Workforce Initiative', secondary: 'Training + equipment', value: '$390K', owner: 'Trail Solutions', due: 'Sep 18', status: 'Research', detail: 'Test eligibility for equipment, seasonal labor, and credentialing before committing scope.' },
     ],
   },
+  'development-grant-research': {
+    section: 'Development · funder intelligence', title: 'Grant research', tone: 'amber', valueLabel: 'Potential', ownerLabel: 'Research owner', dueLabel: 'Qualification', description: 'Discover and qualify institutional funders against mission fit, geography, eligibility, restrictions, timing, and realistic internal capacity.',
+    metrics: [{ label: 'Prospects screened', value: '38', note: 'Illustrative research register' }, { label: 'Qualified', value: '11', note: '$3.8M potential' }, { label: 'Research this week', value: '7', note: 'Two leadership introductions' }, { label: 'Declined early', value: '14', note: 'Avoided low-fit effort' }],
+    records: [
+      { id: 'RSR-208', name: 'Outdoor Equity Collaborative', secondary: 'Youth access · national', value: '$450K', owner: 'Grant Research', due: 'Qualify by Jul 24', status: 'High fit', detail: 'Strong alignment with youth access and local delivery. Confirm evaluation burden, match requirements, and chapter eligibility.' },
+      { id: 'RSR-214', name: 'Rural Community Mobility Fund', secondary: 'Planning · rural communities', value: '$800K', owner: 'Local Programs', due: 'Program review', status: 'Review', detail: 'Promising planning fit; validate whether recreational trail access meets the mobility definition before investing in a concept.' },
+      { id: 'RSR-221', name: 'Climate Adaptation Foundation', secondary: 'Resilience · public lands', value: '$1.2M', owner: 'Advocacy + Programs', due: 'Leadership intro', status: 'Qualified', detail: 'Map resilient-trail evidence, public-land partners, and multi-year measurement capacity to the funder thesis.' },
+      { id: 'RSR-229', name: 'Regional Equipment Trust', secondary: 'Capital · western states', value: '$275K', owner: 'Trail Solutions', due: 'Eligibility check', status: 'Research', detail: 'Confirm equipment ownership, depreciation, geographic eligibility, and whether revenue-generating use is allowable.' },
+    ],
+  },
   'development-campaigns': {
     section: 'Development · campaigns + membership', title: 'Campaign command center', tone: 'amber', valueLabel: 'Progress', ownerLabel: 'Campaign owner', dueLabel: 'Next milestone', description: 'Commitments, cash, restrictions, membership conversion, stewardship, and the operational milestones promised to funders.',
     metrics: [{ label: 'Campaign goal', value: '$20M', note: 'Public campaign framing' }, { label: 'Commitments', value: '46%', note: 'Illustrative progress' }, { label: 'Cash conversion', value: '71%', note: 'Of booked commitments' }, { label: 'Membership trend', value: '+23%', note: '2025 public baseline' }],
@@ -87,6 +100,16 @@ const configs: Record<ImbaEnterpriseOperatingView, WorkspaceConfig> = {
       { id: 'CAM-07', name: 'Member Renewal Sprint', secondary: 'Individual membership', value: '68%', owner: 'Membership', due: 'August wave', status: 'On track', detail: 'Renewal, chapter attribution, processing cost, and unrestricted contribution tracked together.' },
       { id: 'CAM-11', name: 'Trail Champions', secondary: 'Mid-level giving', value: '39%', owner: 'Development', due: 'Fall launch', status: 'Build', detail: 'Segment by engagement, geography, and chapter relationship; establish a clear upgrade path.' },
       { id: 'CAM-14', name: 'Equipment Investment Case', secondary: 'Restricted capital', value: '54%', owner: 'Trail Solutions', due: 'Impact update', status: 'Stewardship', detail: 'Report utilization, project starts enabled, cost recovery, and maintenance reserve.' },
+    ],
+  },
+  'development-donations': {
+    section: 'Development · gift operations', title: 'Donations + pledges', tone: 'amber', valueLabel: 'Commitment', ownerLabel: 'Steward', dueLabel: 'Next cash / action', description: 'Track gift intent, pledge schedule, cash received, designation, restrictions, acknowledgment, chapter attribution, and stewardship in one record.',
+    metrics: [{ label: 'Open pledges', value: '$1.84M', note: 'Illustrative commitment balance' }, { label: 'Cash received YTD', value: '$2.16M', note: 'Demo operating data' }, { label: 'Acknowledgments due', value: '9', note: 'Two over 48 hours' }, { label: 'Restriction review', value: '4', note: 'Held before availability' }],
+    records: [
+      { id: 'GFT-8802', name: 'Trail Leadership Circle', secondary: 'Major gift pledge · unrestricted', value: '$250K', owner: 'Kent', due: '$50K · Aug 1', status: 'Active pledge', detail: 'Five-year commitment with annual cash schedule, leadership stewardship, and unrestricted designation confirmed.' },
+      { id: 'GFT-8841', name: 'Community Access Donor', secondary: 'Restricted gift · youth access', value: '$85K', owner: 'Development', due: 'Restriction approval', status: 'Hold', detail: 'Gift intent is recorded; Finance must approve the restriction language and usable program period before release.' },
+      { id: 'GFT-8867', name: 'Member annual giving cohort', secondary: 'Digital campaign · chapter attributed', value: '$142K', owner: 'Membership', due: 'Weekly settlement', status: 'Processing', detail: 'Contributions, processing fees, local attribution, acknowledgments, and unrestricted net proceeds reconcile together.' },
+      { id: 'GFT-8890', name: 'National Industry Partner', secondary: 'Corporate contribution · campaign', value: '$400K', owner: 'Partnerships', due: 'Impact report · Sep 15', status: 'Stewardship', detail: 'Cash, approved benefits, campaign purpose, reporting promises, and renewal strategy remain attached to the gift record.' },
     ],
   },
   'development-trail-solutions': {
@@ -107,6 +130,16 @@ const configs: Record<ImbaEnterpriseOperatingView, WorkspaceConfig> = {
       { id: 'MKT-2610', name: 'Fall membership drive', secondary: 'Acquisition and retention', value: 'Members + prospects', owner: 'Membership', due: 'Aug 15', status: 'Build', detail: 'Segments, local attribution, benefits, partner incentives, templates, training, conversion, renewals, fees, and cash all reconcile.' },
       { id: 'MKT-2614', name: 'Policy action alert', secondary: 'Advocacy communications', value: '3 states', owner: 'Government Affairs', due: 'Aug 2', status: 'Approval', detail: 'Geographic audience, policy position, decision-maker target, deadline, message approval, actions, and outcome are linked to the issue record.' },
       { id: 'MKT-2619', name: 'Trails Count impact package', secondary: 'Data storytelling', value: 'Grant cohort', owner: 'Programs + Comms', due: 'Sep 10', status: 'Data wait', detail: 'Infographics, social cards, presentations, press obligations, partner branding, and data provenance share one production record.' },
+    ],
+  },
+  'development-press': {
+    section: 'Development · media relations', title: 'Press room', tone: 'amber', valueLabel: 'Reach / impact', ownerLabel: 'Response owner', dueLabel: 'Deadline', description: 'Manage media requests, approved spokespeople, releases, fact checks, source evidence, embargoes, coverage, and follow-up.',
+    metrics: [{ label: 'Open media requests', value: '6', note: 'Two due today' }, { label: 'Release queue', value: '4', note: 'One legal review' }, { label: 'Approved spokespeople', value: '9', note: 'Topic-scoped' }, { label: '90-day earned reach', value: '1.8M', note: 'Illustrative impressions' }],
+    records: [
+      { id: 'PRS-311', name: 'National trail investment interview', secondary: 'Trade publication · CEO request', value: 'National', owner: 'Communications + Kent', due: 'Today · 3 PM', status: 'Brief ready', detail: 'Approved facts, public financial baselines, current campaign language, spokesperson prep, and post-publication link are attached.' },
+      { id: 'PRS-318', name: 'Community designation announcement', secondary: 'Regional release · partner approval', value: '4 markets', owner: 'Local Programs', due: 'Jul 25', status: 'Approvals', detail: 'Local quotes, partner names, designation evidence, images, geography, and calls to action require final approval.' },
+      { id: 'PRS-324', name: 'Trail workforce data request', secondary: 'Policy reporter · fact check', value: 'Data', owner: 'Research + Comms', due: 'Jul 22', status: 'Evidence review', detail: 'Every supplied number links to its source, period, definition, approval, and public-use boundary.' },
+      { id: 'PRS-329', name: 'Impact report media package', secondary: 'Press kit · owned launch', value: '18 outlets', owner: 'Communications', due: 'Aug 8', status: 'Production', detail: 'Release, briefing sheet, leadership quotes, approved visuals, outreach list, embargo plan, and coverage tracking share one record.' },
     ],
   },
   'development-partnerships': {
@@ -251,7 +284,10 @@ type DevelopmentReportSource =
   | 'development-campaigns'
   | 'development-trail-solutions'
   | 'development-marketing'
-  | 'development-partnerships';
+  | 'development-partnerships'
+  | 'development-grant-research'
+  | 'development-donations'
+  | 'development-press';
 
 const developmentReportDefinitions: Array<{ source: DevelopmentReportSource; label: string; note: string }> = [
   { source: 'development-crm', label: 'Relationship pipeline', note: 'Qualified relationships, potential, ownership, and next moves' },
@@ -260,6 +296,9 @@ const developmentReportDefinitions: Array<{ source: DevelopmentReportSource; lab
   { source: 'development-trail-solutions', label: 'Earned-revenue pipeline', note: 'Qualified demand, proposals, economics, and delivery handoffs' },
   { source: 'development-marketing', label: 'Marketing performance', note: 'Audience, production queue, attribution, and approvals' },
   { source: 'development-partnerships', label: 'Partnership portfolio', note: 'Cash, in-kind value, benefits, fulfillment, and renewal' },
+  { source: 'development-grant-research', label: 'Grant research', note: 'Funder fit, eligibility, timing, potential, and qualification decisions' },
+  { source: 'development-donations', label: 'Donations + pledges', note: 'Commitments, cash, restrictions, acknowledgments, and stewardship' },
+  { source: 'development-press', label: 'Press activity', note: 'Requests, releases, approvals, evidence, reach, and outcomes' },
 ];
 
 function exportDevelopmentCsv(filename: string, columns: string[], rows: Array<Record<string, string>>) {

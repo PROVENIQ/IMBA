@@ -14,7 +14,9 @@ import {
   MessageSquare,
   Network,
   NotebookPen,
+  Plug,
   Plus,
+  RefreshCw,
   Search,
   Send,
   ShieldCheck,
@@ -92,6 +94,12 @@ const viewMeta: Record<
     title: "Meetings + decisions",
     description:
       "Turn agendas and notes into explicit decisions, assignments, deadlines, and durable evidence.",
+  },
+  "collaboration-connectors": {
+    eyebrow: "Collaboration · connected channels",
+    title: "Messaging, knowledge, and email connections",
+    description:
+      "See exactly which external tools are connected, what authority each retains, and how an authorized event becomes owned work in IMBA-OS.",
   },
   "communications-inbox": {
     eyebrow: "Collaboration · external commitments",
@@ -403,6 +411,11 @@ export function ImbaCollaborationWorkspace({
 
   return (
     <div className="space-y-5">
+      <section className="rounded-2xl border border-indigo-300/15 bg-indigo-300/[0.04] px-5 py-4">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700 dark:text-indigo-100">{meta.eyebrow}</p>
+        <h2 className="mt-1 text-lg font-semibold text-[rgb(var(--text))]">{meta.title}</h2>
+        <p className="mt-1 max-w-4xl text-xs leading-5 text-[rgb(var(--text-3))]">{meta.description}</p>
+      </section>
       {notice ? (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] px-4 py-3 text-[11px] text-[rgb(var(--sa-soft))]">
           <span className="flex items-center gap-2">
@@ -426,7 +439,6 @@ export function ImbaCollaborationWorkspace({
           openTasks={openTasks.length}
           mentions={mentions.length}
           onNavigate={onNavigate}
-          onNotice={setNotice}
         />
       ) : null}
       {view === "collaboration-inbox" ? (
@@ -499,6 +511,9 @@ export function ImbaCollaborationWorkspace({
           }
         />
       ) : null}
+      {view === "collaboration-connectors" ? (
+        <ConnectedChannels onNotice={setNotice} />
+      ) : null}
       {view === "communications-inbox" ? (
         <StakeholderInbox
           messages={store.messages}
@@ -544,14 +559,12 @@ function CollaborationOverview({
   openTasks,
   mentions,
   onNavigate,
-  onNotice,
 }: {
   rooms: CollaborationRoom[];
   knowledgeCount: number;
   openTasks: number;
   mentions: number;
   onNavigate: (view: ImbaOsView) => void;
-  onNotice: (notice: string) => void;
 }) {
   const launchers = [
     {
@@ -577,6 +590,12 @@ function CollaborationOverview({
       icon: NotebookPen,
       title: "Meetings + decisions",
       note: "Agenda through owned follow-through",
+    },
+    {
+      view: "collaboration-connectors" as ImbaOsView,
+      icon: Plug,
+      title: "Connected channels",
+      note: "Slack, Teams, Notion, SharePoint, and email",
     },
   ];
   return (
@@ -695,20 +714,36 @@ function CollaborationOverview({
             })}
             <button
               type="button"
-              onClick={() =>
-                onNotice(
-                  "Integration discovery checklist created. No Slack, Teams, Notion, or SharePoint credentials were requested.",
-                )
-              }
+              onClick={() => onNavigate("collaboration-connectors")}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300/15 bg-indigo-300/[0.07] px-4 py-3 text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100"
             >
-              <Network className="h-3.5 w-3.5" /> Start discovery checklist
+              <Network className="h-3.5 w-3.5" /> Open connected channels
             </button>
           </div>
         </Card>
       </div>
     </>
   );
+}
+
+const collaborationConnectors = [
+  { key: 'slack', name: 'Slack', domain: 'Conversation', method: 'OAuth + Web API + Events API', state: 'Not connected', inbound: 'Mentions, thread replies, reactions, channel events', outbound: 'Alerts, assigned actions, decision links', sample: '#trail-solutions · equipment release thread → Great Lakes Buildout decision' },
+  { key: 'teams', name: 'Microsoft Teams', domain: 'Conversation + meetings', method: 'Microsoft Graph + webhooks', state: 'Not connected', inbound: 'Channel posts, chat mentions, meeting context', outbound: 'Cards, alerts, assignments, record links', sample: 'Finance Committee meeting → Board decision and two assigned actions' },
+  { key: 'notion', name: 'Notion', domain: 'Knowledge', method: 'OAuth + Notion API', state: 'Not connected', inbound: 'Pages, databases, ownership, edited time', outbound: 'Canonical record links and review tasks', sample: 'Grant operating guide → versioned Evergreen award knowledge page' },
+  { key: 'sharepoint', name: 'SharePoint', domain: 'Documents + knowledge', method: 'Microsoft Graph + change notifications', state: 'Not connected', inbound: 'Files, versions, metadata, permissions', outbound: 'Governed links, evidence status, review tasks', sample: 'Executed agreement → Great Lakes workspace evidence record' },
+  { key: 'email', name: 'Gmail / Outlook', domain: 'Email', method: 'Provider OAuth + API + push notifications', state: 'Not connected', inbound: 'Authorized mailboxes, labels, threads, attachments', outbound: 'Controlled drafts, replies, assignment notices', sample: 'Client acceptance email → milestone approval and $178K billing trigger' },
+  { key: 'drive', name: 'Google Drive', domain: 'Files + knowledge', method: 'OAuth + Drive API + change notifications', state: 'Not connected', inbound: 'Files, folders, ownership, versions', outbound: 'Canonical links and evidence requests', sample: 'Chapter packet → reporting checklist and mapping exception queue' },
+];
+
+function ConnectedChannels({ onNotice }: { onNotice: (notice: string) => void }) {
+  const [selectedKey, setSelectedKey] = useState(collaborationConnectors[0].key);
+  const [eventResult, setEventResult] = useState('');
+  const selected = collaborationConnectors.find((item) => item.key === selectedKey) ?? collaborationConnectors[0];
+  const simulateEvent = () => {
+    setEventResult(selected.sample);
+    onNotice(`${selected.name} demo event mapped into an IMBA-OS record. No external account was contacted.`);
+  };
+  return <><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Live external connections" value="0" note="No Slack, Teams, Notion, email, or file credentials" tone="amber" /><Kpi label="Connection patterns" value={`${collaborationConnectors.length}`} note="Demonstrated authorization + mapping contracts" /><Kpi label="IMBA-OS rooms" value="3" note="Project, grant, and chapter context" tone="lime" /><Kpi label="Uncontrolled sends" value="0" note="Demo events never leave this browser" tone="lime" /></div><div className="grid gap-5 xl:grid-cols-12"><Card className="xl:col-span-7"><Heading eyebrow="Connection register" title="What can connect and how" detail="All external systems are currently disconnected" /><div className="divide-y divide-[rgb(var(--line)/0.06)]">{collaborationConnectors.map((connector) => <button key={connector.key} type="button" onClick={() => { setSelectedKey(connector.key); setEventResult(''); }} className={`grid w-full gap-3 px-5 py-4 text-left md:grid-cols-[1.1fr_1fr_auto] ${selected.key === connector.key ? 'bg-indigo-300/[0.04]' : 'hover:bg-[rgb(var(--line)/0.02)]'}`}><div><div className="flex items-center gap-2"><Plug className="h-3.5 w-3.5 text-indigo-700 dark:text-indigo-100" /><p className="text-xs font-semibold text-[rgb(var(--text))]">{connector.name}</p></div><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{connector.domain}</p></div><p className="text-[11px] leading-5 text-[rgb(var(--text-2))]">{connector.method}</p><span className="self-center rounded-full bg-amber-300/10 px-2 py-1 text-[11px] font-black uppercase text-amber-800 dark:text-amber-100">{connector.state}</span></button>)}</div></Card><Card className="xl:col-span-5"><Heading eyebrow={`Selected · ${selected.name}`} title="Demonstrate the routing contract" detail="Uses a local sample event" /><div className="space-y-4 p-5"><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-4))]">Inbound authority</p><p className="mt-2 text-xs leading-5 text-[rgb(var(--text-2))]">{selected.inbound}</p></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-4))]">Outbound handoff</p><p className="mt-2 text-xs leading-5 text-[rgb(var(--text-2))]">{selected.outbound}</p></div><button type="button" onClick={simulateEvent} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-300 px-4 py-3 text-[11px] font-black uppercase text-[#171126]"><RefreshCw className="h-3.5 w-3.5" /> Run demo event</button>{eventResult ? <div className="rounded-2xl border border-[rgb(var(--sa)/0.18)] bg-[rgb(var(--sa)/0.06)] p-4"><p className="text-[11px] font-black uppercase text-[rgb(var(--sa-soft))]">Mapped result</p><p className="mt-2 text-xs leading-5 text-[rgb(var(--text))]">{eventResult}</p><div className="mt-3 flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />Owner, source link, permissions, and audit event attached</div></div> : null}<div className="rounded-2xl border border-indigo-300/15 bg-indigo-300/[0.05] p-4"><p className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-100">Where MCP fits</p><p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-3))]">An authorized MCP server can let an AI assistant read or act through these tools. Persistent product sync still normally uses the provider&apos;s OAuth, API, and webhooks so IMBA-OS can enforce permissions, retries, mappings, and an audit trail.</p></div></div></Card></div></>;
 }
 
 function CollaborationInbox({
