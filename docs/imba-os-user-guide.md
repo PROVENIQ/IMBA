@@ -2,7 +2,7 @@
 
 **Version:** Prototype (pitch demonstration)
 **Roles covered in this edition:** CEO / Executive · Finance Director
-**Format:** Written guide (doc-first). An in-app Help version will follow.
+**Format:** Written reference plus an in-app, role-based Help center and guided tour.
 
 > **Demo boundary.** IMBA-OS is a working prototype. Headline history uses IMBA's public
 > Form 990 filings (EIN 47-1254119) and the 2025 annual report; operating records
@@ -26,7 +26,7 @@ What you can see and do is governed by your **role**. This guide covers the two 
 | Role | Who | Lands on | Sees |
 |---|---|---|---|
 | **CEO / Executive** | Kent McNeill | Executive brief | All nine sections (curated to the decisions a CEO makes) |
-| **Finance Director** | Terry Holliday | Company snapshot | All nine sections, with full depth in **Money** |
+| **Finance Director** | Terry Holliday | Organization snapshot | All nine sections, with full depth in **Money** |
 
 ---
 
@@ -103,7 +103,7 @@ across every pillar for the few decisions only the CEO makes.
 As CEO you can open any section for the executive cut:
 - **Money → Liquidity runway** — cash you can actually deploy (after restrictions,
   obligations, deferred revenue, and cost-to-complete) with a 13-week forecast.
-- **Money → Company snapshot** — revenue, expense, result, deployable cash, and close status
+- **Money → Organization snapshot** — revenue, expense, result, deployable cash, and close status
   in one home.
 - **Mission → Trail Solutions / Project delivery** — backlog, margin, and delivery health.
 - **People → Capacity plan** — staff against the pipeline.
@@ -118,14 +118,14 @@ guardrail, delivery ahead of billing). Use these to decide where to spend attent
 
 ## 5. Finance Director guide (Terry)
 
-The Finance role lands on **Company snapshot** and owns the **Money** pillar end-to-end. Every
+The Finance role lands on **Organization snapshot** and owns the **Money** pillar end-to-end. Every
 Money view is available.
 
 ### 5.1 Money section — view by view
 | View | What it does | Key actions |
 |---|---|---|
 | **Finance architecture** | The close and the three layers (job costing → portfolio → liquidity) | Orientation for the finance operating model. |
-| **Company snapshot** | QuickBooks-style finance home: revenue, expense, result, deployable cash, close checklist | Launch into budget, grants, AP/AR, reports; track the monthly close. |
+| **Organization snapshot** | QuickBooks-style finance home: revenue, expense, result, deployable cash, close checklist | Launch into budget, grants, AP/AR, reports; track the monthly close. |
 | **Finance calendar** | Close, payroll, billing, grant, chapter, audit, and Board deadlines | Owned schedule with owners and due dates; recurring cadence (daily→annual). |
 | **Chart of accounts** | Canonical parent + chapter account standard | Search accounts; each shows type, who it applies to, and its required dimension (project/chapter/restriction). |
 | **Grant tracking** | Award-to-close lifecycle | Select an award; edit allowable spend and status. Changes persist and queue a QBO tie-out for approval. |
@@ -165,7 +165,7 @@ Use **Acting as** (in the AP view) to switch between:
    - Under $5,000 → Finance Director only.
    - $5,000+ or any donor-restricted bill → Finance Director, then Executive.
 3. The **final approver** decides:
-   - **Approve & Pay** — initiates payment via the Bill.com API (status → Paid).
+   - **Approve & Pay** — demonstrates the approval handoff and queues a controlled outbound job; no payment is sent from the prototype.
    - **Approve & Hold** — approved, payment held (status → On hold; release later).
    - **Reject** — declined, with a reason.
    Intermediate approvers use **Approve** to advance to the next approver.
@@ -251,8 +251,9 @@ audit** trail. Writes are **staged and require approval** before posting to a sy
 
 ---
 
-## 10. What's next for this guide
-- Render this to **Word / PDF** for sharing outside the app.
-- Build the **in-app Help** version (pick a role → see every function with steps).
-- Extend to the remaining roles (Trail Solutions, Development, Board) and the AP-specialist and
-  approver actor views.
+## 10. In-app Help and what's next
+- The app now opens a skippable first-visit tour and provides a replayable **Help** control.
+- The in-app quick-start guide adapts to every configured role; CEO and Finance retain the most
+  detailed written guidance in this reference.
+- Next: render this reference to **Word / PDF** and extend the detailed written procedures to the
+  remaining roles and actor-specific approval views.

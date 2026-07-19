@@ -98,6 +98,7 @@ import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
 import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
 import { ImbaSectionHero } from "@/components/imba/ImbaSectionHero";
+import { ImbaOnboarding } from "@/components/imba/ImbaOnboarding";
 import {
   ImbaAlertsDrawer,
   ImbaInsightStrip,
@@ -2367,6 +2368,7 @@ export function ImbaCeoCockpit() {
           <nav
             className="mt-3 space-y-2"
             aria-label="IMBA operating system views"
+            data-tour="primary-navigation"
           >
             {visibleNavSections.map((section) => {
               const isExpanded = Boolean(expandedSections[section.label]);
@@ -2406,6 +2408,7 @@ export function ImbaCeoCockpit() {
                             key={item.id}
                             type="button"
                             onClick={() => setCurrentView(item.id)}
+                            data-tour={`nav-${item.id}`}
                             className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${active ? "bg-[rgb(var(--line)/0.08)] text-[rgb(var(--text))]" : "text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.04)] hover:text-[rgb(var(--text))]"}`}
                           >
                             <Icon
@@ -2520,7 +2523,8 @@ export function ImbaCeoCockpit() {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <div className="hidden items-center gap-1.5 md:flex">
+            <ImbaOnboarding role={role} currentView={view} onNavigate={setCurrentView} />
+            <div className="hidden items-center gap-1.5 md:flex" data-tour="role-control">
               <div className="relative">
                 <select
                   value={role}
@@ -2591,7 +2595,7 @@ export function ImbaCeoCockpit() {
           </div>
         </header>
 
-        <div className="relative z-20 shrink-0 border-b border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel)/85%)] px-4 py-3 sm:px-6 xl:px-8">
+        <div className="relative z-20 shrink-0 border-b border-[rgb(var(--line)/0.07)] bg-[rgb(var(--panel)/85%)] px-4 py-3 sm:px-6 xl:px-8" data-tour="intelligence-context">
           <div className="mx-auto max-w-[1580px]">
             <ImbaIntelligenceBar
               role={role}
@@ -2618,7 +2622,7 @@ export function ImbaCeoCockpit() {
           </div>
         </div>
 
-        <main className="min-w-0 flex-1 overflow-y-auto">
+        <main className="min-w-0 flex-1 overflow-y-auto" data-tour="workspace">
           <div className="mx-auto max-w-[1580px] space-y-5 px-4 py-5 sm:px-6 xl:px-8 xl:py-7">
             {isSectionLanding && !dismissedHeroes.has(activeSectionLabel) ? (
               <ImbaSectionHero

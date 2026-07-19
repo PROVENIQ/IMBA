@@ -124,8 +124,8 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
       {view === 'finance-ap-ar' ? <ApAr /> : null}
       {view === 'finance-reports' ? (
         <div className="space-y-5">
-          <ProgramFullCostPanel />
           <Reports />
+          <ProgramFullCostPanel />
         </div>
       ) : null}
       {view === 'finance-transactions' ? <TransactionsIntegrated onNavigate={onNavigate} /> : null}
