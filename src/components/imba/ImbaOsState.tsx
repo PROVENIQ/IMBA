@@ -115,7 +115,7 @@ const initialState: ImbaOsStore = {
     { id: 'MAP-ADP-01', system: 'adp', domain: 'Cost number', imbaValue: 'Trail Planning', externalValue: 'ADP Cost 410-PLN', status: 'mapped' },
     { id: 'MAP-ADP-02', system: 'adp', domain: 'Cost number', imbaValue: 'Trail Design', externalValue: 'ADP Cost 420-DSN', status: 'mapped' },
     { id: 'MAP-ADP-03', system: 'adp', domain: 'Earning code', imbaValue: 'Regular project hours', externalValue: 'REG-PROJ', status: 'mapped' },
-    { id: 'MAP-ADP-04', system: 'adp', domain: 'Grant', imbaValue: 'Federal Recreation Partnership', externalValue: 'Allocation code required', status: 'missing' },
+    { id: 'MAP-ADP-04', system: 'adp', domain: 'Grant', imbaValue: 'Evergreen Trails Foundation', externalValue: 'Allocation code required', status: 'missing' },
   ],
   syncJobs: [
     { id: 'SYNC-1048', system: 'qbo', action: 'create', recordType: 'Invoice', recordId: 'INV-DRAFT-18', summary: 'High Desert design milestone · $178K', status: 'awaiting-approval', createdAt: 'Jul 16, 3:14 PM' },

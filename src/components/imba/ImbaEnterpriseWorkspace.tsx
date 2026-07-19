@@ -61,7 +61,7 @@ const configs: Record<ImbaEnterpriseView, WorkspaceConfig> = {
       { id: 'REL-042', name: 'National Outdoor Brand', secondary: 'Corporate partnership', value: '$750K', owner: 'Kent', due: 'Executive briefing', status: 'Cultivation', detail: 'Three-year trail access partnership; align national visibility with measurable community outcomes.' },
       { id: 'REL-057', name: 'Community Health Foundation', secondary: 'Institutional funder', value: '$425K', owner: 'Development', due: 'Concept paper · Jul 29', status: 'Qualified', detail: 'Trails and public-health case; program budget must separate evaluation and direct delivery.' },
       { id: 'REL-063', name: 'Leadership Circle Prospect', secondary: 'Major gift', value: '$250K', owner: 'Board member', due: 'Introduction · Aug 2', status: 'Relationship', detail: 'Board-connected prospect with interest in youth access and rural economic development.' },
-      { id: 'REL-071', name: 'Federal Recreation Partnership', secondary: 'Government relationship', value: '$1.2M', owner: 'Programs', due: 'Renewal strategy', status: 'Stewardship', detail: 'Current award performance and reimbursement timeliness drive renewal confidence.' },
+      { id: 'REL-071', name: 'Evergreen Trails Foundation', secondary: 'Foundation relationship', value: '$1.2M', owner: 'Programs', due: 'Renewal strategy', status: 'Stewardship', detail: 'Current award performance and reimbursement timeliness drive renewal confidence.' },
     ],
   },
   'development-grant-pipeline': {

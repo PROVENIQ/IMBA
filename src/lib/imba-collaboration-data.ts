@@ -120,14 +120,14 @@ export const initialCollaborationKnowledge: CollaborationKnowledgePage[] = [
   },
   {
     id: "KB-GR-01",
-    title: "Federal Recreation Partnership · award guide",
+    title: "Evergreen Trails Foundation · award guide",
     category: "Grant workspace",
     owner: "Grant Finance",
     updated: "Jul 16 · 3:20 PM",
     version: 4,
     content:
-      "Award purpose\nSupport community planning and fieldwork under the approved federal recreation scope.\n\nControl requirements\n• Labor must carry project, grant, and function codes.\n• Reimbursement support is certified before submission.\n• Program outcomes and financial periods must reconcile.\n• Unallowable or unsupported costs remain outside the draw.",
-    tags: ["grant", "federal", "restrictions", "reimbursement"],
+      "Award purpose\nSupport community planning and fieldwork under the approved foundation grant scope.\n\nControl requirements\n• Labor must carry project, grant, and function codes.\n• Reimbursement support is certified before submission.\n• Program outcomes and financial periods must reconcile.\n• Unallowable or unsupported costs remain outside the draw.",
+    tags: ["grant", "foundation", "restrictions", "reimbursement"],
     access: ["executive", "finance", "development"],
   },
   {
@@ -256,7 +256,7 @@ export const initialCollaborationRooms: CollaborationRoom[] = [
   },
   {
     id: "ROOM-GR",
-    name: "Federal Recreation Partnership",
+    name: "Evergreen Trails Foundation",
     kind: "Grant",
     summary:
       "Restrictions, allowable cost, reimbursement package, outcome narrative, and funder commitments.",
