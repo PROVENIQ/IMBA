@@ -7,6 +7,7 @@ import {
   BriefcaseBusiness,
   Check,
   CircleDollarSign,
+  Download,
   FileCheck2,
   FileText,
   FolderOpen,
@@ -23,11 +24,13 @@ import {
   imbaOpenRoles,
 } from '@/lib/imba-detail-data';
 import type { ImbaOsView } from '@/lib/imba-os-data';
+import type { ImbaRoleKey } from '@/lib/imba-intelligence-data';
 import { useImbaOsState } from '@/components/imba/ImbaOsState';
 
 export type ImbaPeopleView =
   | 'people'
   | 'people-directory'
+  | 'people-reports'
   | 'people-payroll'
   | 'people-hiring'
   | 'people-onboarding'
@@ -37,6 +40,17 @@ export type ImbaPeopleView =
 function money(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2).replace(/0$/, '').replace(/\.0$/, '')}M`;
   return `$${Math.round(value / 1_000)}K`;
+}
+
+function communicationTimeZone(location: string): string {
+  if (location === 'Not stated') return 'Needs confirmation';
+  if (location.includes('Window Rock')) return 'Mountain (MT)';
+  if (location.includes('Arizona') || location.includes('Tucson')) return 'Arizona (MST)';
+  if (['Colorado', 'Utah', 'New Mexico'].some((place) => location.includes(place))) return 'Mountain (MT)';
+  if (['Wisconsin', 'Missouri'].some((place) => location.includes(place))) return 'Central (CT)';
+  if (['California', 'Eastern Sierra'].some((place) => location.includes(place))) return 'Pacific (PT)';
+  if (['Delaware', 'Maine', 'New Jersey', 'Cincinnati', 'New York', 'Vermont', 'Washington, D.C.'].some((place) => location.includes(place))) return 'Eastern (ET)';
+  return 'Needs confirmation';
 }
 
 function ShellCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -54,7 +68,8 @@ function Kpi({ label, value, note, tone = 'cyan' }: { label: string; value: stri
 
 const peopleMeta: Record<ImbaPeopleView, { title: string; description: string }> = {
   people: { title: 'People command center', description: 'A complete workforce layer for a distributed nonprofit: core staff, seasonal crews, contractors, PEO controls, capacity, compliance, and knowledge continuity.' },
-  'people-directory': { title: 'Employee + workforce directory', description: 'One roster across core employees, seasonal crews, and contract capacity—with team, location, status, allocation, and loaded cost.' },
+  'people-directory': { title: 'Employee + workforce directory', description: 'One roster across core employees, seasonal crews, and contract capacity—with compensation fields limited by role.' },
+  'people-reports': { title: 'People reports', description: 'Role-governed workforce reporting for hire dates, employment status, onboarding, position control, and compliance.' },
   'people-payroll': { title: 'PEO + payroll allocation', description: 'Reconcile the PEO settlement to project labor, mission programs, development, and shared services before the close is final.' },
   'people-hiring': { title: 'Hiring + position control', description: 'Open positions only when mission need, executed backlog, cost, and management approval support the decision.' },
   'people-onboarding': { title: 'Onboarding', description: 'Role-specific access, payroll, safety, equipment, policy, and first-30-day readiness for a distributed team.' },
@@ -71,11 +86,36 @@ const peopleDocuments = [
   { name: 'Travel and expense policy', category: 'Finance', owner: 'Finance', review: 'Sep 2026', status: 'Review due', acknowledgments: '30 / 31' },
 ];
 
-export function ImbaPeopleWorkspace({ view, onNavigate }: { view: ImbaPeopleView; onNavigate: (view: ImbaOsView) => void }) {
+type PeopleReportKey = 'hire-dates' | 'workforce-status' | 'onboarding' | 'position-control' | 'compliance';
+type ReportRow = Record<string, string>;
+
+const peopleReportDefinitions: Array<{ id: PeopleReportKey; label: string; note: string; cadence: string; columns: string[] }> = [
+  { id: 'hire-dates', label: 'Hire dates + tenure', note: 'Start dates, tenure, and source coverage', cadence: 'Monthly', columns: ['Person', 'Role', 'Team', 'Hire date', 'Tenure', 'Source'] },
+  { id: 'workforce-status', label: 'Workforce status', note: 'Employment type, location, time zone, status, and allocation', cadence: 'Weekly', columns: ['Person', 'Role', 'Team', 'Worker type', 'Location', 'Time zone', 'Status', 'Allocation'] },
+  { id: 'onboarding', label: 'Onboarding readiness', note: 'Starts, progress, owners, and blockers', cadence: 'Weekly', columns: ['Person / role', 'Worker group', 'Start', 'Progress', 'Owner', 'Blocker'] },
+  { id: 'position-control', label: 'Hiring + positions', note: 'Approved and backlog-gated openings', cadence: 'Biweekly', columns: ['Position', 'Team', 'Trigger', 'Stage', 'Backlog gate'] },
+  { id: 'compliance', label: 'People compliance', note: 'Authorization, payroll, classification, and safety', cadence: 'Weekly', columns: ['Control', 'Scope', 'Due', 'Owner', 'Status'] },
+];
+
+function downloadCsv(filename: string, columns: string[], rows: ReportRow[]) {
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const csv = [columns.map(escape).join(','), ...rows.map((row) => columns.map((column) => escape(row[column] ?? '')).join(','))].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export function ImbaPeopleWorkspace({ view, onNavigate, role }: { view: ImbaPeopleView; onNavigate: (view: ImbaOsView) => void; role: ImbaRoleKey }) {
+  const canViewLoadedCost = role === 'executive' || role === 'finance' || role === 'hr';
+  const canViewPeopleReports = role === 'executive' || role === 'hr';
   return (
     <div className="space-y-5">
-      {view === 'people' ? <PeopleHome onNavigate={onNavigate} /> : null}
-      {view === 'people-directory' ? <DirectoryIntegrated /> : null}
+      {view === 'people' ? <PeopleHome onNavigate={onNavigate} canViewLoadedCost={canViewLoadedCost} canViewPeopleReports={canViewPeopleReports} /> : null}
+      {view === 'people-directory' ? <DirectoryIntegrated canViewLoadedCost={canViewLoadedCost} /> : null}
+      {view === 'people-reports' ? canViewPeopleReports ? <PeopleReports /> : <RestrictedPeopleReports /> : null}
       {view === 'people-payroll' ? <Payroll onNavigate={onNavigate} /> : null}
       {view === 'people-hiring' ? <Hiring /> : null}
       {view === 'people-onboarding' ? <Onboarding /> : null}
@@ -85,11 +125,12 @@ export function ImbaPeopleWorkspace({ view, onNavigate }: { view: ImbaPeopleView
   );
 }
 
-function PeopleHome({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
+function PeopleHome({ onNavigate, canViewLoadedCost, canViewPeopleReports }: { onNavigate: (view: ImbaOsView) => void; canViewLoadedCost: boolean; canViewPeopleReports: boolean }) {
   const totalCost = imbaEmployees.reduce((sum, employee) => sum + employee.loadedCost, 0);
   const actionCompliance = imbaCompliance.filter((item) => item.status !== 'Ready').length;
   const launchers: Array<{ title: string; note: string; view: ImbaOsView; icon: typeof Users }> = [
     { title: 'Workforce directory', note: 'Core + seasonal + contractor roster', view: 'people-directory', icon: Users },
+    ...(canViewPeopleReports ? [{ title: 'People reports', note: 'Hire dates, status, onboarding, and controls', view: 'people-reports' as ImbaOsView, icon: FileText }] : []),
     { title: 'PEO + payroll allocation', note: 'Labor to projects and functions', view: 'people-payroll', icon: CircleDollarSign },
     { title: 'Hiring + position control', note: 'Backlog and approval gates', view: 'people-hiring', icon: BriefcaseBusiness },
     { title: 'Onboarding', note: 'Access, payroll, equipment, safety', view: 'people-onboarding', icon: UserPlus },
@@ -98,7 +139,7 @@ function PeopleHome({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) 
   ];
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><Kpi label="Current staff" value={`${imbaEmployees.length}`} note="From IMBA's public staff roster" /><Kpi label="PEO-leased headcount" value="56" note="All staff leased via PEO — 2024 Form 990 (Sch O)" tone="lime" /><Kpi label="Loaded annual cost" value={money(totalCost)} note="Illustrative planning overlay; ADP is authoritative" /><Kpi label="Average allocation" value={`${Math.round(imbaEmployees.reduce((sum, employee) => sum + employee.allocation, 0) / imbaEmployees.length)}%`} note="Project / program-coded time (illustrative)" tone="amber" /><Kpi label="Compliance actions" value={`${actionCompliance}`} note="Authorization, contracts, and safety" tone="rose" /></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><Kpi label="Current staff" value={`${imbaEmployees.length}`} note="From IMBA's public staff roster" /><Kpi label="PEO-leased headcount" value="56" note="All staff leased via PEO — 2024 Form 990 (Sch O)" tone="lime" />{canViewLoadedCost ? <Kpi label="Loaded annual cost" value={money(totalCost)} note="Illustrative planning overlay; ADP is authoritative" /> : <Kpi label="Teams represented" value={`${new Set(imbaEmployees.map((employee) => employee.team)).size}`} note="Compensation is restricted by role" />}<Kpi label="Average allocation" value={`${Math.round(imbaEmployees.reduce((sum, employee) => sum + employee.allocation, 0) / imbaEmployees.length)}%`} note="Project / program-coded time (illustrative)" tone="amber" /><Kpi label="Compliance actions" value={`${actionCompliance}`} note="Authorization, contracts, and safety" tone="rose" /></div>
       <div className="grid gap-5 xl:grid-cols-12">
         <ShellCard className="xl:col-span-8"><Heading eyebrow="People system" title="From employee record to organizational capacity" detail="Six operational workspaces" /><div className="grid gap-3 p-5 md:grid-cols-2">{launchers.map((item) => { const Icon = item.icon; return <button key={item.title} type="button" onClick={() => onNavigate(item.view)} className="group rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4 text-left transition hover:border-cyan-300/25 hover:bg-cyan-300/[0.035]"><div className="flex items-start justify-between gap-3"><span className="rounded-xl bg-cyan-300/10 p-2 text-cyan-700 dark:text-cyan-100"><Icon className="h-4 w-4" /></span><ArrowRight className="h-4 w-4 text-[rgb(var(--text-4))] transition group-hover:translate-x-1 group-hover:text-cyan-700 dark:group-hover:text-cyan-100" /></div><h3 className="mt-4 text-sm font-semibold text-[rgb(var(--text))]">{item.title}</h3><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">{item.note}</p></button>; })}</div></ShellCard>
         <ShellCard className="xl:col-span-4"><Heading eyebrow="Workforce signals" title="What leadership needs to act on" /><div className="space-y-3 p-5">{[['Construction', '96%', 'Seasonal field lead near guardrail', 'amber'], ['Design', '91%', 'Use contract bench before permanent hire', 'amber'], ['Programs', '62%', 'Capacity available for member support', 'lime'], ['Development', '44%', 'Campaign operating support available', 'cyan']].map(([team, value, note, tone]) => <div key={team} className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-3"><div className="flex items-center justify-between"><p className="text-[11px] font-semibold text-[rgb(var(--text))]">{team}</p><span className={`font-mono text-xs font-semibold ${tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : 'text-cyan-700 dark:text-cyan-100'}`}>{value}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgb(var(--line)/0.07)]"><div className={`h-full rounded-full ${tone === 'amber' ? 'bg-amber-300' : tone === 'lime' ? 'bg-[rgb(var(--sa))]' : 'bg-cyan-300'}`} style={{ width: value }} /></div><p className="mt-2 text-[11px] text-[rgb(var(--text-3))]">{note}</p></div>)}</div></ShellCard>
@@ -108,23 +149,164 @@ function PeopleHome({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) 
   );
 }
 
-function DirectoryIntegrated() {
+function DirectoryIntegrated({ canViewLoadedCost }: { canViewLoadedCost: boolean }) {
   const { getEditedRecord, updateRecord } = useImbaOsState();
   const [selectedId, setSelectedId] = useState(imbaEmployees[0].id);
   const selected = getEditedRecord('employee', selectedId, imbaEmployees.find((employee) => employee.id === selectedId) ?? imbaEmployees[0]);
-  return <div className="space-y-4"><div className="grid gap-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-4 lg:grid-cols-[1fr_1fr_1fr_auto]"><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Worker<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none">{imbaEmployees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Operational allocation<input type="number" min="0" max="100" value={selected.allocation} onChange={(event) => updateRecord('employee', selected.id, { allocation: Number(event.target.value) }, { actor: 'People + Finance', detail: `Updated operational allocation for ${selected.name}; ADP worker record remains authoritative.` })} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none" /></label><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Capacity status<select value={selected.status} onChange={(event) => updateRecord('employee', selected.id, { status: event.target.value }, { actor: 'People + Finance', detail: `Updated IMBA-OS capacity status for ${selected.name}.` })} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none"><option>Active</option><option>Seasonal</option><option>Available</option><option>Capacity watch</option></select></label><div className="self-end rounded-xl border border-[rgb(var(--line)/0.08)] px-4 py-2.5"><p className="text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">Source boundary</p><p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">Identity + pay: ADP<br />Allocation + capacity: IMBA-OS</p></div></div><Directory /></div>;
+  return <div className="space-y-4"><div className="grid gap-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] p-4 lg:grid-cols-[1fr_1fr_1fr_auto]"><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Worker<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none">{imbaEmployees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Operational allocation<input type="number" min="0" max="100" value={selected.allocation} onChange={(event) => updateRecord('employee', selected.id, { allocation: Number(event.target.value) }, { actor: 'People + Finance', detail: `Updated operational allocation for ${selected.name}; ADP worker record remains authoritative.` })} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none" /></label><label className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Capacity status<select value={selected.status} onChange={(event) => updateRecord('employee', selected.id, { status: event.target.value }, { actor: 'People + Finance', detail: `Updated IMBA-OS capacity status for ${selected.name}.` })} className="mt-1.5 w-full rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none"><option>Active</option><option>Seasonal</option><option>Available</option><option>Capacity watch</option></select></label><div className="self-end rounded-xl border border-[rgb(var(--line)/0.08)] px-4 py-2.5"><p className="text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">Source boundary</p><p className="mt-1 text-[11px] text-[rgb(var(--text-2))]">Identity + pay: ADP<br />Allocation + capacity: IMBA-OS</p></div></div><Directory canViewLoadedCost={canViewLoadedCost} /></div>;
 }
 
-function Directory() {
+function Directory({ canViewLoadedCost }: { canViewLoadedCost: boolean }) {
   const { getEditedRecord } = useImbaOsState();
   const [query, setQuery] = useState('');
   const [team, setTeam] = useState('All teams');
   const employees = imbaEmployees.map((employee) => getEditedRecord('employee', employee.id, employee));
   const teams = ['All teams', ...Array.from(new Set(employees.map((employee) => employee.team)))];
-  const rows = employees.filter((employee) => (team === 'All teams' || employee.team === team) && `${employee.name} ${employee.role} ${employee.location}`.toLowerCase().includes(query.toLowerCase()));
+  const rows = employees.filter((employee) => (team === 'All teams' || employee.team === team) && `${employee.name} ${employee.role} ${employee.location} ${communicationTimeZone(employee.location)}`.toLowerCase().includes(query.toLowerCase()));
   return (
-    <ShellCard><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Workforce record</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Core, seasonal, and contract capacity</h2></div><div className="flex gap-2"><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" /></label><select value={team} onChange={(event) => setTeam(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none">{teams.map((item) => <option key={item}>{item}</option>)}</select></div></div><div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Person / role</th><th className="px-3 py-3">Team</th><th className="px-3 py-3">Location</th><th className="px-3 py-3">Worker type</th><th className="px-3 py-3 text-right">Allocation</th><th className="px-3 py-3 text-right">Loaded cost</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{rows.map((employee) => <tr key={employee.id} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]"><td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{employee.name}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{employee.id} · {employee.role}</p></td><td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text))]">{employee.team}</td><td className="px-3 py-3.5"><span className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--text-2))]"><MapPin className="h-3 w-3" />{employee.location}</span></td><td className="px-3 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] px-2 py-1 text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">{employee.type}</span></td><td className={`px-3 py-3.5 text-right font-mono text-xs ${employee.allocation > 90 ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{employee.allocation}%</td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(employee.loadedCost)}</td><td className="px-5 py-3.5 text-[11px] text-[rgb(var(--text))]">{employee.status}</td></tr>)}</tbody></table></div></ShellCard>
+    <ShellCard>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Workforce record</p>
+          <h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Core, seasonal, and contract capacity</h2>
+          <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Time zones are derived from listed locations; ambiguous or unstated locations require confirmation.</p>
+        </div>
+        <div className="flex gap-2">
+          <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2">
+            <Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" />
+          </label>
+          <select value={team} onChange={(event) => setTeam(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] text-[rgb(var(--text))] outline-none">
+            {teams.map((item) => <option key={item}>{item}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className={`w-full ${canViewLoadedCost ? 'min-w-[1100px]' : 'min-w-[960px]'} text-left`}>
+          <thead>
+            <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+              <th className="px-5 py-3">Person / role</th><th className="px-3 py-3">Team</th><th className="px-3 py-3">Location</th><th className="px-3 py-3">Time zone</th><th className="px-3 py-3">Worker type</th><th className="px-3 py-3 text-right">Allocation</th>{canViewLoadedCost ? <th className="px-3 py-3 text-right">Loaded cost</th> : null}<th className="px-5 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((employee) => (
+              <tr key={employee.id} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                <td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{employee.name}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{employee.id} · {employee.role}</p></td>
+                <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text))]">{employee.team}</td>
+                <td className="px-3 py-3.5"><span className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--text-2))]"><MapPin className="h-3 w-3" />{employee.location}</span></td>
+                <td className={`px-3 py-3.5 text-[11px] font-semibold ${communicationTimeZone(employee.location) === 'Needs confirmation' ? 'text-amber-800 dark:text-amber-200' : 'text-cyan-700 dark:text-cyan-100'}`}>{communicationTimeZone(employee.location)}</td>
+                <td className="px-3 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] px-2 py-1 text-[11px] font-black uppercase text-cyan-700 dark:text-cyan-100">{employee.type}</span></td>
+                <td className={`px-3 py-3.5 text-right font-mono text-xs ${employee.allocation > 90 ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{employee.allocation}%</td>
+                {canViewLoadedCost ? <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(employee.loadedCost)}</td> : null}
+                <td className="px-5 py-3.5 text-[11px] text-[rgb(var(--text))]">{employee.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </ShellCard>
   );
+}
+
+function PeopleReports() {
+  const [reportId, setReportId] = useState<PeopleReportKey>('hire-dates');
+  const [query, setQuery] = useState('');
+  const report = peopleReportDefinitions.find((item) => item.id === reportId) ?? peopleReportDefinitions[0];
+  const rows = useMemo<ReportRow[]>(() => {
+    if (reportId === 'hire-dates') {
+      return imbaEmployees.map((employee) => ({
+        Person: employee.name,
+        Role: employee.role,
+        Team: employee.team,
+        'Hire date': 'Awaiting ADP',
+        Tenure: 'Not calculated',
+        Source: 'ADP required',
+      }));
+    }
+    if (reportId === 'workforce-status') {
+      return imbaEmployees.map((employee) => ({
+        Person: employee.name,
+        Role: employee.role,
+        Team: employee.team,
+        'Worker type': employee.type,
+        Location: employee.location,
+        'Time zone': communicationTimeZone(employee.location),
+        Status: employee.status,
+        Allocation: `${employee.allocation}%`,
+      }));
+    }
+    if (reportId === 'onboarding') {
+      return imbaOnboarding.map((item) => ({
+        'Person / role': item.person,
+        'Worker group': item.role,
+        Start: item.start,
+        Progress: `${item.progress}%`,
+        Owner: item.owner,
+        Blocker: item.blockers,
+      }));
+    }
+    if (reportId === 'position-control') {
+      return imbaOpenRoles.map((item) => ({
+        Position: item.title,
+        Team: item.team,
+        Trigger: item.trigger,
+        Stage: item.stage,
+        'Backlog gate': item.backlogGate,
+      }));
+    }
+    return imbaCompliance.map((item) => ({
+      Control: item.item,
+      Scope: item.scope,
+      Due: item.due,
+      Owner: item.owner,
+      Status: item.status,
+    }));
+  }, [reportId]);
+  const filteredRows = rows.filter((row) => Object.values(row).join(' ').toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi label="Available reports" value={`${peopleReportDefinitions.length}`} note="HR operating report suite" />
+        <Kpi label="Hire-date coverage" value={`0 / ${imbaEmployees.length}`} note="Authoritative dates require ADP" tone="amber" />
+        <Kpi label="Current staff" value={`${imbaEmployees.length}`} note="Public roster records" tone="lime" />
+        <Kpi label="Open controls" value={`${imbaCompliance.filter((item) => item.status !== 'Ready').length}`} note="Watch and action items" tone="rose" />
+      </div>
+      <div className="grid gap-5 xl:grid-cols-12">
+        <ShellCard className="xl:col-span-3">
+          <Heading eyebrow="People reporting" title="Report library" detail="HR + executive" />
+          <div className="space-y-2 p-3">
+            {peopleReportDefinitions.map((item) => (
+              <button key={item.id} type="button" onClick={() => setReportId(item.id)} className={`w-full rounded-xl border p-3 text-left transition ${reportId === item.id ? 'border-cyan-300/25 bg-cyan-300/[0.06]' : 'border-[rgb(var(--line)/0.07)] hover:bg-[rgb(var(--line)/0.025)]'}`}>
+                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-[rgb(var(--text))]">{item.label}</p><span className="text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-100">{item.cadence}</span></div>
+                <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{item.note}</p>
+              </button>
+            ))}
+          </div>
+        </ShellCard>
+        <ShellCard className="xl:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+            <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">{report.cadence} report</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{report.label}</h2></div>
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search report" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
+              <button type="button" onClick={() => downloadCsv(`imba-${reportId}.csv`, report.columns, filteredRows)} className="flex items-center gap-2 rounded-xl bg-cyan-300 px-3 py-2 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" />Export CSV</button>
+            </div>
+          </div>
+          {reportId === 'hire-dates' ? <div className="border-b border-amber-300/15 bg-amber-300/[0.045] px-5 py-3 text-[11px] leading-5 text-amber-900 dark:text-amber-100"><strong>Authoritative field required.</strong> The public staff roster does not establish employment start dates. Connecting the ADP worker start-date field will populate hire date and calculated tenure without changing this report structure.</div> : null}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left">
+              <thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.14em] text-[rgb(var(--text-3))]">{report.columns.map((column) => <th key={column} className="px-4 py-3">{column}</th>)}</tr></thead>
+              <tbody>{filteredRows.map((row, index) => <tr key={`${reportId}-${index}`} className="border-b border-[rgb(var(--line)/0.055)] last:border-0">{report.columns.map((column) => <td key={column} className={`px-4 py-3 text-[11px] ${row[column] === 'Awaiting ADP' ? 'font-semibold text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--text-2))]'}`}>{row[column]}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        </ShellCard>
+      </div>
+    </>
+  );
+}
+
+function RestrictedPeopleReports() {
+  return <ShellCard><div className="flex items-start gap-3 p-5"><ShieldCheck className="mt-0.5 h-5 w-5 text-cyan-700 dark:text-cyan-100" /><div><p className="text-sm font-semibold text-[rgb(var(--text))]">People reports are restricted</p><p className="mt-1 text-[11px] leading-5 text-[rgb(var(--text-3))]">This report center is available to People / HR and executive leadership.</p></div></div></ShellCard>;
 }
 
 function Payroll({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {

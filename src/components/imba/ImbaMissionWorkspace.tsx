@@ -6,16 +6,22 @@ import {
   BarChart3,
   Compass,
   Database,
+  Download,
   MapPin,
   Search,
   ShieldCheck,
   Users,
 } from "lucide-react";
 import type { ImbaOsView } from "@/lib/imba-os-data";
+import type { ImbaRoleKey } from "@/lib/imba-intelligence-data";
+import { capacityRows, imbaProjects } from "@/lib/imba-cockpit-data";
+import { imbaProjectTasks } from "@/lib/imba-detail-data";
 
 export type ImbaMissionView =
   | "community-progress"
   | "trail-solutions"
+  | "construction-reports"
+  | "mission-reports"
   | "programs-education"
   | "assessments-designations"
   | "advocacy-policy"
@@ -46,7 +52,9 @@ interface MissionConfig {
   records: MissionRecord[];
 }
 
-const configs: Record<ImbaMissionView, MissionConfig> = {
+type ImbaMissionOperatingView = Exclude<ImbaMissionView, "construction-reports" | "mission-reports">;
+
+const configs: Record<ImbaMissionOperatingView, MissionConfig> = {
   "community-progress": {
     eyebrow: "Mission / Community Progress Shop",
     title: "Community progress",
@@ -482,8 +490,22 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
 export function ImbaMissionWorkspace({
   view,
   onNavigate,
+  role,
 }: {
   view: ImbaMissionView;
+  onNavigate: (view: ImbaOsView) => void;
+  role: ImbaRoleKey;
+}) {
+  if (view === "construction-reports") return <ConstructionReports />;
+  if (view === "mission-reports") return <MissionDirectorReports role={role} />;
+  return <MissionOperatingWorkspace view={view} onNavigate={onNavigate} />;
+}
+
+function MissionOperatingWorkspace({
+  view,
+  onNavigate,
+}: {
+  view: ImbaMissionOperatingView;
   onNavigate: (view: ImbaOsView) => void;
 }) {
   const config = configs[view];
@@ -593,6 +615,180 @@ export function ImbaMissionWorkspace({
             <div className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><MapPin className="h-3.5 w-3.5" />Relationships and activity roll up to the community record.</div>
             <div className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-3))]"><BarChart3 className="h-3.5 w-3.5" />Every stage change requires dated evidence.</div>
           </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+type ConstructionReportKey = "project-delivery" | "billing-control" | "crew-capacity" | "field-actions";
+type ConstructionReportRow = Record<string, string>;
+
+const constructionReportDefinitions: Array<{ id: ConstructionReportKey; label: string; note: string; cadence: string; columns: string[] }> = [
+  { id: "project-delivery", label: "Project delivery", note: "Phase, progress, billing, contribution, and signal", cadence: "Weekly", columns: ["Project", "Region", "Phase", "Completion", "Billed", "Contribution", "Signal"] },
+  { id: "billing-control", label: "Billing + schedule control", note: "Delivery-to-billing gaps requiring project action", cadence: "Weekly", columns: ["Project", "Phase", "Completion", "Billed", "Gap", "Control status", "Next action"] },
+  { id: "crew-capacity", label: "Crew + discipline capacity", note: "Base and expansion utilization against available capacity", cadence: "Biweekly", columns: ["Discipline", "Base plan", "Expansion", "Available", "Signal"] },
+  { id: "field-actions", label: "Field action register", note: "Project decisions, delivery actions, owners, and due dates", cadence: "Weekly", columns: ["Action", "Project", "Owner", "Due", "Workflow", "Operating signal"] },
+];
+
+function compactMoney(value: number): string {
+  return value >= 1_000_000 ? `$${(value / 1_000_000).toFixed(2)}M` : `$${Math.round(value / 1_000)}K`;
+}
+
+function downloadConstructionCsv(filename: string, columns: string[], rows: ConstructionReportRow[]) {
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const csv = [columns.map(escape).join(","), ...rows.map((row) => columns.map((column) => escape(row[column] ?? "")).join(","))].join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function ConstructionReports() {
+  const [reportId, setReportId] = useState<ConstructionReportKey>("project-delivery");
+  const [query, setQuery] = useState("");
+  const report = constructionReportDefinitions.find((item) => item.id === reportId) ?? constructionReportDefinitions[0];
+  const rows = useMemo<ConstructionReportRow[]>(() => {
+    if (reportId === "project-delivery") {
+      return imbaProjects.map((project) => ({
+        Project: project.name,
+        Region: project.region,
+        Phase: project.phase,
+        Completion: `${project.completion}%`,
+        Billed: `${project.billed}%`,
+        Contribution: `${project.contribution.toFixed(1)}%`,
+        Signal: project.signal,
+      }));
+    }
+    if (reportId === "billing-control") {
+      return imbaProjects.map((project) => {
+        const gap = project.completion - project.billed;
+        return {
+          Project: project.name,
+          Phase: project.phase,
+          Completion: `${project.completion}%`,
+          Billed: `${project.billed}%`,
+          Gap: `${gap > 0 ? "+" : ""}${gap} pts`,
+          "Control status": gap >= 5 ? "Action" : gap > 0 ? "Watch" : "Aligned",
+          "Next action": gap >= 5 ? "Confirm acceptance and issue progress billing" : "Maintain milestone cadence",
+        };
+      });
+    }
+    if (reportId === "crew-capacity") {
+      return capacityRows.map((row) => ({
+        Discipline: row.discipline,
+        "Base plan": `${row.base}%`,
+        Expansion: `${row.expansion}%`,
+        Available: row.available,
+        Signal: row.expansion >= 100 ? "Contract bench required" : row.expansion >= 95 ? "Capacity watch" : "Within guardrail",
+      }));
+    }
+    return imbaProjectTasks.map((task) => ({
+      Action: task.title,
+      Project: task.project,
+      Owner: task.owner,
+      Due: task.due,
+      Workflow: task.column,
+      "Operating signal": task.finance,
+    }));
+  }, [reportId]);
+  const filteredRows = rows.filter((row) => Object.values(row).join(" ").toLowerCase().includes(query.toLowerCase()));
+  const averageCompletion = Math.round(imbaProjects.reduce((sum, project) => sum + project.completion, 0) / imbaProjects.length);
+  const contractValue = imbaProjects.reduce((sum, project) => sum + project.contractValue, 0);
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Active portfolio" value={`${imbaProjects.length}`} note={`${compactMoney(contractValue)} illustrative contract value`} />
+        <MetricCard label="Average completion" value={`${averageCompletion}%`} note="Across the active delivery portfolio" />
+        <MetricCard label="At-risk projects" value={`${imbaProjects.filter((project) => project.status === "at-risk").length}`} note="Requires construction leadership decision" />
+        <MetricCard label="Expansion constraints" value={`${capacityRows.filter((row) => row.expansion >= 100).length}`} note="Discipline at or above 100% utilization" />
+      </div>
+      <div className="grid gap-5 xl:grid-cols-12">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-3">
+          <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Construction reporting</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Report library</h2><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Director of Construction + executive</p></div>
+          <div className="space-y-2 p-3">
+            {constructionReportDefinitions.map((item) => (
+              <button key={item.id} type="button" onClick={() => setReportId(item.id)} className={`w-full rounded-xl border p-3 text-left transition ${reportId === item.id ? "border-blue-300/25 bg-blue-300/[0.06]" : "border-[rgb(var(--line)/0.07)] hover:bg-[rgb(var(--line)/0.025)]"}`}>
+                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-[rgb(var(--text))]">{item.label}</p><span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-100">{item.cadence}</span></div>
+                <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{item.note}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+            <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">{report.cadence} report</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{report.label}</h2></div>
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search report" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label>
+              <button type="button" onClick={() => downloadConstructionCsv(`imba-${reportId}.csv`, report.columns, filteredRows)} className="flex items-center gap-2 rounded-xl bg-blue-300 px-3 py-2 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" />Export CSV</button>
+            </div>
+          </div>
+          <div className="border-b border-blue-300/10 bg-blue-300/[0.035] px-5 py-3 text-[11px] leading-5 text-blue-900 dark:text-blue-100">Operating values are illustrative until project, time, and accounting connectors are active. The report structure and role boundary are part of the demonstrated OS.</div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left">
+              <thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.14em] text-[rgb(var(--text-3))]">{report.columns.map((column) => <th key={column} className="px-4 py-3">{column}</th>)}</tr></thead>
+              <tbody>{filteredRows.map((row, index) => <tr key={`${reportId}-${index}`} className="border-b border-[rgb(var(--line)/0.055)] last:border-0">{report.columns.map((column) => <td key={column} className="px-4 py-3 text-[11px] text-[rgb(var(--text-2))]">{row[column]}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+const missionReportSourcesByRole: Partial<Record<ImbaRoleKey, ImbaMissionOperatingView[]>> = {
+  executive: ["community-progress", "trail-solutions", "programs-education", "assessments-designations", "advocacy-policy", "trail-assets", "impact-research"],
+  "planning-design": ["trail-solutions", "trail-assets"],
+  "local-programs": ["community-progress", "programs-education", "assessments-designations", "trail-assets", "impact-research"],
+  "government-affairs": ["advocacy-policy", "impact-research"],
+};
+
+function exportMissionCsv(filename: string, columns: string[], rows: Array<Record<string, string>>) {
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const csv = [columns.map(escape).join(","), ...rows.map((row) => columns.map((column) => escape(row[column] ?? "")).join(","))].join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function MissionDirectorReports({ role }: { role: ImbaRoleKey }) {
+  const allowedSources = missionReportSourcesByRole[role] ?? ["impact-research"];
+  const [requestedSource, setRequestedSource] = useState<ImbaMissionOperatingView>(allowedSources[0]);
+  const [query, setQuery] = useState("");
+  const source = allowedSources.includes(requestedSource) ? requestedSource : allowedSources[0];
+  const config = configs[source];
+  const columns = ["Record", "Context", config.valueLabel, "Owner", "Next move", "Status"];
+  const rows = config.records.map((record) => ({
+    Record: record.name,
+    Context: record.secondary,
+    [config.valueLabel]: record.value,
+    Owner: record.owner,
+    "Next move": record.next,
+    Status: record.status,
+  }));
+  const filteredRows = rows.filter((row) => Object.values(row).join(" ").toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{config.metrics.map((metric) => <MetricCard key={metric.label} {...metric} />)}</div>
+      <div className="grid gap-5 xl:grid-cols-12">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-3">
+          <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Mission reporting</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Role report library</h2><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{allowedSources.length} reports scoped to this director role</p></div>
+          <div className="space-y-2 p-3">{allowedSources.map((item) => <button key={item} type="button" onClick={() => setRequestedSource(item)} className={`w-full rounded-xl border p-3 text-left transition ${source === item ? "border-blue-300/25 bg-blue-300/[0.06]" : "border-[rgb(var(--line)/0.07)] hover:bg-[rgb(var(--line)/0.025)]"}`}><p className="text-xs font-semibold text-[rgb(var(--text))]">{configs[item].title}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{configs[item].description}</p></button>)}</div>
+        </section>
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+            <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Director report</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{config.title}</h2></div>
+            <div className="flex flex-wrap gap-2"><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search report" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label><button type="button" onClick={() => exportMissionCsv(`imba-${source}-report.csv`, columns, filteredRows)} className="flex items-center gap-2 rounded-xl bg-blue-300 px-3 py-2 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" />Export CSV</button></div>
+          </div>
+          <div className="border-b border-blue-300/10 bg-blue-300/[0.035] px-5 py-3 text-[11px] leading-5 text-blue-900 dark:text-blue-100">Report values reuse the demonstrated Mission operating registers. Public baselines retain their source notes; other operating values are illustrative.</div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.14em] text-[rgb(var(--text-3))]">{columns.map((column) => <th key={column} className="px-4 py-3">{column}</th>)}</tr></thead><tbody>{filteredRows.map((row) => <tr key={`${source}-${row.Record}`} className="border-b border-[rgb(var(--line)/0.055)] last:border-0">{columns.map((column) => <td key={column} className="px-4 py-3 text-[11px] text-[rgb(var(--text-2))]">{row[column]}</td>)}</tr>)}</tbody></table></div>
         </section>
       </div>
     </div>

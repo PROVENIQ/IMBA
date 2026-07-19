@@ -9,8 +9,10 @@ import {
   Send,
   ShieldCheck,
 } from 'lucide-react';
+import type { ImbaRoleKey } from '@/lib/imba-intelligence-data';
 
 export type ImbaEnterpriseView =
+  | 'development-reports'
   | 'development-crm'
   | 'development-grant-pipeline'
   | 'development-campaigns'
@@ -53,7 +55,9 @@ interface WorkspaceConfig {
   records: WorkspaceRecord[];
 }
 
-const configs: Record<ImbaEnterpriseView, WorkspaceConfig> = {
+type ImbaEnterpriseOperatingView = Exclude<ImbaEnterpriseView, 'development-reports'>;
+
+const configs: Record<ImbaEnterpriseOperatingView, WorkspaceConfig> = {
   'development-crm': {
     section: 'Development · relationship pipeline', title: 'CRM workspace', tone: 'amber', valueLabel: 'Potential', ownerLabel: 'Relationship owner', dueLabel: 'Next move', description: 'One relationship record for major gifts, sponsorships, institutional funders, member growth, restrictions, and next actions.',
     metrics: [{ label: 'Qualified pipeline', value: '$6.4M', note: 'Probability-adjusted $3.1M' }, { label: 'Active relationships', value: '47', note: '12 need a next action' }, { label: 'Campaign commitments', value: '$9.2M', note: 'Leading with Trails demo baseline' }, { label: '90-day opportunity', value: '$1.1M', note: 'Five leadership moves' }],
@@ -224,7 +228,12 @@ const toneClasses: Record<Tone, { border: string; text: string; button: string; 
   slate: { border: 'border-slate-300/20', text: 'text-slate-700 dark:text-slate-100', button: 'bg-slate-300', tint: 'bg-slate-300/[0.04]' },
 };
 
-export function ImbaEnterpriseWorkspace({ view }: { view: ImbaEnterpriseView }) {
+export function ImbaEnterpriseWorkspace({ view, role }: { view: ImbaEnterpriseView; role: ImbaRoleKey }) {
+  if (view === 'development-reports') return <DevelopmentReports role={role} />;
+  return <EnterpriseOperatingWorkspace view={view} />;
+}
+
+function EnterpriseOperatingWorkspace({ view }: { view: ImbaEnterpriseOperatingView }) {
   const config = configs[view];
   const tone = toneClasses[config.tone];
   const [query, setQuery] = useState('');
@@ -233,4 +242,75 @@ export function ImbaEnterpriseWorkspace({ view }: { view: ImbaEnterpriseView }) 
   const records = useMemo(() => config.records.filter((record) => `${record.name} ${record.secondary} ${record.status}`.toLowerCase().includes(query.toLowerCase())), [config.records, query]);
   const selected = config.records.find((record) => record.id === selectedId) ?? config.records[0];
   return <div className="space-y-5"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{config.metrics.map((metric) => <div key={metric.label} className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{metric.label}</p><p className={`mt-3 font-mono text-2xl font-semibold ${tone.text}`}>{metric.value}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{metric.note}</p></div>)}</div><div className="grid gap-5 xl:grid-cols-12"><section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-8"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Operating register</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{config.title} queue</h3></div><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--line)/0.025)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search records" className="w-40 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none placeholder:text-[rgb(var(--text-4))]" /></label></div><div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.15em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Record</th><th className="px-3 py-3">{config.valueLabel}</th><th className="px-3 py-3">{config.ownerLabel}</th><th className="px-3 py-3">{config.dueLabel}</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{records.map((record) => <tr key={record.id} onClick={() => { setSelectedId(record.id); setAction(''); }} className={`cursor-pointer border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.025)] ${selected.id === record.id ? tone.tint : ''}`}><td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{record.name}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{record.id} · {record.secondary}</p></td><td className={`px-3 py-3.5 font-mono text-xs font-semibold ${tone.text}`}>{record.value}</td><td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{record.owner}</td><td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{record.due}</td><td className="px-5 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.035)] px-2 py-1 text-[11px] font-black uppercase text-[rgb(var(--text))]">{record.status}</span></td></tr>)}</tbody></table></div></section><section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-4"><div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Selected · {selected.id}</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{selected.name}</h3></div><div className="space-y-4 p-5"><p className="text-xs leading-6 text-[rgb(var(--text-2))]">{selected.detail}</p><div className="grid grid-cols-2 gap-3"><div className="rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-3"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-4))]">Owner</p><p className="mt-1 text-[11px] font-semibold text-[rgb(var(--text))]">{selected.owner}</p></div><div className="rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-3"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-4))]">Status</p><p className={`mt-1 text-[11px] font-semibold ${tone.text}`}>{selected.status}</p></div></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><div className="flex items-center gap-2"><Database className={`h-3.5 w-3.5 ${tone.text}`} /><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Control posture</p></div><div className="mt-3 space-y-2">{['Owner and next action are explicit', 'Financial or compliance consequence is linked', 'Evidence and changes retain an audit trail'].map((item) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]"><ShieldCheck className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" />{item}</div>)}</div></div><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => setAction('Owner notified and action recorded.')} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))] ${tone.button}`}><Send className="h-3.5 w-3.5" /> Assign</button><button type="button" onClick={() => setAction('Controlled export prepared with watermark.')} className="flex items-center justify-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-3 text-[11px] font-black uppercase text-[rgb(var(--text))]"><Download className="h-3.5 w-3.5" /> Export</button></div>{action ? <p className="flex items-center gap-2 text-[11px] text-[rgb(var(--sa-soft))]"><Check className="h-3.5 w-3.5" />{action}</p> : null}</div></section></div></div>;
+}
+
+type DevelopmentReportSource =
+  | 'development-crm'
+  | 'development-grant-pipeline'
+  | 'development-campaigns'
+  | 'development-trail-solutions'
+  | 'development-marketing'
+  | 'development-partnerships';
+
+const developmentReportDefinitions: Array<{ source: DevelopmentReportSource; label: string; note: string }> = [
+  { source: 'development-crm', label: 'Relationship pipeline', note: 'Qualified relationships, potential, ownership, and next moves' },
+  { source: 'development-grant-pipeline', label: 'Grant pipeline', note: 'Requests, deadlines, proposal ownership, and award handoffs' },
+  { source: 'development-campaigns', label: 'Campaign + membership', note: 'Commitments, conversion, milestones, and stewardship' },
+  { source: 'development-trail-solutions', label: 'Earned-revenue pipeline', note: 'Qualified demand, proposals, economics, and delivery handoffs' },
+  { source: 'development-marketing', label: 'Marketing performance', note: 'Audience, production queue, attribution, and approvals' },
+  { source: 'development-partnerships', label: 'Partnership portfolio', note: 'Cash, in-kind value, benefits, fulfillment, and renewal' },
+];
+
+function exportDevelopmentCsv(filename: string, columns: string[], rows: Array<Record<string, string>>) {
+  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const csv = [columns.map(escape).join(','), ...rows.map((row) => columns.map((column) => escape(row[column] ?? '')).join(','))].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function DevelopmentReports({ role }: { role: ImbaRoleKey }) {
+  const availableReports = role === 'communications'
+    ? developmentReportDefinitions.filter((item) => ['development-campaigns', 'development-marketing', 'development-partnerships'].includes(item.source))
+    : developmentReportDefinitions;
+  const [requestedSource, setRequestedSource] = useState<DevelopmentReportSource>(availableReports[0].source);
+  const [query, setQuery] = useState('');
+  const source = availableReports.some((item) => item.source === requestedSource) ? requestedSource : availableReports[0].source;
+  const config = configs[source];
+  const definition = developmentReportDefinitions.find((item) => item.source === source) ?? developmentReportDefinitions[0];
+  const columns = ['Record', 'Context', config.valueLabel, config.ownerLabel, config.dueLabel, 'Status'];
+  const rows = config.records.map((record) => ({
+    Record: record.name,
+    Context: record.secondary,
+    [config.valueLabel]: record.value,
+    [config.ownerLabel]: record.owner,
+    [config.dueLabel]: record.due,
+    Status: record.status,
+  }));
+  const filteredRows = rows.filter((row) => Object.values(row).join(' ').toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {config.metrics.map((metric) => <div key={metric.label} className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{metric.label}</p><p className="mt-3 font-mono text-2xl font-semibold text-amber-800 dark:text-amber-100">{metric.value}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{metric.note}</p></div>)}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-12">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-3">
+          <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Development reporting</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Report library</h2><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Development team + executive</p></div>
+          <div className="space-y-2 p-3">{availableReports.map((item) => <button key={item.source} type="button" onClick={() => setRequestedSource(item.source)} className={`w-full rounded-xl border p-3 text-left transition ${source === item.source ? 'border-amber-300/30 bg-amber-300/[0.07]' : 'border-[rgb(var(--line)/0.07)] hover:bg-[rgb(var(--line)/0.025)]'}`}><p className="text-xs font-semibold text-[rgb(var(--text))]">{item.label}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{item.note}</p></button>)}</div>
+        </section>
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
+            <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Development report</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">{definition.label}</h2></div>
+            <div className="flex flex-wrap gap-2"><label className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-2"><Search className="h-3.5 w-3.5 text-[rgb(var(--text-3))]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search report" className="w-36 bg-transparent text-[11px] text-[rgb(var(--text))] outline-none" /></label><button type="button" onClick={() => exportDevelopmentCsv(`imba-${source}.csv`, columns, filteredRows)} className="flex items-center gap-2 rounded-xl bg-amber-300 px-3 py-2 text-[11px] font-black uppercase text-[rgb(var(--sa-ink))]"><Download className="h-3.5 w-3.5" />Export CSV</button></div>
+          </div>
+          <div className="border-b border-amber-300/15 bg-amber-300/[0.045] px-5 py-3 text-[11px] leading-5 text-amber-900 dark:text-amber-100">Report values reuse the demonstrated Development operating registers. Values are illustrative unless a source note explicitly identifies a public baseline.</div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.14em] text-[rgb(var(--text-3))]">{columns.map((column) => <th key={column} className="px-4 py-3">{column}</th>)}</tr></thead><tbody>{filteredRows.map((row) => <tr key={`${source}-${row.Record}`} className="border-b border-[rgb(var(--line)/0.055)] last:border-0">{columns.map((column) => <td key={column} className="px-4 py-3 text-[11px] text-[rgb(var(--text-2))]">{row[column]}</td>)}</tr>)}</tbody></table></div>
+        </section>
+      </div>
+    </div>
+  );
 }

@@ -1,7 +1,16 @@
 import type { ImbaOsView } from "@/lib/imba-os-data";
 
 export type ImbaRoleKey =
-  "executive" | "finance" | "hr" | "trail-solutions" | "development" | "board";
+  | "executive"
+  | "finance"
+  | "hr"
+  | "trail-solutions"
+  | "planning-design"
+  | "local-programs"
+  | "communications"
+  | "government-affairs"
+  | "development"
+  | "board";
 
 export interface ImbaRoleProfile {
   label: string;
@@ -65,7 +74,7 @@ export interface ImbaMetricExplanation {
 
 export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
   executive: {
-    label: "CEO / Executive",
+    label: "CEO / Executive Director",
     initials: "CE",
     purpose: "Enterprise performance, risk, and decisions",
     home: "brief",
@@ -75,13 +84,13 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "People",
       "Development",
       "Platform",
+      "System",
       "Governance",
       "Collaboration",
-      "System",
       "Management",
     ],
     sectionViews: {
-      Mission: ["operations", "trail-solutions", "impact-research"],
+      Mission: ["operations", "trail-solutions", "construction-reports", "mission-reports", "impact-research"],
       Money: [
         "finance-snapshot",
         "finance-grants",
@@ -93,8 +102,8 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-expenses",
         "liquidity",
       ],
-      People: ["people", "capacity"],
-      Development: ["development", "development-campaigns"],
+      People: ["people", "people-directory", "people-reports", "capacity"],
+      Development: ["development", "development-reports", "development-campaigns"],
       Platform: ["platform", "platform-health"],
       Governance: ["governance", "governance-board"],
       Collaboration: ["collaboration", "collaboration-inbox"],
@@ -102,7 +111,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     },
   },
   finance: {
-    label: "Finance",
+    label: "Director of Finance",
     initials: "FD",
     purpose: "Close, liquidity, compliance, and decision support",
     home: "finance-snapshot",
@@ -117,7 +126,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     ],
     sectionViews: {
       Mission: ["operations", "trail-solutions", "project-board"],
-      People: ["people-payroll", "people-compliance"],
+      People: ["people-directory", "people-payroll", "people-compliance"],
       Development: ["development-grant-pipeline"],
       Platform: [
         "integration-control",
@@ -132,7 +141,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     },
   },
   hr: {
-    label: "People / HR",
+    label: "Director of Talent & Culture / HR",
     initials: "HR",
     purpose: "Workforce, payroll, hiring, onboarding, and compliance",
     home: "people",
@@ -145,7 +154,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Management",
     ],
     sectionViews: {
-      Money: ["finance-snapshot", "finance-calendar", "finance-budget"],
+      Money: ["finance-snapshot", "finance-calendar", "finance-budget", "finance-cost-of-labor"],
       Platform: ["integration-control", "integration-adp", "integration-audit"],
       Governance: ["governance-compliance", "governance-vault"],
       Collaboration: ["collaboration", "collaboration-inbox", "communications-templates"],
@@ -153,8 +162,8 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     },
   },
   "trail-solutions": {
-    label: "Trail Solutions",
-    initials: "TS",
+    label: "Director of Construction & Operations",
+    initials: "DC",
     purpose: "Project delivery, margin, pipeline, and capacity",
     home: "trail-solutions",
     sections: [
@@ -169,6 +178,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "operations",
         "trail-solutions",
         "project-board",
+        "construction-reports",
         "chapter-network",
         "chapter-standards",
         "trail-assets",
@@ -176,7 +186,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Money: [
         "finance-snapshot",
         "finance-budget",
-        "finance-cost-of-labor",
         "finance-reports",
         "finance-payables",
         "finance-ap-ar",
@@ -185,6 +194,52 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       People: ["people", "capacity", "people-directory"],
       Platform: ["platform"],
       Collaboration: ["collaboration", "collaboration-inbox", "collaboration-workspaces"],
+    },
+  },
+  "planning-design": {
+    label: "Director of Planning & Design",
+    initials: "PD",
+    purpose: "Planning quality, design delivery, assets, and capacity",
+    home: "trail-solutions",
+    sections: ["Mission", "People", "Platform"],
+    sectionViews: {
+      Mission: ["operations", "trail-solutions", "project-board", "mission-reports", "trail-assets"],
+      People: ["people", "capacity", "people-directory"],
+      Platform: ["platform"],
+    },
+  },
+  "local-programs": {
+    label: "Director of Local Programs",
+    initials: "LP",
+    purpose: "Community progress, programs, designations, and impact",
+    home: "community-progress",
+    sections: ["Mission", "People", "Development"],
+    sectionViews: {
+      Mission: ["operations", "community-progress", "programs-education", "assessments-designations", "mission-reports", "chapter-network", "chapter-standards", "trail-assets", "impact-research"],
+      People: ["people", "capacity", "people-directory"],
+      Development: ["development-campaigns", "development-partnerships"],
+    },
+  },
+  communications: {
+    label: "Director of Communications",
+    initials: "CM",
+    purpose: "Audience, content, campaigns, attribution, and brand controls",
+    home: "development-marketing",
+    sections: ["Development", "Mission"],
+    sectionViews: {
+      Development: ["development-reports", "development-campaigns", "development-marketing", "development-partnerships"],
+      Mission: ["operations", "impact-research"],
+    },
+  },
+  "government-affairs": {
+    label: "Director of Government Affairs",
+    initials: "GA",
+    purpose: "Advocacy issues, campaigns, decisions, and evidence",
+    home: "advocacy-policy",
+    sections: ["Mission", "Development"],
+    sectionViews: {
+      Mission: ["operations", "advocacy-policy", "mission-reports", "impact-research"],
+      Development: ["development-marketing", "development-partnerships"],
     },
   },
   development: {
@@ -202,7 +257,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-snapshot",
         "finance-grants",
         "finance-budget",
-        "finance-cost-of-labor",
         "finance-reports",
       ],
       Collaboration: [
@@ -224,7 +278,6 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Money: [
         "finance-snapshot",
         "finance-budget",
-        "finance-cost-of-labor",
         "finance-reports",
         "liquidity",
       ],

@@ -204,6 +204,18 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: ListChecks,
       },
       {
+        id: "construction-reports",
+        label: "Construction reports",
+        description: "Delivery + crew controls",
+        icon: BarChart3,
+      },
+      {
+        id: "mission-reports",
+        label: "Mission reports",
+        description: "Programs + planning + policy",
+        icon: FileText,
+      },
+      {
         id: "programs-education",
         label: "Programs + education",
         description: "Offerings through outcomes",
@@ -356,6 +368,12 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: Users,
       },
       {
+        id: "people-reports",
+        label: "People reports",
+        description: "Hire dates + workforce controls",
+        icon: BarChart3,
+      },
+      {
         id: "people-payroll",
         label: "PEO + payroll",
         description: "Labor allocation + close",
@@ -403,6 +421,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Development engine",
         description: "Membership + philanthropy",
         icon: HeartHandshake,
+      },
+      {
+        id: "development-reports",
+        label: "Development reports",
+        description: "Pipeline + campaign performance",
+        icon: BarChart3,
       },
       {
         id: "development-crm",
@@ -750,6 +774,17 @@ function sectionForView(view: string): string {
 
 function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const profile = imbaRoleProfiles[role];
+  const sidebarOrder = [
+    "Mission",
+    "Money",
+    "People",
+    "Development",
+    "Platform",
+    "System",
+    "Governance",
+    "Collaboration",
+    "Management",
+  ];
   return imbaNavSections
     .filter((section) => profile.sections.includes(section.label))
     .map((section) => {
@@ -763,7 +798,8 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
           }
         : section;
     })
-    .filter((section) => section.items.length > 0);
+    .filter((section) => section.items.length > 0)
+    .sort((left, right) => sidebarOrder.indexOf(left.label) - sidebarOrder.indexOf(right.label));
 }
 const financeViews: ImbaFinanceView[] = [
   "finance-snapshot",
@@ -788,6 +824,8 @@ const operationsViews: ImbaOperationsView[] = [
 const missionViews: ImbaMissionView[] = [
   "community-progress",
   "trail-solutions",
+  "construction-reports",
+  "mission-reports",
   "programs-education",
   "assessments-designations",
   "advocacy-policy",
@@ -797,6 +835,7 @@ const missionViews: ImbaMissionView[] = [
 const peopleViews: ImbaPeopleView[] = [
   "people",
   "people-directory",
+  "people-reports",
   "people-payroll",
   "people-hiring",
   "people-onboarding",
@@ -821,6 +860,7 @@ const collaborationViews: ImbaCollaborationView[] = [
   "communications-templates",
 ];
 const enterpriseViews: ImbaEnterpriseView[] = [
+  "development-reports",
   "development-crm",
   "development-grant-pipeline",
   "development-campaigns",
@@ -3124,6 +3164,7 @@ export function ImbaCeoCockpit() {
                 key={view}
                 view={view as ImbaMissionView}
                 onNavigate={setCurrentView}
+                role={role}
               />
             ) : null}
 
@@ -3131,6 +3172,7 @@ export function ImbaCeoCockpit() {
               <ImbaPeopleWorkspace
                 view={view as ImbaPeopleView}
                 onNavigate={setCurrentView}
+                role={role}
               />
             ) : null}
 
@@ -3153,6 +3195,7 @@ export function ImbaCeoCockpit() {
               <ImbaEnterpriseWorkspace
                 key={view}
                 view={view as ImbaEnterpriseView}
+                role={role}
               />
             ) : null}
 
