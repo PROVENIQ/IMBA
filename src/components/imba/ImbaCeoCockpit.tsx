@@ -32,6 +32,8 @@ import {
   Moon,
   Mountain,
   Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   Presentation,
   Route,
   Settings,
@@ -1648,6 +1650,7 @@ export function ImbaCeoCockpit() {
   const [view, setView] = useState<ImbaOsView>("brief");
   const [scenarioKey, setScenarioKey] = useState<ImbaScenarioKey>("base");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({ Management: true });
@@ -1672,6 +1675,11 @@ export function ImbaCeoCockpit() {
   useEffect(() => {
     const stored = window.localStorage.getItem("imba-theme");
     setTheme(stored === "dark" ? "dark" : "light");
+  }, []);
+  useEffect(() => {
+    setSidebarCollapsed(
+      window.localStorage.getItem("imba-sidebar-collapsed") === "true",
+    );
   }, []);
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -2051,18 +2059,31 @@ export function ImbaCeoCockpit() {
     setMobileNavOpen(false);
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem("imba-sidebar-collapsed", String(next));
+      if (!next) {
+        setExpandedSections((sections) => ({
+          ...sections,
+          [activeSectionLabel]: true,
+        }));
+      }
+      return next;
+    });
+  };
+
   const changeRole = (nextRole: ImbaRoleKey) => {
     setRole(nextRole);
     const profile = imbaRoleProfiles[nextRole];
     const nextNavigation = navSectionsForRole(nextRole);
-    const canAccessCurrentView = nextNavigation.some((section) =>
-      section.items.some((item) => item.id === view),
+    // Land on the role's home view and expand only the section that contains it,
+    // so each role opens on its primary section (e.g. HR → People → Directory).
+    setCurrentView(profile.home);
+    const homeSection = nextNavigation.find((section) =>
+      section.items.some((item) => item.id === profile.home),
     );
-    if (!canAccessCurrentView) setCurrentView(profile.home);
-    setExpandedSections((current) => ({
-      ...current,
-      [profile.sections.at(-1) ?? "Management"]: true,
-    }));
+    setExpandedSections(homeSection ? { [homeSection.label]: true } : {});
   };
 
   const saveCurrentView = () => {
@@ -2106,19 +2127,33 @@ export function ImbaCeoCockpit() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_2%,rgba(105,185,170,0.12),transparent_30%),radial-gradient(circle_at_15%_100%,rgba(183,227,91,0.08),transparent_28%)]" />
 
       <aside
-        className={`${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} absolute inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] transition-transform duration-300 lg:relative lg:translate-x-0`}
+        className={`${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} absolute inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-[rgb(var(--line)/0.08)] bg-[rgb(var(--panel))] transition-[transform,width] duration-300 lg:relative lg:translate-x-0 ${sidebarCollapsed ? "lg:w-[72px]" : "lg:w-[252px]"}`}
       >
-        <div className="flex h-[86px] items-center justify-between border-b border-[rgb(var(--line)/0.08)] px-5">
+        <div className={`flex h-[86px] items-center justify-between border-b border-[rgb(var(--line)/0.08)] px-5 ${sidebarCollapsed ? "lg:flex-col lg:justify-center lg:gap-1 lg:px-2" : ""}`}>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--sa))] text-[#0b2118] shadow-[0_0_30px_rgba(183,227,91,0.16)]">
+            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--sa))] text-[#0b2118] shadow-[0_0_30px_rgba(183,227,91,0.16)] ${sidebarCollapsed ? "lg:h-9 lg:w-9 lg:rounded-xl" : ""}`}>
               <Mountain className="h-6 w-6" />
             </div>
-            <div>
+            <div className={sidebarCollapsed ? "lg:hidden" : ""}>
               <h1 className="text-sm font-semibold tracking-tight text-[rgb(var(--text))]">
                 IMBA-OS
               </h1>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="hidden rounded-lg p-1.5 text-[rgb(var(--text-3))] transition hover:bg-[rgb(var(--line)/0.06)] hover:text-[rgb(var(--text))] lg:inline-flex"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Minimize sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Minimize sidebar"}
+            aria-pressed={sidebarCollapsed}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}
@@ -2129,7 +2164,7 @@ export function ImbaCeoCockpit() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className={`flex-1 overflow-y-auto px-3 py-4 ${sidebarCollapsed ? "lg:hidden" : ""}`}>
           <div className="px-2">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[rgb(var(--text-4))]">
               Nonprofit operating system
@@ -2204,10 +2239,36 @@ export function ImbaCeoCockpit() {
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-[rgb(var(--line)/0.07)] p-3">
+        {sidebarCollapsed ? (
+          <nav
+            className="hidden flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-4 lg:flex"
+            aria-label="Minimized IMBA operating system views"
+          >
+            {visibleNavSections.map((section) => {
+              const SectionIcon = section.items[0].icon;
+              const hasActiveItem = section.items.some(
+                (item) => item.id === view,
+              );
+              return (
+                <button
+                  key={section.label}
+                  type="button"
+                  onClick={() => setCurrentView(section.items[0].id)}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition hover:bg-[rgb(var(--line)/0.05)] ${section.color} ${hasActiveItem ? section.active : "bg-[rgb(var(--line)/0.018)]"}`}
+                  aria-label={`Open ${section.label}`}
+                  title={`${section.label}: ${section.items[0].label}`}
+                >
+                  <SectionIcon className="h-4 w-4" />
+                </button>
+              );
+            })}
+          </nav>
+        ) : null}
+
+        <div className={`shrink-0 border-t border-[rgb(var(--line)/0.07)] p-3 ${sidebarCollapsed ? "lg:hidden" : ""}`}>
           <div className="flex items-center justify-between px-2 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--text-4))]">
             <span>IMBA-OS Prototype</span>
-            <span>Technology × Mission</span>
+            <span>Technology + Mission</span>
           </div>
         </div>
       </aside>

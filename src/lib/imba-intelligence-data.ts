@@ -144,7 +144,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     label: "Director of Talent & Culture / HR",
     initials: "HR",
     purpose: "Workforce, payroll, hiring, onboarding, and compliance",
-    home: "people",
+    home: "people-directory",
     sections: [
       "People",
       "Money",
