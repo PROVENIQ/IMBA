@@ -41,7 +41,8 @@ export type ImbaFinanceView =
   | 'finance-ap-ar'
   | 'finance-reports'
   | 'finance-transactions'
-  | 'finance-expenses';
+  | 'finance-expenses'
+  | 'finance-cost-of-labor';
 
 function money(value: number): string {
   const sign = value < 0 ? '-' : '';
@@ -89,6 +90,7 @@ const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; descri
   'finance-reports': { eyebrow: 'Money · reporting library', title: 'Reports', description: 'A governed catalog for leadership, Board, project accounting, treasury, grants, and compliance.' },
   'finance-transactions': { eyebrow: 'Money · transaction control', title: 'Bills + invoices', description: 'Controlled entry for vendor bills, client invoices, chapter obligations, project milestones, and coding evidence.' },
   'finance-expenses': { eyebrow: 'Money · employee spend', title: 'Expenses (Expensify)', description: 'Card spend and receipts flow from Expensify into coding, reconcile to the card statement, and post to the GL and reimbursements.' },
+  'finance-cost-of-labor': { eyebrow: 'Money · workforce cost', title: 'Cost of labor', description: 'IMBA leases its entire workforce through a PEO. This decomposes the PEO reimbursement into the filed Form 990 lines and builds the loaded rate — showing exactly where public data runs out.' },
 };
 
 export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view: ImbaFinanceView; onNavigate: (view: ImbaOsView) => void; role?: ImbaRoleKey; filters?: ImbaFilterState }) {
@@ -109,6 +111,7 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
       ) : null}
       {view === 'finance-transactions' ? <TransactionsIntegrated onNavigate={onNavigate} /> : null}
       {view === 'finance-expenses' ? <ExpenseTracking /> : null}
+      {view === 'finance-cost-of-labor' ? <CostOfLabor /> : null}
     </div>
   );
 }
@@ -201,6 +204,143 @@ function ExpenseTracking() {
                 ))}
               </div>
             </div>
+          </div>
+        </ShellCard>
+      </div>
+    </>
+  );
+}
+
+// Provenance badge — makes every figure's lane explicit (filed / derived /
+// illustrative / unknown), per the data-provenance ground rules.
+function Prov({ kind }: { kind: 'filed' | 'derived' | 'illustrative' | 'unknown' }) {
+  const map = {
+    filed: ['Filed · 990', 'bg-[rgb(var(--info)/0.12)] text-[rgb(var(--info))]'],
+    derived: ['Derived', 'bg-[rgb(var(--line)/0.07)] text-[rgb(var(--text-2))]'],
+    illustrative: ['Illustrative', 'bg-amber-300/10 text-amber-800 dark:text-amber-200'],
+    unknown: ['Unknown', 'bg-rose-300/10 text-rose-700 dark:text-rose-200'],
+  } as const;
+  const [label, cls] = map[kind];
+  return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black uppercase tracking-wider ${cls}`}>{label}</span>;
+}
+
+// Cost of labor — IMBA leases its entire workforce through a PEO and files no
+// W-2s (2024 Form 990, Schedule O). The PEO reimbursement is reported on Part IX
+// lines 5-10. This decomposes it, builds the loaded rate, and shows where public
+// data runs out (the PEO fee and workers-comp premium live inside the invoice).
+function CostOfLabor() {
+  const comp: Array<[string, number]> = [
+    ['Line 7 · Other salaries and wages', 2_820_457],
+    ['Line 5 · Officer + key-employee comp', 188_977],
+    ['Line 10 · Payroll taxes', 268_321],
+    ['Line 9 · Other employee benefits', 189_015],
+    ['Line 8 · Pension plan contributions', 59_144],
+  ];
+  const totalComp = comp.reduce((s, [, v]) => s + v, 0); // 3,525,914
+  const baseWages = 2_820_457 + 188_977; // 3,009,434 (lines 5 + 7)
+  const taxRate = 268_321 / baseWages; // 8.92%
+  const benRate = (189_015 + 59_144) / baseWages; // 8.25%
+  const totalExpense = 7_014_359;
+  const loadedMult = totalComp / baseWages; // 1.1716
+  const compPct = totalComp / totalExpense; // 50.3%
+
+  const [wage, setWage] = useState(32);
+  const hr = (n: number) => `$${n.toFixed(2)}`;
+  const afterTax = wage * (1 + taxRate);
+  const afterBen = wage * (1 + taxRate + benRate);
+
+  const [perEmployee, setPerEmployee] = useState(false);
+
+  return (
+    <>
+      <div className="rounded-2xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))]">PEO-leased workforce</span>
+          <Prov kind="filed" />
+        </div>
+        <p className="mt-1.5 text-[11px] leading-5 text-[rgb(var(--text-2))]">
+          IMBA files no W-2s. All <span className="font-semibold text-[rgb(var(--text))]">56</span> employees are leased from a professional employer organization (PEO); IMBA reimburses the PEO, and the reimbursement is reported on Form 990 Part IX lines 5–10 (2024 Schedule O).
+        </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Total compensation</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">{money(totalComp)}</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Part IX lines 5 + 7–10, 2024</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Comp · % of expense</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--info))]">{(compPct * 100).toFixed(1)}%</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Half of every dollar spent is labor</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Known loaded multiplier</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--sa-soft))]">{loadedMult.toFixed(3)}×</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Wages → taxes + benefits (public only)</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Leased headcount</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">56</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">All via the PEO (Sch O)</p></div>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-12">
+        <ShellCard className="xl:col-span-6">
+          <Heading eyebrow="Invoice → ledger" title="One PEO reimbursement, five filed lines" detail="Foots exactly to the 990" />
+          <div className="p-5">
+            <div className="space-y-2">
+              {comp.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5">
+                  <span className="text-[11px] text-[rgb(var(--text-2))]">{label}</span>
+                  <span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(value)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--sa)/0.2)] bg-[rgb(var(--sa)/0.06)] px-3 py-3">
+              <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-soft))]">Total PEO reimbursement <Prov kind="filed" /></span>
+              <span className="font-mono text-sm font-semibold text-[rgb(var(--sa-soft))]">{money(totalComp)}</span>
+            </div>
+            <p className="mt-3 text-[11px] leading-5 text-[rgb(var(--text-3))]">The five lines foot exactly to the reimbursement — IMBA already decomposes the invoice correctly. The open question is what the single invoice does <span className="italic">not</span> break out.</p>
+          </div>
+        </ShellCard>
+
+        <ShellCard className="xl:col-span-6">
+          <Heading eyebrow="Loaded-rate builder" title="Where public data runs out" detail="Illustrative base wage" />
+          <div className="p-5">
+            <label className="flex items-center justify-between gap-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">
+              Illustrative base wage ($/hr)
+              <input type="number" min={15} max={120} value={wage} onChange={(e) => setWage(Number(e.target.value) || 0)} className="w-24 rounded-lg border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-right font-mono text-xs text-[rgb(var(--text))] outline-none" />
+            </label>
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">Base wage <Prov kind="illustrative" /></span><span className="font-mono text-xs text-[rgb(var(--text))]">{hr(wage)}</span></div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">+ Payroll taxes · {(taxRate * 100).toFixed(2)}% <Prov kind="filed" /></span><span className="font-mono text-xs text-[rgb(var(--text))]">{hr(afterTax)}</span></div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">+ Benefits + pension · {(benRate * 100).toFixed(2)}% <Prov kind="filed" /></span><span className="font-mono text-xs font-semibold text-[rgb(var(--sa-soft))]">{hr(afterBen)}</span></div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-300/25 bg-rose-300/[0.05] px-3 py-2.5"><span className="flex items-center gap-2 text-[11px] text-rose-700 dark:text-rose-200">+ PEO administrative fee <Prov kind="unknown" /></span><span className="font-mono text-xs text-rose-700 dark:text-rose-200">inside the invoice</span></div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-300/25 bg-rose-300/[0.05] px-3 py-2.5"><span className="flex items-center gap-2 text-[11px] text-rose-700 dark:text-rose-200">+ Workers&#39; comp premium <Prov kind="unknown" /></span><span className="font-mono text-xs text-rose-700 dark:text-rose-200">inside the invoice</span></div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-3"><span className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))]">True loaded cost</span><span className="font-mono text-sm font-semibold text-[rgb(var(--text))]">≥ {hr(afterBen)}</span></div>
+            </div>
+            <p className="mt-3 text-[11px] leading-5 text-[rgb(var(--text-3))]">The public loaded rate stops at {loadedMult.toFixed(2)}×. The true rate is higher — the PEO fee and workers&#39; comp premium are bundled in the invoice and can&#39;t be isolated from public filings.</p>
+          </div>
+        </ShellCard>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <ShellCard>
+          <Heading eyebrow="Open question" title="Where does the PEO fee live?" />
+          <div className="space-y-3 p-5">
+            <p className="text-[11px] leading-5 text-[rgb(var(--text-2))]">The PEO administrative fee does not appear as its own Part IX line. It could plausibly sit inside:</p>
+            {[['Compensation lines 5–10', money(totalComp)], ['Other fees for services · line 11g', money(656_882)], ['Office expenses · line 13', money(1_051_344)]].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-3 rounded-xl border border-[rgb(var(--line)/0.06)] bg-[rgb(var(--line)/0.02)] px-3 py-2.5"><span className="text-[11px] text-[rgb(var(--text-2))]">{label}</span><span className="font-mono text-[11px] text-[rgb(var(--text-3))]">{value}</span></div>
+            ))}
+            <p className="text-[11px] leading-5 text-[rgb(var(--text-3))]">An open question, not an allegation — resolving it needs the PEO invoice detail. <Prov kind="derived" /></p>
+          </div>
+        </ShellCard>
+
+        <ShellCard>
+          <Heading eyebrow="Compliance control" title="Grant documentation adequacy" />
+          <div className="space-y-4 p-5">
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setPerEmployee(false)} className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-bold transition ${!perEmployee ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.08)] text-[rgb(var(--text-2))]'}`}>Aggregate reimbursement</button>
+              <button type="button" onClick={() => setPerEmployee(true)} className={`flex-1 rounded-xl px-3 py-2 text-[11px] font-bold transition ${perEmployee ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.08)] text-[rgb(var(--text-2))]'}`}>Per-employee, coded</button>
+            </div>
+            {perEmployee ? (
+              <div className="rounded-2xl border border-[rgb(var(--sa)/0.2)] bg-[rgb(var(--sa)/0.05)] p-4">
+                <div className="flex items-center gap-2"><Check className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><span className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-soft))]">Sufficient</span></div>
+                <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">Per-employee labor detail with project, grant, and funding-source coding supports federal or state cost reimbursement and allowable-cost tests.</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-rose-300/25 bg-rose-300/[0.05] p-4">
+                <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-rose-700 dark:text-rose-200" /><span className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-200">Insufficient</span></div>
+                <p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-2))]">A single aggregate PEO reimbursement cannot support grant cost reimbursement — there is no per-employee, per-project labor allocation to certify.</p>
+              </div>
+            )}
+            <p className="text-[11px] leading-5 text-[rgb(var(--text-3))]">This is the whole compliance argument in one control: the PEO invoice is a starting point, not the documentation.</p>
           </div>
         </ShellCard>
       </div>

@@ -35,6 +35,7 @@ export type ImbaOsView =
   | "finance-reports"
   | "finance-transactions"
   | "finance-expenses"
+  | "finance-cost-of-labor"
   | "people-directory"
   | "people-payroll"
   | "people-hiring"

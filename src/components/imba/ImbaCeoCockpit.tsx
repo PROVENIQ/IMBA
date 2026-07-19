@@ -289,6 +289,12 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: Target,
       },
       {
+        id: "finance-cost-of-labor",
+        label: "Cost of labor",
+        description: "PEO decomposition + loaded rate",
+        icon: Users,
+      },
+      {
         id: "finance-budget",
         label: "Budget + forecast",
         description: "Plan vs actual by engine",
@@ -770,6 +776,7 @@ const financeViews: ImbaFinanceView[] = [
   "finance-reports",
   "finance-transactions",
   "finance-expenses",
+  "finance-cost-of-labor",
 ];
 const operationsViews: ImbaOperationsView[] = [
   "project-command",

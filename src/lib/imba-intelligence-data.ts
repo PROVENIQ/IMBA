@@ -86,6 +86,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-snapshot",
         "finance-grants",
         "finance-budget",
+        "finance-cost-of-labor",
         "finance-reports",
         "finance-payables",
         "finance-ap-ar",
@@ -175,6 +176,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Money: [
         "finance-snapshot",
         "finance-budget",
+        "finance-cost-of-labor",
         "finance-reports",
         "finance-payables",
         "finance-ap-ar",
@@ -200,6 +202,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-snapshot",
         "finance-grants",
         "finance-budget",
+        "finance-cost-of-labor",
         "finance-reports",
       ],
       Collaboration: [
@@ -221,6 +224,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Money: [
         "finance-snapshot",
         "finance-budget",
+        "finance-cost-of-labor",
         "finance-reports",
         "liquidity",
       ],
