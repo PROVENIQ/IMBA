@@ -2765,19 +2765,20 @@ export function ImbaCeoCockpit() {
               </div>
             ) : null}
 
-            <ImbaInsightStrip
-              key={`insights-${view}`}
-              insights={intelligenceInsights}
-              condensed={!isSectionLanding}
-              onSelect={(insight) => {
-                if (insight.project)
-                  setFilters((current) => ({
-                    ...current,
-                    project: insight.project ?? "All projects",
-                  }));
-                setCurrentView(insight.targetView);
-              }}
-            />
+            {view === "brief" ? (
+              <ImbaInsightStrip
+                key="insights-brief"
+                insights={intelligenceInsights}
+                onSelect={(insight) => {
+                  if (insight.project)
+                    setFilters((current) => ({
+                      ...current,
+                      project: insight.project ?? "All projects",
+                    }));
+                  setCurrentView(insight.targetView);
+                }}
+              />
+            ) : null}
 
             {view === "brief" ? (
               <>
