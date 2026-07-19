@@ -2698,6 +2698,20 @@ tbody tr:last-child td {
 .signature-decisions > div.is-active svg, .signature-decisions > div.is-active span, .signature-decisions > div.is-active strong, .signature-decisions > div.is-active small { color: rgb(var(--sa-ink)); }
 .workspace-shell--management .workspace-canvas section:not(.workspace-signature) { border-radius: 22px 22px 7px 7px !important; }
 
+/* Dark-mode overrides for workspace signatures with hardcoded light colors. */
+html.dark .workspace-signature--mission { background: radial-gradient(circle at 88% 12%, rgb(96 165 250 / 0.12), transparent 25%), linear-gradient(135deg, rgb(var(--card)) 0 49%, rgb(35 94 67 / 0.15) 100%); }
+html.dark .workspace-signature--people { background: linear-gradient(125deg, rgb(var(--card)) 0 52%, rgb(14 105 128 / 0.12) 100%); box-shadow: 0 22px 60px rgb(0 0 0 / 0.2); }
+html.dark .workspace-signature--development { background: linear-gradient(100deg, rgb(var(--card)) 0 55%, rgb(217 169 39 / 0.1) 100%); }
+html.dark .workspace-signature--platform { background: linear-gradient(118deg, rgb(var(--card)) 0 48%, rgb(139 92 246 / 0.12) 100%); box-shadow: 10px 10px 0 rgb(88 52 191 / 0.12); }
+html.dark .workspace-signature--governance { background: rgb(var(--card) / 0.96); box-shadow: 0 14px 38px rgb(0 0 0 / 0.22); }
+html.dark .workspace-shell--governance { background: linear-gradient(90deg, rgb(190 33 60 / 0.04) 1px, transparent 1px), rgb(var(--app-bg)); background-size: 56px 100%; }
+html.dark .signature-docket li { border-bottom-color: rgb(190 33 60 / 0.18); color: rgb(var(--text-3)); }
+html.dark .signature-docket li.is-active { color: rgb(251 207 216); background: rgb(190 33 60 / 0.16); border-bottom-color: rgb(190 33 60 / 0.3); }
+html.dark .signature-docket-status { border-top-color: rgb(251 113 133 / 0.45); color: rgb(251 207 216); }
+html.dark .workspace-signature--collaboration { background: linear-gradient(105deg, rgb(var(--card)) 0 49%, rgb(129 140 248 / 0.1) 100%); }
+html.dark .signature-channel-tools { border-left-color: rgb(var(--line) / 0.12); color: rgb(165 170 230); }
+html.dark .workspace-signature--management { background: linear-gradient(120deg, rgb(var(--card)) 0 50%, rgb(132 204 22 / 0.1) 100%); }
+
 /* Mode changes are intentionally subtle; section identity remains dominant. */
 .workspace-mode--document .workspace-signature { grid-template-columns: minmax(320px, 1.05fr) minmax(430px, 0.95fr); }
 .workspace-mode--document .workspace-signature h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 600; letter-spacing: -0.035em; }
