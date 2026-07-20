@@ -257,9 +257,9 @@ const configs: Record<ImbaEnterpriseOperatingView, WorkspaceConfig> = {
 const toneClasses: Record<Tone, { border: string; text: string; button: string; tint: string }> = {
   amber: { border: 'border-amber-300/20', text: 'text-amber-800 dark:text-amber-100', button: 'bg-amber-300', tint: 'bg-amber-300/[0.04]' },
   rose: { border: 'border-rose-300/20', text: 'text-rose-700 dark:text-rose-100', button: 'bg-rose-300', tint: 'bg-rose-300/[0.04]' },
-  indigo: { border: 'border-indigo-300/20', text: 'text-indigo-700 dark:text-indigo-100', button: 'bg-indigo-300', tint: 'bg-indigo-300/[0.04]' },
-  violet: { border: 'border-violet-300/20', text: 'text-violet-700 dark:text-violet-100', button: 'bg-violet-300', tint: 'bg-violet-300/[0.04]' },
-  slate: { border: 'border-slate-300/20', text: 'text-slate-700 dark:text-slate-100', button: 'bg-slate-300', tint: 'bg-slate-300/[0.04]' },
+  indigo: { border: 'border-teal-300/20', text: 'text-teal-700 dark:text-teal-100', button: 'bg-teal-300', tint: 'bg-teal-300/[0.04]' },
+  violet: { border: 'border-purple-300/20', text: 'text-purple-700 dark:text-purple-100', button: 'bg-purple-300', tint: 'bg-purple-300/[0.04]' },
+  slate: { border: 'border-stone-300/20', text: 'text-stone-700 dark:text-stone-100', button: 'bg-stone-300', tint: 'bg-stone-300/[0.04]' },
 };
 
 export function ImbaEnterpriseWorkspace({ view, role }: { view: ImbaEnterpriseView; role: ImbaRoleKey }) {
