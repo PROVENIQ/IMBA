@@ -137,7 +137,7 @@ function Card({
 }) {
   return (
     <section
-      className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}
+      className={`rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev ${className}`}
     >
       {children}
     </section>
@@ -191,7 +191,7 @@ function Kpi({
           ? "text-rose-700 dark:text-rose-100"
           : "text-indigo-700 dark:text-indigo-100";
   return (
-    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
       <p className="text-[11px] font-black uppercase tracking-[0.17em] text-[rgb(var(--text-3))]">
         {label}
       </p>

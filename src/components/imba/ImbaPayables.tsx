@@ -172,7 +172,7 @@ function isOverdue(bill: Bill): boolean {
 function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose' }) {
   const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[rgb(var(--info))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : 'text-rose-700 dark:text-rose-200';
   return (
-    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p>
       <p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p>
       <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p>
@@ -305,7 +305,7 @@ export function ImbaPayables({ role, filters }: { role?: ImbaRoleKey; filters?: 
         <Kpi label="Approved on hold" value={moneyFull(metrics.heldTotal)} note={`${metrics.heldCount} awaiting release`} tone="amber" />
       </div>
 
-      <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)]">
+      <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev">
         <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Cash conversion · approval control</p>
           <h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Accounts payable — approve &amp; pay</h2>

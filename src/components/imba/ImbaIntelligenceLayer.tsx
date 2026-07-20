@@ -155,7 +155,13 @@ export function ImbaIntelligenceBar({
 
 export function ImbaInsightStrip({ insights, onSelect, condensed = false }: { insights: ImbaInsight[]; onSelect: (insight: ImbaInsight) => void; condensed?: boolean }) {
   const [expanded, setExpanded] = useState(!condensed);
-  const tone = { positive: 'border-[rgb(var(--sa)/0.15)] bg-[rgb(var(--sa))]/[0.045] text-[rgb(var(--sa-soft))]', warning: 'border-amber-300/15 bg-amber-300/[0.045] text-amber-800 dark:text-amber-100', risk: 'border-rose-300/15 bg-rose-300/[0.045] text-rose-700 dark:text-rose-100' };
+  // A left accent bar carries the tone, so each alert reads as a distinct,
+  // colour-coded card rather than a faint tinted tile on a pale canvas.
+  const tone = {
+    positive: 'border-[rgb(var(--sa)/0.22)] border-l-4 border-l-[rgb(var(--sa))] bg-[rgb(var(--sa))]/[0.07] text-[rgb(var(--sa-soft))] elev',
+    warning: 'border-amber-300/25 border-l-4 border-l-amber-400 bg-amber-300/[0.07] text-amber-800 dark:text-amber-100 elev',
+    risk: 'border-rose-300/25 border-l-4 border-l-rose-400 bg-rose-300/[0.07] text-rose-700 dark:text-rose-100 elev',
+  };
 
   if (!expanded) {
     return (

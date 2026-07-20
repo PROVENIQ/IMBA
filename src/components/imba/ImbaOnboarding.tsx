@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowRight,
@@ -51,26 +51,37 @@ const GUIDE_TABS: Array<{ key: GuideTab; label: string; icon: typeof Sparkles }>
   { key: "system", label: "How it works", icon: Layers3 },
 ];
 
+// An action step hands control back to the user: the scrim opens a hole over the
+// real control, and the tour only advances once they actually operate it. A
+// passive step keeps the old click-Next behaviour for pure explanation.
+type TourAction =
+  | { kind: "navigate"; view: ImbaOsView }
+  | { kind: "theme" }
+  | { kind: "help" };
+
 type TourStep = {
   eyebrow: string;
   title: string;
   body: string;
   target?: string;
-  view?: ImbaOsView;
-  actionLabel?: string;
+  action?: TourAction;
+  actionHint?: string;
 };
 
 function tourForRole(role: ImbaRoleKey): TourStep[] {
   const profile = imbaRoleProfiles[role];
   const guide = roleGuides[role];
-  const firstLink = guide.links[0];
-  const secondLink = guide.links[1];
+  // An action step must require an actual navigation, so drop the role's home
+  // view — the user is already sitting on it and the step would complete the
+  // instant it opened, giving them nothing to do.
+  const candidates = guide.links.filter((link) => link.view !== profile.home);
+  const [firstLink, secondLink] = candidates.length >= 2 ? candidates : guide.links;
 
   return [
     {
       eyebrow: "Welcome to IMBA-OS",
       title: `${profile.label} guided tour`,
-      body: `This short walkthrough is tailored to ${profile.label}. It shows how one shared operating system changes what each role sees and does.`,
+      body: `This short walkthrough is tailored to ${profile.label}. It shows how one shared operating system changes what each role sees and does. You'll drive — the tour will ask you to click things yourself.`,
     },
     {
       eyebrow: "One system · role-scoped",
@@ -91,26 +102,36 @@ function tourForRole(role: ImbaRoleKey): TourStep[] {
       target: '[data-tour="intelligence-context"]',
     },
     {
-      eyebrow: "Try a real action",
+      eyebrow: "Your turn",
       title: firstLink.label,
       body: firstLink.description,
       target: `[data-tour="nav-${firstLink.view}"]`,
-      view: firstLink.view,
-      actionLabel: `Open ${firstLink.label}`,
+      action: { kind: "navigate", view: firstLink.view },
+      actionHint: `Click "${firstLink.label}"`,
     },
     ...(secondLink ? [{
-      eyebrow: "Continue the workflow",
+      eyebrow: "Keep going",
       title: secondLink.label,
       body: secondLink.description,
       target: `[data-tour="nav-${secondLink.view}"]`,
-      view: secondLink.view,
-      actionLabel: `Open ${secondLink.label}`,
+      action: { kind: "navigate", view: secondLink.view } as TourAction,
+      actionHint: `Click "${secondLink.label}"`,
     } satisfies TourStep] : []),
     {
+      eyebrow: "Make it yours",
+      title: "Switch between dark and light",
+      body: "IMBA-OS opens in dark for long working sessions. Light mode suits a projector, a printout, or a board room. Try the toggle — everything follows, except report pages, which always stay on white paper.",
+      target: '[data-tour="theme-toggle"]',
+      action: { kind: "theme" },
+      actionHint: "Click the theme toggle",
+    },
+    {
       eyebrow: "You're ready",
-      title: "Explore with the guide close at hand",
-      body: "Use Help at any time to replay this tour, open a role-specific quick-start guide, or review what is real versus illustrative in this prototype.",
-      target: '[data-tour="workspace"]',
+      title: "Open Help whenever you need it",
+      body: "Help holds a quick-start for your role, where each number comes from and how it is calculated, and what is real versus illustrative in this prototype. Open it now to finish the tour.",
+      target: '[data-tour="help-button"]',
+      action: { kind: "help" },
+      actionHint: "Click Help to finish",
     },
   ];
 }
@@ -121,10 +142,12 @@ export function ImbaOnboarding({
   role,
   currentView,
   onNavigate,
+  theme,
 }: {
   role: ImbaRoleKey;
   currentView: ImbaOsView;
   onNavigate: (view: ImbaOsView) => void;
+  theme: "light" | "dark";
 }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [guideTab, setGuideTab] = useState<GuideTab>("role");
@@ -155,26 +178,37 @@ export function ImbaOnboarding({
     return () => window.clearTimeout(timer);
   }, []);
 
+  // Track the target on every frame rather than only on resize/scroll. The
+  // scrim cuts a hole over this rect for action steps, so a stale measurement
+  // means the hole sits somewhere the control isn't and the click is swallowed.
+  // Layout here shifts for reasons that fire no event (a nav group expanding,
+  // the step card re-flowing), so polling is the only reliable option. State is
+  // only written when the rect actually changes, so this does not re-render.
   useEffect(() => {
     if (!tourOpen || !step.target) {
       setTargetRect(null);
       return;
     }
-    const updateTarget = () => {
+    let frame = 0;
+    let previous = "";
+    const measure = () => {
       const target = document.querySelector<HTMLElement>(step.target ?? "");
-      if (!target) return setTargetRect(null);
-      const rect = target.getBoundingClientRect();
-      const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
-      setTargetRect(visible ? rect : null);
+      let next: DOMRect | null = null;
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+        if (visible) next = rect;
+      }
+      const key = next ? `${Math.round(next.left)},${Math.round(next.top)},${Math.round(next.width)},${Math.round(next.height)}` : "none";
+      if (key !== previous) {
+        previous = key;
+        setTargetRect(next);
+      }
+      frame = window.requestAnimationFrame(measure);
     };
-    updateTarget();
-    window.addEventListener("resize", updateTarget);
-    window.addEventListener("scroll", updateTarget, true);
-    return () => {
-      window.removeEventListener("resize", updateTarget);
-      window.removeEventListener("scroll", updateTarget, true);
-    };
-  }, [step.target, tourOpen, currentView]);
+    frame = window.requestAnimationFrame(measure);
+    return () => window.cancelAnimationFrame(frame);
+  }, [step.target, tourOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -202,8 +236,45 @@ export function ImbaOnboarding({
     setTourOpen(true);
   };
 
+  // The theme the user was on when this step opened, so a theme step can tell
+  // that they flipped it (rather than comparing against a fixed value).
+  const themeAtStepStart = useRef(theme);
+  const viewAtStepStart = useRef(currentView);
+  useEffect(() => {
+    themeAtStepStart.current = theme;
+    viewAtStepStart.current = currentView;
+    // Intentionally keyed on the step only — re-snapshotting on every theme or
+    // view change would make the "did it change?" test always false.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepIndex, tourOpen]);
+
+  // Action steps advance when the user actually operates the real control.
+  const stepAction = step.action;
+  useEffect(() => {
+    if (!tourOpen || !stepAction) return;
+    // Each test requires a change since the step opened, so a step can never
+    // complete itself the moment it appears.
+    const satisfied =
+      stepAction.kind === "navigate" ? currentView === stepAction.view && viewAtStepStart.current !== stepAction.view
+      : stepAction.kind === "theme" ? theme !== themeAtStepStart.current
+      : helpOpen;
+    if (!satisfied) return;
+    // Let the user see the result of their click land before moving on.
+    const timer = window.setTimeout(() => {
+      setStepIndex((current) => {
+        if (current >= steps.length - 1) {
+          rememberCompletion();
+          setTourOpen(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, 600);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourOpen, stepAction, currentView, theme, helpOpen, steps.length]);
+
   const advanceTour = () => {
-    if (step.view && currentView !== step.view) onNavigate(step.view);
     if (stepIndex === steps.length - 1) return closeTour();
     setStepIndex((current) => current + 1);
   };
@@ -231,6 +302,7 @@ export function ImbaOnboarding({
         onClick={() => setHelpOpen(true)}
         aria-label="Open Help and guided tour"
         title="Help and guided tour"
+        data-tour="help-button"
         className="flex h-9 items-center justify-center gap-2 rounded-full border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.03)] px-2.5 text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.07)] hover:text-[rgb(var(--text))]"
       >
         <CircleHelp className="h-4 w-4" />
@@ -400,12 +472,24 @@ export function ImbaOnboarding({
       ) : null}
 
       {mounted && tourOpen ? createPortal(
-        <div className="fixed inset-0 z-[160]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
+        <div className="pointer-events-none fixed inset-0 z-[160]">
+          {/* On an action step the scrim is drawn as four panels around the
+              target, leaving a hole so the user can click the real control.
+              Passive steps keep a single blocking scrim. */}
+          {stepAction && targetRect ? (
+            <>
+              <div className="pointer-events-auto absolute left-0 right-0 top-0 bg-black/60" style={{ height: Math.max(0, targetRect.top - 6) }} />
+              <div className="pointer-events-auto absolute bottom-0 left-0 right-0 bg-black/60" style={{ top: targetRect.bottom + 6 }} />
+              <div className="pointer-events-auto absolute left-0 bg-black/60" style={{ top: targetRect.top - 6, height: targetRect.height + 12, width: Math.max(0, targetRect.left - 6) }} />
+              <div className="pointer-events-auto absolute right-0 bg-black/60" style={{ top: targetRect.top - 6, height: targetRect.height + 12, left: targetRect.right + 6 }} />
+            </>
+          ) : (
+            <div className="pointer-events-auto absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
+          )}
           {targetRect ? (
-            <div className="pointer-events-none fixed rounded-2xl border-2 border-[rgb(var(--sa-soft))] shadow-[0_0_0_6px_rgb(var(--sa)/0.18),0_18px_60px_rgba(0,0,0,0.45)]" style={{ left: targetRect.left - 6, top: targetRect.top - 6, width: targetRect.width + 12, height: targetRect.height + 12 }} />
+            <div className={`pointer-events-none fixed rounded-2xl border-2 border-[rgb(var(--sa-soft))] shadow-[0_0_0_6px_rgb(var(--sa)/0.18),0_18px_60px_rgba(0,0,0,0.45)] ${stepAction ? "animate-pulse" : ""}`} style={{ left: targetRect.left - 6, top: targetRect.top - 6, width: targetRect.width + 12, height: targetRect.height + 12 }} />
           ) : null}
-          <section role="dialog" aria-modal="true" aria-label="IMBA-OS guided tour" className="fixed w-[min(390px,calc(100vw-32px))] rounded-3xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] p-5 text-left shadow-2xl sm:p-6" style={cardPosition}>
+          <section role="dialog" aria-modal="true" aria-label="IMBA-OS guided tour" className="pointer-events-auto fixed w-[min(390px,calc(100vw-32px))] rounded-3xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--panel))] p-5 text-left shadow-2xl sm:p-6" style={cardPosition}>
             <div className="flex items-center justify-between gap-4">
               <span className="rounded-full bg-[rgb(var(--sa)/0.12)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[rgb(var(--sa-soft))]">Step {stepIndex + 1} of {steps.length}</span>
               <button type="button" onClick={closeTour} className="text-[11px] font-bold text-[rgb(var(--text-3))] hover:text-[rgb(var(--text))]">Skip tour</button>
@@ -418,10 +502,21 @@ export function ImbaOnboarding({
             <p className="mt-3 text-sm leading-6 text-[rgb(var(--text-2))]">{step.body}</p>
             <div className="mt-6 flex items-center justify-between gap-3">
               <button type="button" onClick={() => setStepIndex((current) => Math.max(0, current - 1))} disabled={stepIndex === 0} className="rounded-xl px-3 py-2 text-xs font-bold text-[rgb(var(--text-3))] disabled:invisible">Back</button>
-              <button type="button" onClick={advanceTour} className="inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-xs font-black text-[rgb(var(--sa-ink))] transition hover:brightness-110">
-                {stepIndex === steps.length - 1 ? "Finish" : step.actionLabel ?? "Next"}<ArrowRight className="h-3.5 w-3.5" />
-              </button>
+              {stepAction ? (
+                <span className="inline-flex items-center gap-2 rounded-xl border border-dashed border-[rgb(var(--sa)/0.5)] bg-[rgb(var(--sa)/0.1)] px-3 py-2.5 text-xs font-black text-[rgb(var(--sa-soft))]">
+                  <MousePointer2 className="h-3.5 w-3.5" />{step.actionHint ?? "Your turn"}
+                </span>
+              ) : (
+                <button type="button" onClick={advanceTour} className="inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--sa))] px-4 py-2.5 text-xs font-black text-[rgb(var(--sa-ink))] transition hover:brightness-110">
+                  {stepIndex === steps.length - 1 ? "Finish" : "Next"}<ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
+            {stepAction ? (
+              <div className="mt-2 text-right">
+                <button type="button" onClick={advanceTour} className="text-[11px] font-bold text-[rgb(var(--text-4))] transition hover:text-[rgb(var(--text-2))]">Skip this step</button>
+              </div>
+            ) : null}
           </section>
         </div>,
         document.body,

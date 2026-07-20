@@ -1093,7 +1093,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] shadow-[0_22px_80px_rgba(0,0,0,0.22)] ${className}`}
+      className={`rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev dark:shadow-[0_22px_80px_rgba(0,0,0,0.22)] ${className}`}
     >
       {children}
     </section>
@@ -1149,7 +1149,7 @@ function MetricCard({
         : "text-[rgb(var(--info))] bg-[#68b9aa]/10 border-[#68b9aa]/20";
 
   return (
-    <div className="group rounded-[20px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4 transition hover:-translate-y-0.5 hover:border-[rgb(var(--line)/0.16)]">
+    <div className="group rounded-[20px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4 transition hover:-translate-y-0.5 hover:border-[rgb(var(--line)/0.16)]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
@@ -1357,7 +1357,7 @@ function DecisionCard({
           : "";
 
   return (
-    <article className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+    <article className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2">
@@ -2632,11 +2632,12 @@ export function ImbaCeoCockpit() {
               onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              data-tour="theme-toggle"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.03)] text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.07)] hover:text-[rgb(var(--text))]"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <ImbaOnboarding role={role} currentView={view} onNavigate={setCurrentView} />
+            <ImbaOnboarding role={role} currentView={view} onNavigate={setCurrentView} theme={theme} />
             <div className="hidden items-center gap-1.5 md:flex" data-tour="role-control">
               <div className="relative">
                 <select

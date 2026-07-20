@@ -26,7 +26,7 @@ function money(value: number): string {
 }
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}>{children}</section>;
+  return <section className={`rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev ${className}`}>{children}</section>;
 }
 
 function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; detail?: string }) {
@@ -35,7 +35,7 @@ function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; d
 
 function Kpi({ label, value, note, tone = 'blue' }: { label: string; value: string; note: string; tone?: 'blue' | 'lime' | 'amber' | 'rose' }) {
   const toneClass = tone === 'blue' ? 'text-blue-700 dark:text-blue-100' : tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : 'text-rose-700 dark:text-rose-200';
-  return <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p><p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>;
+  return <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p><p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>;
 }
 
 export function ImbaOperationsWorkspace({ view, onNavigate }: { view: ImbaOperationsView; onNavigate: (view: ImbaOsView) => void }) {

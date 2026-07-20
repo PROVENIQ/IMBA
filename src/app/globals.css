@@ -23,17 +23,21 @@
 :root {
   /* Light palette echoes the dark "hunter green" base: white-dominant cards on a
      pale-green canvas, with pale-green wells and a faintly green hairline. */
-  --app-bg: 242 246 243;   /* page canvas — pale green */
-  --panel: 236 242 238;    /* header / sidebar / footer chrome — pale green */
+  --app-bg: 245 247 243;   /* page canvas — pale green, warmed slightly */
+  --panel: 240 244 240;    /* header / sidebar / footer chrome — pale green */
   --card: 255 255 255;     /* raised cards — white, the dominant surface */
   --card-2: 233 240 235;   /* inner tiles, inputs, KPI wells — pale green */
   --line: 20 40 33;        /* green-tinted ink for borders/fills at low opacity */
   --text: 23 37 45;        /* primary text (headings, emphasis) */
   --text-2: 46 62 69;      /* secondary body text (~9:1 on white) */
-  --text-3: 74 90 95;      /* muted labels / eyebrows (~6:1) */
+  --text-3: 64 82 88;      /* muted labels / eyebrows (deepened for contrast) */
   --text-4: 92 106 108;    /* faint captions (~5:1, legible at 8-10px) */
   --info: 13 100 116;      /* teal accent text (illustrative/connector) */
   --pos: 60 92 16;         /* lime/positive accent text */
+  /* Card elevation. Light mode separates surfaces with a real shadow; dark mode
+     separates them with surface contrast instead, so it opts out entirely.
+     Without this the light cockpit reads as flat pale tiles — the washout. */
+  --elev: 0 1px 2px rgb(23 37 45 / 0.05), 0 6px 16px -4px rgb(23 37 45 / 0.09);
 }
 
 html.dark {
@@ -49,6 +53,7 @@ html.dark {
   --info: 159 214 204;     /* = #9fd6cc, the original dark-theme teal */
   --pos: 217 245 156;      /* = #d9f59c, the original dark-theme lime */
   --sa-soft: 223 247 168;  /* light-lime fallback for chrome outside the accented area */
+  --elev: none;            /* dark separates surfaces by contrast, not shadow */
 }
 
 :root {
@@ -734,6 +739,13 @@ select {
 .table-scroll,
 .brief-table-wrap {
   overflow-x: auto;
+}
+
+/* Card elevation. A plain class rather than Tailwind's shadow-[var(--elev)],
+ * which is ambiguous: Tailwind reads a bare var() there as a shadow *colour*
+ * and drops it into --tw-shadow-color, leaving box-shadow: none. */
+.elev {
+  box-shadow: var(--elev);
 }
 
 table {

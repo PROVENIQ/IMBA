@@ -265,7 +265,7 @@ export function ImbaWhatIfLab() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-12">
-        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] xl:col-span-5">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev xl:col-span-5">
           <div className="border-b border-[rgb(var(--line)/0.07)] p-5">
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">01 · Choose the idea</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -300,12 +300,12 @@ export function ImbaWhatIfLab() {
             <div className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><span className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Break even</span><Clock3 className="h-4 w-4 text-[rgb(var(--sa-soft))]" /></div><p className="mt-4 font-mono text-xl font-semibold text-[rgb(var(--text))]">{result.breakEvenMonth === null ? '>24 mo' : `Month ${result.breakEvenMonth}`}</p></div>
           </div>
 
-          <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)]">
+          <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev">
             <div className="flex items-start justify-between border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">03 · See the consequence</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Deployable cash over 24 months</h3></div><span className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${result.floorGap > 0 ? 'border-rose-300/20 bg-rose-300/10 text-rose-700 dark:text-rose-200' : 'border-[rgb(var(--sa)/0.20)] bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]'}`}>{result.floorGap > 0 ? 'Floor breached' : 'Inside guardrail'}</span></div>
             <div className="px-3 pb-5 pt-2"><ScenarioLineChart result={result} floor={inputs.cashFloor} /></div>
           </section>
 
-          <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)]">
+          <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev">
             <div className="border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">04 · Define what must be true</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Finance guardrails for Kent</h3></div>
             <div className="grid gap-3 p-5 md:grid-cols-3">
               <div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><CircleDollarSign className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><p className="mt-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Break-even revenue</p><p className="mt-1 font-mono text-lg font-semibold text-[rgb(var(--text))]">{money(result.revenueToBreakEven)} / yr</p><p className="mt-2 text-[11px] leading-4 text-[rgb(var(--text-3))]">At the current timing and confidence assumptions.</p></div>
@@ -317,7 +317,7 @@ export function ImbaWhatIfLab() {
       </div>
 
       {saved.length > 0 ? (
-        <section className="rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)]">
+        <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev">
           <div className="flex items-center gap-2 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><Sparkles className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><div><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">Saved comparison</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Choices side by side</h3></div></div>
           <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]"><th className="px-5 py-3">Scenario</th><th className="px-3 py-3 text-right">12 month</th><th className="px-3 py-3 text-right">24 month</th><th className="px-3 py-3 text-right">Lowest cash</th><th className="px-3 py-3 text-right">Break even</th><th className="px-5 py-3 text-right">Floor protection</th></tr></thead><tbody>{saved.map((item) => <tr key={item.name} className="border-b border-[rgb(var(--line)/0.05)] last:border-0"><td className="px-5 py-4 text-xs font-semibold text-[rgb(var(--text))]">{item.name}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net12 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net12)}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net24 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net24)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{money(item.minCash)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.breakEvenMonth === null ? '>24 mo' : `Mo ${item.breakEvenMonth}`}</td><td className="px-5 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.floorGap > 0 ? money(item.floorGap) : 'Protected'}</td></tr>)}</tbody></table></div>
         </section>

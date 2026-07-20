@@ -77,7 +77,7 @@ function money(value: number): string {
 }
 
 function ShellCard({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
-  return <section id={id} className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}>{children}</section>;
+  return <section id={id} className={`rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev ${className}`}>{children}</section>;
 }
 
 function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; detail?: string }) {
@@ -95,7 +95,7 @@ function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; d
 function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose' }) {
   const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[rgb(var(--info))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : 'text-rose-700 dark:text-rose-200';
   return (
-    <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+    <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p>
       <p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p>
       <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p>
@@ -683,17 +683,17 @@ function ProgramFullCostPanel() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
           <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Trail direct spread</p><Prov kind="derived" /></div>
           <p className="mt-3 font-mono text-2xl font-semibold text-[rgb(var(--sa-soft))]">{accounting(trail.directSpread, { symbol: true })}</p>
           <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Revenue less direct program expense only</p>
         </div>
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
           <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Shared support pool</p><Prov kind="filed" /></div>
           <p className="mt-3 font-mono text-2xl font-semibold text-[rgb(var(--text))]">{accounting(supportPool, { symbol: true })}</p>
           <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">M&amp;G plus fundraising, Form 990 Part IX</p>
         </div>
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4">
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
           <div className="flex items-start justify-between gap-2"><p className="text-[11px] font-black uppercase text-[rgb(var(--text-3))]">Trail fully-loaded result</p><Prov kind={resultProvenance} /></div>
           <p className={`mt-3 font-mono text-2xl font-semibold ${trail.fullyLoadedResult >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{accounting(trail.fullyLoadedResult, { symbol: true })}</p>
           <p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">After {accounting(trail.allocatedSupport, { symbol: true })} of allocated support</p>
@@ -882,10 +882,10 @@ function CostOfLabor() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Total compensation</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">{money(totalComp)}</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Part IX lines 5 + 7–10, 2024</p></div>
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Comp · % of expense</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--info))]">{(compPct * 100).toFixed(1)}%</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Half of every dollar spent is labor</p></div>
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Known loaded multiplier</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--sa-soft))]">{loadedMult.toFixed(3)}×</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Wages → taxes + benefits (public only)</p></div>
-        <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Leased headcount</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">56</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">All via the PEO (Sch O)</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Total compensation</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">{money(totalComp)}</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Part IX lines 5 + 7–10, 2024</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Comp · % of expense</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--info))]">{(compPct * 100).toFixed(1)}%</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Half of every dollar spent is labor</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Known loaded multiplier</p><Prov kind="derived" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--sa-soft))]">{loadedMult.toFixed(3)}×</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">Wages → taxes + benefits (public only)</p></div>
+        <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><div className="flex items-center justify-between"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">Leased headcount</p><Prov kind="filed" /></div><p className="mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] text-[rgb(var(--text))]">56</p><p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">All via the PEO (Sch O)</p></div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-12">

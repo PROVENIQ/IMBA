@@ -39,7 +39,7 @@ export type ImbaIntegrationView =
   | 'integration-audit';
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-[22px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/90%)] ${className}`}>{children}</section>;
+  return <section className={`rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev ${className}`}>{children}</section>;
 }
 
 function Heading({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
@@ -48,7 +48,7 @@ function Heading({ eyebrow, title, action }: { eyebrow: string; title: string; a
 
 function Kpi({ label, value, note, tone = 'violet' }: { label: string; value: string; note: string; tone?: 'violet' | 'lime' | 'amber' | 'rose' }) {
   const color = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : tone === 'rose' ? 'text-rose-700 dark:text-rose-200' : 'text-violet-700 dark:text-violet-200';
-  return <div className="rounded-[18px] border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p><p className={`mt-3 font-mono text-2xl font-semibold ${color}`}>{value}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>;
+  return <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4"><p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p><p className={`mt-3 font-mono text-2xl font-semibold ${color}`}>{value}</p><p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>;
 }
 
 function SystemBadge({ system }: { system: ConnectorKey }) {
