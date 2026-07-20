@@ -28,6 +28,13 @@ import {
   imbaReports,
   imbaVendors,
 } from '@/lib/imba-detail-data';
+import {
+  bankToBook,
+  bankTotals,
+  imbaBankAccounts,
+  imbaBankMovements,
+  imbaBankTransfers,
+} from '@/lib/imba-banking-data';
 import { accounting, financialHistory, publicFinancialFacts } from '@/lib/imba-data';
 import {
   qboFundAccountingCaveats,
@@ -46,6 +53,7 @@ import { ImbaInfoTooltip } from '@/components/imba/ImbaInfoTooltip';
 
 export type ImbaFinanceView =
   | 'finance-snapshot'
+  | 'finance-banking'
   | 'finance-calendar'
   | 'finance-coa'
   | 'finance-budget'
@@ -97,6 +105,7 @@ function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: stri
 
 export const viewMeta: Record<ImbaFinanceView, { eyebrow: string; title: string; description: string }> = {
   'finance-snapshot': { eyebrow: 'Money · command center', title: 'Organization snapshot', description: 'The accounting, liquidity, budget, grants, and working-capital picture in one finance home.' },
+  'finance-banking': { eyebrow: 'Money · cash at the source', title: 'Banking', description: 'Connected bank and savings accounts, what is restricted, how bank cash reconciles to the general ledger, and the movement behind the runway.' },
   'finance-calendar': { eyebrow: 'Money · control calendar', title: 'Finance calendar', description: 'Close, payroll, billing, grant, chapter settlement, audit, filing, and Board deadlines in one owned schedule.' },
   'finance-coa': { eyebrow: 'Money · data standard', title: 'Canonical chart of accounts', description: 'One reporting vocabulary across IMBA, Trail Solutions projects, restricted funds, and chapter submissions.' },
   'finance-budget': { eyebrow: 'Money · planning', title: 'Budget + forecast', description: 'Plan, actual, variance, and expected year-end result by IMBA revenue engine and cost center.' },
@@ -116,6 +125,7 @@ export function ImbaFinanceWorkspace({ view, onNavigate, role, filters }: { view
   return (
     <div className="space-y-5">
       {view === 'finance-snapshot' ? <Snapshot onNavigate={onNavigate} /> : null}
+      {view === 'finance-banking' ? <Banking onNavigate={onNavigate} /> : null}
       {view === 'finance-calendar' ? <FinanceCalendar /> : null}
       {view === 'finance-coa' ? <ChartOfAccounts /> : null}
       {view === 'finance-budget' ? <Budget /> : null}
@@ -147,6 +157,216 @@ function QboRecord({ type }: { type: 'Vendor' | 'Customer' }) {
 
 function PartyNote({ children }: { children: React.ReactNode }) {
   return <div className="rounded-2xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] px-4 py-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">{children}</div>;
+}
+
+// Banking is the source layer under every cash number in the cockpit. The four
+// accounts sum to the same gross cash the liquidity waterfall starts from, and
+// the restricted account equals the donor-restriction line exactly — so this
+// view explains that figure rather than competing with it.
+function Banking({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
+  const kindLabel: Record<string, string> = {
+    operating: 'Operating',
+    clearing: 'Clearing',
+    reserve: 'Reserve',
+    restricted: 'Restricted',
+  };
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] px-4 py-3">
+        <span className="rounded-full bg-[rgb(var(--sa)/0.12)] px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-soft))]">Plaid</span>
+        <span className="text-[11px] font-semibold text-[rgb(var(--text-2))]">read-only bank feed · demo</span>
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+        <span className="text-[11px] text-[rgb(var(--text-3))]">Authorize once → balances refresh daily → reconcile to the GL · illustrative data</span>
+        <ImbaInfoTooltip
+          label="Banking · demo scope"
+          text="IMBA-OS is not connected to a live bank. In production, a read-only Plaid link authorizes once and refreshes balances daily — IMBA-OS can never move money, and only the last four digits are ever stored or shown. Balances below are illustrative but sum to the same gross cash the liquidity view starts from."
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi label="Total bank cash" value={money(bankTotals.balance)} note="Across 4 connected accounts" />
+        <Kpi label="Donor-restricted" value={money(bankTotals.restricted)} note="Held separately until allowable spend" tone="amber" />
+        <Kpi label="Unrestricted bank cash" value={money(bankTotals.unrestricted)} note="Before obligations and reserves" tone="teal" />
+        <Kpi label="Bank vs GL variance" value={money(bankToBook.variance)} note="Fully explained by timing" tone="teal" />
+      </div>
+
+      <ShellCard>
+        <Heading eyebrow="Connected accounts" title="Bank + savings accounts" detail="Plaid read-only · last four only" />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-left">
+            <thead>
+              <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                <th className="px-5 py-3">Account</th>
+                <th className="px-3 py-3">Type</th>
+                <th className="px-3 py-3 text-right">Balance</th>
+                <th className="px-3 py-3 text-right">Available</th>
+                <th className="px-3 py-3">Last sync</th>
+                <th className="px-5 py-3">GL account</th>
+              </tr>
+            </thead>
+            <tbody>
+              {imbaBankAccounts.map((account) => (
+                <tr key={account.id} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]">
+                  <td className="px-5 py-3.5">
+                    <span className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--text))]">
+                      {account.name}
+                      {account.restricted ? <span className="rounded-full bg-amber-300/15 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-200">Restricted</span> : null}
+                    </span>
+                    <span className="mt-1 block text-[11px] text-[rgb(var(--text-3))]">{account.institution} ····{account.mask} · {account.purpose}</span>
+                  </td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{kindLabel[account.kind]}</td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(account.balance)}</td>
+                  <td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text-2))]">{money(account.available)}</td>
+                  <td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-3))]">{account.lastSync}</td>
+                  <td className="px-5 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{account.glAccount}</td>
+                </tr>
+              ))}
+              <tr className="bg-[rgb(var(--line)/0.03)]">
+                <td className="px-5 py-3.5 text-xs font-black uppercase tracking-wider text-[rgb(var(--text))]">Total</td>
+                <td className="px-3 py-3.5" />
+                <td className="px-3 py-3.5 text-right font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(bankTotals.balance)}</td>
+                <td className="px-3 py-3.5" />
+                <td className="px-3 py-3.5" />
+                <td className="px-5 py-3.5" />
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ShellCard>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <ShellCard>
+          <Heading eyebrow="Bank to book" title="Reconciliation to the general ledger" detail={`As of ${imbaBankAccounts[0].lastSync}`} />
+          <div className="space-y-3 p-5">
+            <div className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] px-4 py-3">
+              <span className="text-[11px] font-semibold text-[rgb(var(--text-2))]">Bank balance (Plaid feed)</span>
+              <span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(bankToBook.bankBalance)}</span>
+            </div>
+            {bankToBook.items.map((item) => (
+              <div key={item.label} className="flex items-center justify-between px-4">
+                <span className="text-[11px] text-[rgb(var(--text-3))]">{item.label} <span className="text-[rgb(var(--text-4))]">· {item.count} items · {item.note}</span></span>
+                <span className={`font-mono text-xs ${item.amount < 0 ? 'text-rose-700 dark:text-rose-200' : 'text-[rgb(var(--text-2))]'}`}>{item.amount < 0 ? '−' : '+'}{money(Math.abs(item.amount))}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between rounded-xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] px-4 py-3">
+              <span className="text-[11px] font-semibold text-[rgb(var(--text-2))]">QuickBooks GL cash</span>
+              <span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(bankToBook.glBalance)}</span>
+            </div>
+            <p className="px-4 text-[11px] leading-5 text-[rgb(var(--text-3))]">
+              The {money(bankToBook.variance)} variance is timing, not error — every item is identified and dated. An unexplained variance is the finding worth escalating; this one closes when the deposits post on Jul 21.
+            </p>
+          </div>
+        </ShellCard>
+
+        <ShellCard>
+          <Heading eyebrow="Reconciliation status" title="Per-account control" detail="Monthly close discipline" />
+          <div className="space-y-2 p-5">
+            {imbaBankAccounts.map((account) => (
+              <div key={account.id} className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] px-4 py-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-[rgb(var(--text))]">{account.name}</p>
+                  <p className="mt-0.5 text-[11px] text-[rgb(var(--text-3))]">Reconciled through {account.lastReconciled}</p>
+                </div>
+                <div className="text-right">
+                  {account.unclearedCount === 0 ? (
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[rgb(var(--sa-soft))]"><Check className="h-3.5 w-3.5" />Clean</span>
+                  ) : (
+                    <>
+                      <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-200">{account.unclearedCount} uncleared</p>
+                      <p className="mt-0.5 font-mono text-[11px] text-[rgb(var(--text-3))]">net +{money(account.unclearedNet)}</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+            <p className="pt-1 text-[11px] leading-5 text-[rgb(var(--text-3))]">
+              Reconciliation remains a QuickBooks control. IMBA-OS surfaces status and exceptions so a stale account is visible before the Board asks — it does not perform the reconciliation.
+            </p>
+          </div>
+        </ShellCard>
+      </div>
+
+      <ShellCard>
+        <Heading eyebrow="Restricted vs deployable" title="From bank cash to what Kent can actually spend" detail="Ties to the liquidity waterfall" />
+        <div className="space-y-3 p-5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[rgb(var(--text-2))]">Total bank cash</span>
+            <span className="font-mono font-semibold text-[rgb(var(--text))]">{money(bankTotals.balance)}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[rgb(var(--text-2))]">Less donor restrictions <span className="text-[rgb(var(--text-4))]">· the ····{imbaBankAccounts[3].mask} account</span></span>
+            <span className="font-mono font-semibold text-rose-700 dark:text-rose-200">−{money(bankTotals.restricted)}</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-[rgb(var(--line)/0.07)] pt-3 text-xs">
+            <span className="font-semibold text-[rgb(var(--text))]">Unrestricted bank cash</span>
+            <span className="font-mono font-semibold text-[rgb(var(--text))]">{money(bankTotals.unrestricted)}</span>
+          </div>
+          <p className="text-[11px] leading-5 text-[rgb(var(--text-3))]">
+            Unrestricted is not the same as deployable. Amounts due to chapters, deferred project revenue, and the completion reserve reduce this further before it becomes spendable cash.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('liquidity')}
+            className="flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.09)] px-3 py-2.5 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text))] hover:bg-[rgb(var(--line)/0.03)]"
+          >
+            Open the full liquidity waterfall <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </ShellCard>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <ShellCard>
+          <Heading eyebrow="Cash movement" title="Recent activity" detail="What moved the runway" />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[460px] text-left">
+              <thead>
+                <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-3 py-3">Description</th>
+                  <th className="px-5 py-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {imbaBankMovements.map((movement) => (
+                  <tr key={`${movement.date}-${movement.description}`} className="border-b border-[rgb(var(--line)/0.055)] last:border-0">
+                    <td className="px-5 py-3 text-[11px] text-[rgb(var(--text-3))]">{movement.date}</td>
+                    <td className="px-3 py-3">
+                      <p className="text-[11px] font-semibold text-[rgb(var(--text))]">{movement.description}</p>
+                      <p className="mt-0.5 text-[11px] text-[rgb(var(--text-4))]">{movement.account} · {movement.category}</p>
+                    </td>
+                    <td className={`px-5 py-3 text-right font-mono text-xs font-semibold ${movement.amount < 0 ? 'text-rose-700 dark:text-rose-200' : 'text-[rgb(var(--sa-soft))]'}`}>
+                      {movement.amount < 0 ? '−' : '+'}{money(Math.abs(movement.amount))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ShellCard>
+
+        <ShellCard>
+          <Heading eyebrow="Internal transfers" title="Between IMBA accounts" detail="Approved and logged" />
+          <div className="space-y-2 p-5">
+            {imbaBankTransfers.map((transfer) => (
+              <div key={`${transfer.date}-${transfer.to}`} className="rounded-xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[rgb(var(--text))]">
+                    {transfer.from} <ArrowRight className="h-3 w-3 text-[rgb(var(--text-4))]" /> {transfer.to}
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{money(transfer.amount)}</span>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[rgb(var(--text-3))]">{transfer.date} · {transfer.reason}</p>
+                <p className="mt-0.5 text-[11px] text-[rgb(var(--text-4))]">Approved by {transfer.approvedBy}</p>
+              </div>
+            ))}
+            <div className="rounded-xl border border-[rgb(var(--info)/0.2)] bg-[rgb(var(--info)/0.05)] p-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">
+              Transfers are recorded here, not executed here. IMBA-OS holds a read-only bank connection — moving money stays in the bank&apos;s own authorization flow with its existing dual-approval controls.
+            </div>
+          </div>
+        </ShellCard>
+      </div>
+    </>
+  );
 }
 
 function Vendors() {

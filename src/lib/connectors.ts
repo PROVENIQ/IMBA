@@ -27,6 +27,14 @@ export const connectors: Connector[] = [
     flows: 'Push approved bills → execute payment · receive payment status webhooks',
   },
   {
+    key: 'plaid',
+    name: 'Plaid (bank feed)',
+    category: 'Banking & cash',
+    systemOfRecordFor: 'Bank and savings account balances',
+    status: 'planned',
+    flows: 'Authorize once (read-only) · refresh balances and cleared transactions daily · reconcile bank cash to the GL. IMBA-OS cannot initiate transfers or payments.',
+  },
+  {
     key: 'gl',
     name: 'Accounting / GL',
     category: 'General ledger',

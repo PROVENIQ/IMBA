@@ -741,7 +741,12 @@ table {
   border-collapse: collapse;
 }
 
-th {
+/* Legacy printed-report table styling. Scoped to .report-paper: these rules
+ * predate the Tailwind workspaces and carry hardcoded light-mode colors, and
+ * `td:first-child span` (specificity 0,1,2) silently outranks any Tailwind
+ * text-color class, so unscoped they repaint every workspace table's first
+ * column and force inline badges to display:block. */
+.report-paper th {
   padding: 10px 12px;
   color: var(--ink-soft);
   border-bottom: 1px solid var(--rule-strong);
@@ -753,25 +758,25 @@ th {
   white-space: nowrap;
 }
 
-td {
+.report-paper td {
   padding: 16px 12px;
   border-bottom: 1px solid #e9e5dc;
   font-size: 0.72rem;
   white-space: nowrap;
 }
 
-td:first-child strong,
-td:first-child span {
+.report-paper td:first-child strong,
+.report-paper td:first-child span {
   display: block;
 }
 
-td:first-child span {
+.report-paper td:first-child span {
   margin-top: 4px;
   color: var(--ink-soft);
   font-size: 0.63rem;
 }
 
-tbody tr:last-child td {
+.report-paper tbody tr:last-child td {
   border-bottom: 0;
 }
 

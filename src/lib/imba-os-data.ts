@@ -28,6 +28,7 @@ export type ImbaOsView =
   | "chapter-standards"
   | "data-exchange"
   | "finance-snapshot"
+  | "finance-banking"
   | "finance-calendar"
   | "finance-coa"
   | "finance-budget"

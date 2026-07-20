@@ -49,7 +49,7 @@ export function workspaceModeForView(viewId: string): WorkspaceMode {
   if (/(report|document|vault|board|press|template|runbook|knowledge)/.test(viewId)) return 'document';
   if (/(directory|network|system|connector|partnership|grantor|vendor|customer)/.test(viewId)) return 'network';
   if (/(crm|pipeline|campaign|hiring|onboarding|project-board|decision)/.test(viewId)) return 'pipeline';
-  if (/(inbox|sync|payable|transaction|expense|compliance|activity|audit)/.test(viewId)) return 'queue';
+  if (/(inbox|sync|payable|transaction|expense|compliance|activity|audit|bank)/.test(viewId)) return 'queue';
   if (/(whatif|budget|coa|mapping|role-studio|research|assessment)/.test(viewId)) return 'studio';
   if (/(calendar|roadmap|training|meeting)/.test(viewId)) return 'timeline';
   return 'control';

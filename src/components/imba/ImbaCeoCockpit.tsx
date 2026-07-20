@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   BarChart3,
   BookOpen,
+  Banknote,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -297,6 +298,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Organization snapshot",
         description: "QuickBooks-style finance home",
         icon: Gauge,
+      },
+      {
+        id: "finance-banking",
+        label: "Banking",
+        description: "Connected accounts + cash",
+        icon: Banknote,
       },
       {
         id: "finance-calendar",
@@ -795,7 +802,7 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
       'QuickBooks Online — accounting / general ledger',
       'ADP (via PEO) — payroll and labor allocation',
       'Bill.com — vendor bill payment',
-      'Bank feeds — cash positions',
+      'Plaid — read-only bank and savings balances',
       'Public figures re-derived from IMBA Form 990 (EIN 47-1254119)',
     ],
     note: 'Structure is production-minded; current-period values are illustrative until the GL and connectors are live. Money never moves inside IMBA-OS — payment would execute in Bill.com once that connector is live.',
@@ -950,6 +957,7 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
 }
 const financeViews: ImbaFinanceView[] = [
   "finance-snapshot",
+  "finance-banking",
   "finance-calendar",
   "finance-coa",
   "finance-budget",

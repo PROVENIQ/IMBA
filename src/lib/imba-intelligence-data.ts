@@ -93,6 +93,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Mission: ["operations", "trail-solutions", "construction-reports", "mission-reports", "impact-research"],
       Money: [
         "finance-snapshot",
+        "finance-banking",
         "finance-grants",
         "finance-budget",
         "finance-cost-of-labor",
@@ -285,6 +286,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     sectionViews: {
       Money: [
         "finance-snapshot",
+        "finance-banking",
         "finance-budget",
         "finance-reports",
         "liquidity",
