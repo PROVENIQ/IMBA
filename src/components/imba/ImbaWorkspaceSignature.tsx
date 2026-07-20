@@ -103,20 +103,41 @@ function PeopleSignature({ active }: { active: number }) {
 }
 
 function DevelopmentSignature({ active }: { active: number }) {
-  const stages = [
-    ['Discover', '47'],
-    ['Qualify', '26'],
-    ['Cultivate', '18'],
-    ['Commit', '9'],
-    ['Steward', '31'],
+  // Discover→Commit is a genuine narrowing funnel, so bar width is proportional
+  // to the count. Stewardship is the standing portfolio that follows a
+  // commitment, not a fifth stage — drawing it inside the funnel forced 31 to
+  // render narrower than 9, which is why the shape read as nonsense. It is
+  // reported separately, below the rule.
+  const stages: Array<[string, number]> = [
+    ['Discover', 47],
+    ['Qualify', 26],
+    ['Cultivate', 18],
+    ['Commit', 9],
   ];
+  const peak = stages[0][1];
+  const current = active % stages.length;
   return (
-    <div className="signature-funnel" role="img" aria-label="Development relationship pipeline">
-      {stages.map(([stage, count], index) => (
-        <div key={stage} className={`${index === active % stages.length ? 'is-active' : ''} funnel-stage-${index + 1}`}>
-          <span>{stage}</span><strong>{count}</strong><small>{index === active % stages.length ? 'Current lens' : 'relationships'}</small>
-        </div>
-      ))}
+    <div
+      className="signature-funnel"
+      role="img"
+      aria-label="Relationship pipeline: Discover 47, Qualify 26, Cultivate 18, Commit 9. 31 relationships in active stewardship."
+    >
+      <div className="signature-funnel-rows">
+        {stages.map(([stage, count], index) => (
+          <div key={stage} className={index === current ? 'is-active' : ''}>
+            <span>{stage}{index === current ? <small>Current lens</small> : null}</span>
+            <span className="signature-funnel-track">
+              <span className="signature-funnel-bar" style={{ width: `${Math.round((count / peak) * 100)}%` }} />
+            </span>
+            <strong>{count}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="signature-funnel-foot">
+        <UsersRound />
+        <span>In stewardship</span>
+        <strong>31</strong>
+      </div>
     </div>
   );
 }
@@ -210,7 +231,7 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
   const active = [...viewId].reduce((total, character) => total + character.charCodeAt(0), 0);
 
   return (
-    <section className={`workspace-signature workspace-signature--${section.toLowerCase()} workspace-signature-mode--${mode}`}>
+    <section className={`workspace-signature workspace-signature--${section.toLowerCase()} workspace-signature-mode--${mode}${onClose ? ' workspace-signature--closable' : ''}`}>
       {onClose ? (
         <button type="button" onClick={onClose} aria-label={`Dismiss ${section} workspace introduction`} className="workspace-signature-close">
           <X />

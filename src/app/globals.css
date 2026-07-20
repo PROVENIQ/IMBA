@@ -2481,6 +2481,13 @@ table {
   padding: 26px;
 }
 
+/* The dismiss button floats over this pane's top-right corner, so reserve the
+ * space rather than letting it occlude a value (it sat on top of the funnel's
+ * first count). */
+.workspace-signature--closable .workspace-signature-visual {
+  padding-right: 56px;
+}
+
 /* Mission: a landscape-like journey rather than a dashboard row. */
 .workspace-shell--mission {
   background:
@@ -2590,18 +2597,23 @@ table {
 /* Development: relationship movement is expressed as a narrowing funnel. */
 .workspace-shell--development { background: linear-gradient(155deg, rgb(251 191 36 / 0.07), transparent 32%), rgb(var(--app-bg)); }
 .workspace-signature--development { border-radius: 8px 38px 8px 38px; background: linear-gradient(100deg, rgb(var(--card)) 0 55%, rgb(255 246 218) 100%); }
-.signature-funnel { display: flex; height: 100%; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
-.signature-funnel > div { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 7px 14px; color: rgb(var(--text-3)); border: 1px solid rgb(140 92 8 / 0.15); background: rgb(var(--card) / 0.76); clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%); }
-.signature-funnel .funnel-stage-1 { width: 100%; }
-.signature-funnel .funnel-stage-2 { width: 92%; }
-.signature-funnel .funnel-stage-3 { width: 84%; }
-.signature-funnel .funnel-stage-4 { width: 76%; }
-.signature-funnel .funnel-stage-5 { width: 68%; }
-.signature-funnel > div span { font-size: 0.61rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
-.signature-funnel > div strong { color: rgb(var(--text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.73rem; }
-.signature-funnel > div small { grid-column: 1 / span 2; margin-top: 2px; color: rgb(var(--text-4)); font-size: 0.51rem; }
-.signature-funnel > div.is-active { color: rgb(var(--sa-ink)); background: rgb(var(--sa) / 0.7); transform: scale(1.025); }
-.signature-funnel > div.is-active strong, .signature-funnel > div.is-active small { color: rgb(var(--sa-ink)); }
+/* Bar width encodes the count against the top of the funnel, so the shape and
+ * the numbers agree. (It previously used a fixed 100/92/84/76/68% staircase
+ * independent of the data.) */
+.signature-funnel { display: flex; height: 100%; flex-direction: column; justify-content: center; gap: 11px; }
+.signature-funnel-rows { display: grid; gap: 4px; }
+.signature-funnel-rows > div { display: grid; grid-template-columns: 74px minmax(0, 1fr) 26px; align-items: center; gap: 11px; padding: 5px 9px; border-radius: 7px; color: rgb(var(--text-3)); }
+.signature-funnel-rows > div > span:first-child { display: flex; flex-direction: column; gap: 1px; font-size: 0.57rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.signature-funnel-rows > div > span:first-child small { color: rgb(var(--sa-soft)); font-size: 0.46rem; font-weight: 700; letter-spacing: 0.03em; text-transform: none; }
+.signature-funnel-track { display: block; height: 8px; overflow: hidden; border-radius: 4px; background: rgb(var(--line) / 0.09); }
+.signature-funnel-bar { display: block; height: 100%; border-radius: 4px; background: rgb(var(--sa) / 0.5); }
+.signature-funnel-rows > div > strong { color: rgb(var(--text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; text-align: right; }
+.signature-funnel-rows > div.is-active { color: rgb(var(--text)); background: rgb(var(--sa) / 0.12); }
+.signature-funnel-rows > div.is-active .signature-funnel-bar { background: rgb(var(--sa)); }
+.signature-funnel-foot { display: grid; grid-template-columns: 15px 1fr auto; align-items: center; gap: 9px; padding: 10px 9px 0; border-top: 1px solid rgb(var(--line) / 0.1); }
+.signature-funnel-foot svg { width: 14px; color: rgb(var(--sa-soft)); }
+.signature-funnel-foot span { color: rgb(var(--text-3)); font-size: 0.57rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.signature-funnel-foot strong { color: rgb(var(--text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; }
 .workspace-shell--development .workspace-canvas section:not(.workspace-signature) { border-radius: 8px 24px 8px 24px !important; }
 
 /* Platform: an angular control plane on a technical grid. */
