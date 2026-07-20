@@ -35,6 +35,14 @@ import {
   imbaBankMovements,
   imbaBankTransfers,
 } from '@/lib/imba-banking-data';
+import {
+  benefitRate,
+  filedCompensation,
+  filedTotalExpense,
+  knownLoadedMultiplier,
+  payrollTaxRate,
+  totalCompensation,
+} from '@/lib/imba-job-costing';
 import { accounting, financialHistory, publicFinancialFacts } from '@/lib/imba-data';
 import {
   qboFundAccountingCaveats,
@@ -50,6 +58,7 @@ import { useImbaOsState } from '@/components/imba/ImbaOsState';
 import { ImbaPayables } from '@/components/imba/ImbaPayables';
 import { ImbaReportOutput } from '@/components/imba/ImbaReportOutput';
 import { ImbaInfoTooltip } from '@/components/imba/ImbaInfoTooltip';
+import { Term } from '@/components/imba/ImbaTerm';
 
 export type ImbaFinanceView =
   | 'finance-snapshot'
@@ -92,11 +101,11 @@ function Heading({ eyebrow, title, detail }: { eyebrow: string; title: string; d
   );
 }
 
-function Kpi({ label, value, note, tone = 'lime' }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose' }) {
+function Kpi({ label, value, note, tone = 'lime', term }: { label: string; value: string; note: string; tone?: 'lime' | 'teal' | 'amber' | 'rose'; term?: string }) {
   const toneClass = tone === 'lime' ? 'text-[rgb(var(--sa-soft))]' : tone === 'teal' ? 'text-[rgb(var(--info))]' : tone === 'amber' ? 'text-amber-800 dark:text-amber-200' : 'text-rose-700 dark:text-rose-200';
   return (
     <div className="rounded-[18px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] elev p-4">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{label}</p>
+      <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">{term ? <Term term={term} align="left">{label}</Term> : label}</p>
       <p className={`mt-3 font-mono text-2xl font-semibold tracking-[-0.04em] ${toneClass}`}>{value}</p>
       <p className="mt-1.5 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p>
     </div>
@@ -185,9 +194,9 @@ function Banking({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi label="Total bank cash" value={money(bankTotals.balance)} note="Across 4 connected accounts" />
-        <Kpi label="Donor-restricted" value={money(bankTotals.restricted)} note="Held separately until allowable spend" tone="amber" />
+        <Kpi term="Donor restrictions" label="Donor-restricted" value={money(bankTotals.restricted)} note="Held separately until allowable spend" tone="amber" />
         <Kpi label="Unrestricted bank cash" value={money(bankTotals.unrestricted)} note="Before obligations and reserves" tone="teal" />
-        <Kpi label="Bank vs GL variance" value={money(bankToBook.variance)} note="Fully explained by timing" tone="teal" />
+        <Kpi term="Reconciliation" label="Bank vs GL variance" value={money(bankToBook.variance)} note="Fully explained by timing" tone="teal" />
       </div>
 
       <ShellCard>
@@ -201,7 +210,7 @@ function Banking({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
                 <th className="px-3 py-3 text-right">Balance</th>
                 <th className="px-3 py-3 text-right">Available</th>
                 <th className="px-3 py-3">Last sync</th>
-                <th className="px-5 py-3">GL account</th>
+                <th className="px-5 py-3"><Term term="GL" align="right">GL account</Term></th>
               </tr>
             </thead>
             <tbody>
@@ -424,7 +433,7 @@ function Customers() {
           <table className="w-full min-w-[820px] text-left">
             <thead>
               <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
-                <th className="px-5 py-3">Customer</th><th className="px-3 py-3">Engagement</th><th className="px-3 py-3 text-right">Open AR</th><th className="px-3 py-3">Status</th><th className="px-5 py-3">QuickBooks</th>
+                <th className="px-5 py-3">Customer</th><th className="px-3 py-3"><Term term="Engagement" /></th><th className="px-3 py-3 text-right"><Term term="AR" align="right">Open AR</Term></th><th className="px-3 py-3">Status</th><th className="px-5 py-3">QuickBooks</th>
               </tr>
             </thead>
             <tbody>
@@ -468,7 +477,7 @@ function Grantors() {
           <table className="w-full min-w-[920px] text-left">
             <thead>
               <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]">
-                <th className="px-5 py-3">Grantor · program</th><th className="px-3 py-3 text-right">Award</th><th className="px-3 py-3 text-right">Drawn</th><th className="px-3 py-3">Restriction</th><th className="px-5 py-3">Record mapping</th>
+                <th className="px-5 py-3">Grantor · program</th><th className="px-3 py-3 text-right">Award</th><th className="px-3 py-3 text-right"><Term term="Drawn" align="right" /></th><th className="px-3 py-3">Restriction</th><th className="px-5 py-3">Record mapping</th>
               </tr>
             </thead>
             <tbody>
@@ -847,19 +856,20 @@ function ProgramFullCostPanel() {
 // lines 5-10. This decomposes it, builds the loaded rate, and shows where public
 // data runs out (the PEO fee and workers-comp premium live inside the invoice).
 function CostOfLabor() {
+  // Figures come from imba-job-costing.ts so this view and project costing
+  // cannot drift apart — the same filed multiplier prices both.
   const comp: Array<[string, number]> = [
-    ['Line 7 · Other salaries and wages', 2_820_457],
-    ['Line 5 · Officer + key-employee comp', 188_977],
-    ['Line 10 · Payroll taxes', 268_321],
-    ['Line 9 · Other employee benefits', 189_015],
-    ['Line 8 · Pension plan contributions', 59_144],
+    ['Line 7 · Other salaries and wages', filedCompensation.otherSalariesAndWages],
+    ['Line 5 · Officer + key-employee comp', filedCompensation.officerAndKeyEmployee],
+    ['Line 10 · Payroll taxes', filedCompensation.payrollTaxes],
+    ['Line 9 · Other employee benefits', filedCompensation.otherEmployeeBenefits],
+    ['Line 8 · Pension plan contributions', filedCompensation.pensionContributions],
   ];
-  const totalComp = comp.reduce((s, [, v]) => s + v, 0); // 3,525,914
-  const baseWages = 2_820_457 + 188_977; // 3,009,434 (lines 5 + 7)
-  const taxRate = 268_321 / baseWages; // 8.92%
-  const benRate = (189_015 + 59_144) / baseWages; // 8.25%
-  const totalExpense = 7_014_359;
-  const loadedMult = totalComp / baseWages; // 1.1716
+  const totalComp = totalCompensation; // 3,525,914
+  const taxRate = payrollTaxRate; // 8.92%
+  const benRate = benefitRate; // 8.25%
+  const totalExpense = filedTotalExpense;
+  const loadedMult = knownLoadedMultiplier; // 1.1716
   const compPct = totalComp / totalExpense; // 50.3%
 
   const [wage, setWage] = useState(32);
@@ -1106,7 +1116,7 @@ function Snapshot({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
         <Kpi label="YTD revenue" value={money(revenue)} note="Membership, philanthropy, and Trail Solutions" />
         <Kpi label="YTD expense" value={money(expense)} note="Delivery, mission, and shared services" tone="teal" />
         <Kpi label="YTD result" value={money(revenue - expense)} note="Investment position before close adjustments" tone="amber" />
-        <Kpi label="Deployable cash" value="$1.74M" note="Modeled · base scenario — see Liquidity runway for the bridge" tone="lime" />
+        <Kpi term="Deployable cash" label="Deployable cash" value="$1.74M" note="Modeled · base scenario — see Liquidity runway for the bridge" tone="lime" />
         <Kpi label="Monthly close" value="24 / 28" note="Four control steps remain · target Jul 22" tone="amber" />
       </div>
 
@@ -1149,7 +1159,7 @@ function Snapshot({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <ShellCard><Heading eyebrow="Working capital" title="Cash conversion" /><div className="space-y-3 p-5"><Kpi label="Receivables + unbilled" value={money(ar)} note="$96K is over 60 days" tone="amber" /><Kpi label="Approved + pending payables" value={money(ap)} note="Includes chapter settlement reserve" tone="teal" /></div></ShellCard>
+        <ShellCard><Heading eyebrow="Working capital" title="Cash conversion" /><div className="space-y-3 p-5"><Kpi term="Unbilled" label="Receivables + unbilled" value={money(ar)} note="$96K is over 60 days" tone="amber" /><Kpi label="Approved + pending payables" value={money(ap)} note="Includes chapter settlement reserve" tone="teal" /></div></ShellCard>
         <ShellCard><Heading eyebrow="Restricted funding" title="Grant portfolio" /><div className="p-5"><p className="font-mono text-3xl font-semibold text-[rgb(var(--text))]">{money(grantRemaining)}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Unspent award balance across the illustrative active portfolio</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-[rgb(var(--line)/0.07)]"><div className="h-full rounded-full bg-[#68b9aa]" style={{ width: `${Math.round((imbaGrants.reduce((s, g) => s + g.spent, 0) / imbaGrants.reduce((s, g) => s + g.award, 0)) * 100)}%` }} /></div><p className="mt-2 text-[11px] text-[rgb(var(--text-3))]">{Math.round((imbaGrants.reduce((s, g) => s + g.spent, 0) / imbaGrants.reduce((s, g) => s + g.award, 0)) * 100)}% of awarded funds spent · {money(imbaGrants.reduce((s, g) => s + g.reimbursement, 0))} draws pending</p></div></ShellCard>
         <ShellCard><Heading eyebrow="Control signals" title="Finance action queue" /><div className="space-y-3 p-5">{['Collect Great Lakes invoice before next mobilization', 'Submit foundation reimbursement package by Jul 31', 'Resolve equipment invoice decision hold', 'Refresh three project estimates to complete'].map((item, index) => <div key={item} className="flex items-start gap-3"><span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${index < 2 ? 'bg-rose-300/10 text-rose-700 dark:text-rose-100' : 'bg-amber-300/10 text-amber-800 dark:text-amber-100'}`}>{index + 1}</span><p className="text-[11px] leading-5 text-[rgb(var(--text-2))]">{item}</p></div>)}</div></ShellCard>
       </div>
@@ -1167,7 +1177,7 @@ function Budget() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Annual plan" value={money(totals.budget)} note="Selected budget lines" /><Kpi label="YTD actual" value={money(totals.actual)} note={`Against ${money(totals.ytdBudget)} phased plan`} tone="teal" /><Kpi label="YTD variance" value={money(totals.actual - totals.ytdBudget)} note="Positive means above phased plan" tone={totals.actual > totals.ytdBudget ? 'amber' : 'lime'} /><Kpi label="Year-end forecast" value={money(totals.forecast)} note={`${money(totals.forecast - totals.budget)} against annual plan`} tone="amber" /></div>
       <ShellCard>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Operating plan</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Budget by revenue engine + cost center</h2></div><select value={engine} onChange={(event) => setEngine(event.target.value)} className="rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--text))] outline-none">{engines.map((item) => <option key={item}>{item}</option>)}</select></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Line</th><th className="px-3 py-3">Engine</th><th className="px-3 py-3 text-right">Annual budget</th><th className="px-3 py-3 text-right">YTD budget</th><th className="px-3 py-3 text-right">YTD actual</th><th className="px-3 py-3 text-right">Variance</th><th className="px-5 py-3 text-right">Forecast</th></tr></thead><tbody>{rows.map((row) => { const variance = row.actual - row.ytdBudget; const risk = Math.abs(row.forecast - row.budget) / row.budget > .05; return <tr key={row.line} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]"><td className="px-5 py-3.5 text-xs font-semibold text-[rgb(var(--text))]">{row.line}</td><td className="px-3 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.035)] px-2 py-1 text-[11px] text-[rgb(var(--text-2))]">{row.engine}</span></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(row.budget)}</td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text-3))]">{money(row.ytdBudget)}</td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(row.actual)}</td><td className={`px-3 py-3.5 text-right font-mono text-xs ${Math.abs(variance) > row.ytdBudget * .08 ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{money(variance)}</td><td className={`px-5 py-3.5 text-right font-mono text-xs font-semibold ${risk ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{money(row.forecast)}</td></tr>; })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Line</th><th className="px-3 py-3">Engine</th><th className="px-3 py-3 text-right">Annual budget</th><th className="px-3 py-3 text-right">YTD budget</th><th className="px-3 py-3 text-right">YTD actual</th><th className="px-3 py-3 text-right"><Term term="Variance" align="right" /></th><th className="px-5 py-3 text-right">Forecast</th></tr></thead><tbody>{rows.map((row) => { const variance = row.actual - row.ytdBudget; const risk = Math.abs(row.forecast - row.budget) / row.budget > .05; return <tr key={row.line} className="border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.02)]"><td className="px-5 py-3.5 text-xs font-semibold text-[rgb(var(--text))]">{row.line}</td><td className="px-3 py-3.5"><span className="rounded-full border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--line)/0.035)] px-2 py-1 text-[11px] text-[rgb(var(--text-2))]">{row.engine}</span></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(row.budget)}</td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text-3))]">{money(row.ytdBudget)}</td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(row.actual)}</td><td className={`px-3 py-3.5 text-right font-mono text-xs ${Math.abs(variance) > row.ytdBudget * .08 ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{money(variance)}</td><td className={`px-5 py-3.5 text-right font-mono text-xs font-semibold ${risk ? 'text-amber-800 dark:text-amber-200' : 'text-[rgb(var(--sa-soft))]'}`}>{money(row.forecast)}</td></tr>; })}</tbody></table></div>
       </ShellCard>
       <div className="grid gap-5 lg:grid-cols-3"><ShellCard className="lg:col-span-2"><Heading eyebrow="Forecast bridge" title="What is moving the year-end result" /><div className="grid gap-3 p-5 sm:grid-cols-3">{[['Trail Services', '-$240K', 'Starts slipped; design mix lower'], ['Membership', '+$85K', 'Renewal pace above plan'], ['Shared services', '-$23K', 'Technology milestone costs']].map(([name, value, note]) => <div key={name} className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">{name}</p><p className={`mt-3 font-mono text-xl font-semibold ${value.startsWith('+') ? 'text-[rgb(var(--sa-soft))]' : 'text-amber-800 dark:text-amber-200'}`}>{value}</p><p className="mt-1 text-[11px] leading-4 text-[rgb(var(--text-3))]">{note}</p></div>)}</div></ShellCard><ShellCard><Heading eyebrow="Budget controls" title="Planning workflow" /><div className="space-y-3 p-5">{['Department owner submits forecast', 'Finance validates assumptions', 'Kent selects management case', 'Board sees approved variance bridge'].map((item, index) => <div key={item} className="flex items-center gap-3"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[rgb(var(--sa)/0.10)] font-mono text-[11px] text-[rgb(var(--sa-soft))]">{index + 1}</span><p className="text-[11px] text-[rgb(var(--text-2))]">{item}</p></div>)}</div></ShellCard></div>
     </>
@@ -1194,11 +1204,11 @@ function Grants({ onNavigate }: { onNavigate: (view: ImbaOsView) => void }) {
   const reimbursement = grants.reduce((sum, grant) => sum + grant.reimbursement, 0);
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Active awards" value={money(award)} note={`${imbaGrants.length} awards in the demo portfolio`} /><Kpi label="Allowable spend recorded" value={money(spent)} note={`${Math.round((spent / award) * 100)}% aggregate burn`} tone="teal" /><Kpi label="Award capacity remaining" value={money(award - spent)} note="Not the same as deployable cash" /><Kpi label="Draws pending" value={money(reimbursement)} note="Reimbursement packages to submit" tone="amber" /></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Active awards" value={money(award)} note={`${imbaGrants.length} awards in the demo portfolio`} /><Kpi term="Allowable spend" label="Allowable spend recorded" value={money(spent)} note={`${Math.round((spent / award) * 100)}% aggregate burn`} tone="teal" /><Kpi label="Award capacity remaining" value={money(award - spent)} note="Not the same as deployable cash" /><Kpi label="Draws pending" value={money(reimbursement)} note="Reimbursement packages to submit" tone="amber" /></div>
       <div className="grid gap-5 xl:grid-cols-12">
         <ShellCard className="xl:col-span-8">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Award register</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Restriction + draw + deadline control</h2></div><div className="flex gap-1">{['All', 'On track', 'Draw due', 'Watch'].map((item) => <button key={item} type="button" onClick={() => setStatus(item)} className={`rounded-lg px-2.5 py-2 text-[11px] font-bold ${status === item ? 'bg-[rgb(var(--sa))] text-[rgb(var(--sa-ink))]' : 'border border-[rgb(var(--line)/0.08)] text-[rgb(var(--text-2))]'}`}>{item}</button>)}</div></div>
-          <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Funder + program</th><th className="px-3 py-3 text-right">Award</th><th className="px-3 py-3">Burn</th><th className="px-3 py-3 text-right">Remaining</th><th className="px-3 py-3">Next deadline</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{rows.map((grant) => { const burn = Math.round((grant.spent / grant.award) * 100); return <tr key={grant.id} onClick={() => setSelectedId(grant.id)} className={`cursor-pointer border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.03)] ${selectedId === grant.id ? 'bg-[rgb(var(--sa)/0.035)]' : ''}`}><td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{grant.funder}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{grant.id} · {grant.program}</p></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(grant.award)}</td><td className="px-3 py-3.5"><div className="flex items-center gap-2"><div className="h-1.5 w-20 overflow-hidden rounded-full bg-[rgb(var(--line)/0.08)]"><div className="h-full rounded-full bg-[#68b9aa]" style={{ width: `${burn}%` }} /></div><span className="font-mono text-[11px] text-[rgb(var(--text-2))]">{burn}%</span></div></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--sa-soft))]">{money(grant.remaining)}</td><td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{grant.nextDeadline}</td><td className="px-5 py-3.5"><span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${grant.status === 'On track' ? 'bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]' : grant.status === 'Draw due' ? 'bg-cyan-300/10 text-cyan-700 dark:text-cyan-100' : 'bg-amber-300/10 text-amber-800 dark:text-amber-100'}`}>{grant.status}</span></td></tr>; })}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Funder + program</th><th className="px-3 py-3 text-right">Award</th><th className="px-3 py-3"><Term term="Burn" /></th><th className="px-3 py-3 text-right">Remaining</th><th className="px-3 py-3">Next deadline</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{rows.map((grant) => { const burn = Math.round((grant.spent / grant.award) * 100); return <tr key={grant.id} onClick={() => setSelectedId(grant.id)} className={`cursor-pointer border-b border-[rgb(var(--line)/0.055)] last:border-0 hover:bg-[rgb(var(--line)/0.03)] ${selectedId === grant.id ? 'bg-[rgb(var(--sa)/0.035)]' : ''}`}><td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{grant.funder}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{grant.id} · {grant.program}</p></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--text))]">{money(grant.award)}</td><td className="px-3 py-3.5"><div className="flex items-center gap-2"><div className="h-1.5 w-20 overflow-hidden rounded-full bg-[rgb(var(--line)/0.08)]"><div className="h-full rounded-full bg-[#68b9aa]" style={{ width: `${burn}%` }} /></div><span className="font-mono text-[11px] text-[rgb(var(--text-2))]">{burn}%</span></div></td><td className="px-3 py-3.5 text-right font-mono text-xs text-[rgb(var(--sa-soft))]">{money(grant.remaining)}</td><td className="px-3 py-3.5 text-[11px] text-[rgb(var(--text-2))]">{grant.nextDeadline}</td><td className="px-5 py-3.5"><span className={`rounded-full px-2 py-1 text-[11px] font-black uppercase ${grant.status === 'On track' ? 'bg-[rgb(var(--sa)/0.10)] text-[rgb(var(--sa-soft))]' : grant.status === 'Draw due' ? 'bg-cyan-300/10 text-cyan-700 dark:text-cyan-100' : 'bg-amber-300/10 text-amber-800 dark:text-amber-100'}`}>{grant.status}</span></td></tr>; })}</tbody></table></div>
         </ShellCard>
         <ShellCard className="xl:col-span-4"><Heading eyebrow={`${selected.id} · selected award`} title={selected.funder} /><div className="space-y-4 p-5"><div><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Restriction</p><p className="mt-1 text-xs leading-5 text-[rgb(var(--text))]">{selected.restriction}</p></div><div className="grid grid-cols-2 gap-3"><Kpi label="Remaining" value={money(selected.remaining)} note="Award balance" /><Kpi label="Draw pending" value={money(selected.reimbursement)} note="Receivable / action" tone={selected.reimbursement ? 'amber' : 'teal'} /></div><div className="rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-4"><p className="text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]">Next controls</p><div className="mt-3 space-y-2">{['Validate allowable-cost coding', 'Reconcile payroll allocation', 'Attach evidence to reimbursement', 'Route narrative data to program owner'].map((item, index) => <div key={item} className="flex items-center gap-2 text-[11px] text-[rgb(var(--text-2))]">{index < 2 ? <Check className="h-3.5 w-3.5 text-[rgb(var(--sa-soft))]" /> : <CalendarClock className="h-3.5 w-3.5 text-amber-800 dark:text-amber-200" />}{item}</div>)}</div></div><button type="button" onClick={() => onNavigate('development-grant-pipeline')} className="w-full rounded-xl bg-[rgb(var(--sa))] px-4 py-3 text-[11px] font-black uppercase tracking-wider text-[rgb(var(--sa-ink))]">Open grant workspace</button></div></ShellCard>
       </div>
@@ -1237,7 +1247,7 @@ function ApAr() {
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi label="Receivables + unbilled" value={money(arTotal)} note="Invoices plus earned milestone work" /><Kpi label="Over 30 days" value={money(overdue)} note="Aged collection risk" tone="amber" /><Kpi label="Current" value={money(current)} note="Within terms" tone="teal" /><Kpi label="Open items" value={String(receivables.length)} note="Receivable + unbilled records" tone="lime" /></div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi term="Unbilled" label="Receivables + unbilled" value={money(arTotal)} note="Invoices plus earned milestone work" /><Kpi label="Over 30 days" value={money(overdue)} note="Aged collection risk" tone="amber" /><Kpi label="Current" value={money(current)} note="Within terms" tone="teal" /><Kpi label="Open items" value={String(receivables.length)} note="Receivable + unbilled records" tone="lime" /></div>
       <ShellCard>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-5 py-4">
           <div><p className="text-[11px] font-black uppercase tracking-[0.22em] text-[rgb(var(--text-3))]">Cash conversion · collections</p><h2 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Accounts receivable + unbilled work</h2></div>
@@ -1245,7 +1255,7 @@ function ApAr() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] text-left">
-            <thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Customer / project</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3 text-right">Amount</th><th className="px-3 py-3 text-right">Age</th><th className="px-3 py-3">Due</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
+            <thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-3))]"><th className="px-5 py-3">Customer / project</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3 text-right">Amount</th><th className="px-3 py-3 text-right"><Term term="Aging" align="right">Age</Term></th><th className="px-3 py-3">Due</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
             <tbody>{receivables.map((row) => (
               <tr key={row.ref} className={`border-b border-[rgb(var(--line)/0.055)] last:border-0 ${selectedReceivable?.ref === row.ref ? 'bg-[rgb(var(--sa)/0.035)]' : ''}`}>
                 <td className="px-5 py-3.5"><p className="text-xs font-semibold text-[rgb(var(--text))]">{row.customer}</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">{row.project}</p></td>

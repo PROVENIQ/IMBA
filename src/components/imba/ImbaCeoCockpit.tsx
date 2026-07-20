@@ -10,6 +10,7 @@ import {
   BookOpen,
   Banknote,
   BriefcaseBusiness,
+  Calculator,
   Building2,
   CalendarDays,
   Check,
@@ -70,6 +71,7 @@ import {
   type ImbaOsView,
 } from "@/lib/imba-os-data";
 import { ImbaWhatIfLab } from "@/components/imba/ImbaWhatIfLab";
+import { Term } from "@/components/imba/ImbaTerm";
 import {
   ImbaFinanceWorkspace,
   type ImbaFinanceView,
@@ -213,6 +215,12 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Trail Solutions",
         description: "Plan, build, sign + steward",
         icon: Mountain,
+      },
+      {
+        id: "project-command",
+        label: "Project job costing",
+        description: "Loaded cost + shared resources",
+        icon: Calculator,
       },
       {
         id: "project-board",
@@ -1492,11 +1500,11 @@ function PortfolioTable({
       <table className="w-full min-w-[760px] text-left">
         <thead>
           <tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-[0.18em] text-[rgb(var(--text-3))]">
-            <th className="px-5 py-3">Engagement</th>
+            <th className="px-5 py-3"><Term term="Engagement" align="left" /></th>
             <th className="px-3 py-3">Delivery</th>
             <th className="px-3 py-3 text-right">Contract</th>
-            <th className="px-3 py-3 text-right">EAC</th>
-            <th className="px-3 py-3 text-right">Contribution</th>
+            <th className="px-3 py-3 text-right"><Term term="EAC" align="right" /></th>
+            <th className="px-3 py-3 text-right"><Term term="Contribution" align="right" /></th>
             <th className="px-5 py-3">Signal</th>
           </tr>
         </thead>

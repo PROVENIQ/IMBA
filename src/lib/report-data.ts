@@ -87,10 +87,10 @@ const identifiedLiabilities =
 
 export const positionRows: ReportRow[] = [
   { kind: 'section', label: 'Assets' },
-  { kind: 'account', label: 'Cash and cash equivalents', symbol: true, cells: { amount: 'Connect GL' } },
-  { kind: 'account', label: 'Grants and contracts receivable', cells: { amount: 'Connect GL' } },
-  { kind: 'account', label: 'Property and equipment, net', cells: { amount: 'Connect GL' } },
-  { kind: 'subtotal', label: 'Total assets', cells: { amount: 'Connect GL' } },
+  { kind: 'account', label: 'Cash and cash equivalents', symbol: true, cells: { amount: 'Requires ledger' } },
+  { kind: 'account', label: 'Grants and contracts receivable', cells: { amount: 'Requires ledger' } },
+  { kind: 'account', label: 'Property and equipment, net', cells: { amount: 'Requires ledger' } },
+  { kind: 'subtotal', label: 'Total assets', cells: { amount: 'Requires ledger' } },
   { kind: 'blank' },
   { kind: 'section', label: 'Liabilities' },
   {
@@ -104,7 +104,7 @@ export const positionRows: ReportRow[] = [
     label: 'Deferred project revenue',
     cells: { amount: publicFinancialFacts.deferredRevenue },
   },
-  { kind: 'account', label: 'Accounts payable and accrued liabilities', cells: { amount: 'Connect GL' } },
+  { kind: 'account', label: 'Accounts payable and accrued liabilities', cells: { amount: 'Requires ledger' } },
   {
     kind: 'subtotal',
     label: 'Total identified commitments',
@@ -125,7 +125,7 @@ export const positionRows: ReportRow[] = [
   },
   { kind: 'subtotal', label: 'Total net assets', cells: { amount: totalNetAssets } },
   { kind: 'blank' },
-  { kind: 'total', label: 'Total liabilities and net assets', cells: { amount: 'Connect GL' } },
+  { kind: 'total', label: 'Total liabilities and net assets', cells: { amount: 'Requires ledger' } },
 ];
 
 // ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ export const cashFlowColumns: ReportColumn[] = [
 
 export const cashFlowRows: ReportRow[] = [
   { kind: 'section', label: 'Deployable-cash bridge' },
-  { kind: 'account', label: 'Beginning cash and near-cash resources', symbol: true, cells: { amount: 'Connect GL' } },
+  { kind: 'account', label: 'Beginning cash and near-cash resources', symbol: true, cells: { amount: 'Requires ledger' } },
   { kind: 'account', label: 'Less: Donor-restricted resources', cells: { amount: -publicFinancialFacts.donorRestrictedNetAssets } },
   { kind: 'account', label: 'Less: Amounts due to chapters', cells: { amount: -publicFinancialFacts.chapterObligations } },
   { kind: 'account', label: 'Less: Deferred project revenue', cells: { amount: -publicFinancialFacts.deferredRevenue } },

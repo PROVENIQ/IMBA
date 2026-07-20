@@ -208,8 +208,8 @@ export const imbaOsSections: ImbaOsSection[] = [
       {
         name: "Project-lifetime job costing",
         purpose:
-          "Loaded labor, indirect cost, commitments, budget, and estimate to complete.",
-        source: "QuickBooks + Monday.com",
+          "Loaded labour rates from the filed return, shared-resource allocation between engagements, budget, and estimate to complete. Subcontractor commitments and indirect recovery are designed, not yet demonstrated.",
+        source: "QuickBooks + ADP time coding + Monday.com",
         stage: "Demonstrated",
       },
       {

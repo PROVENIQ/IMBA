@@ -67,7 +67,7 @@ export function ImbaStatementOutput({ tab }: { tab: ImbaStatementTab }) {
           title="Statement of Financial Position"
           period="As of December 31, 2024"
           basis="Accrual basis · U.S. GAAP (FASB ASC 958) · Amounts in U.S. dollars"
-          footnote="Net assets are presented in two classes per FASB ASC 958 — without and with donor restrictions. Total net assets of $3,754,879 reconcile to the FY 2024 Form 990. Asset detail requires the general ledger (Connect GL)."
+          footnote="Net assets are presented in two classes per FASB ASC 958 — without and with donor restrictions. Total net assets of $3,754,879 reconcile to the FY 2024 Form 990. Asset and liability detail is not broken out on the public return; those lines require the general ledger."
         >
           <StatementTable columns={positionColumns} rows={positionRows} />
         </ReportPaper>

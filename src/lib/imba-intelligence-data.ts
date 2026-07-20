@@ -90,7 +90,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Management",
     ],
     sectionViews: {
-      Mission: ["operations", "trail-solutions", "construction-reports", "mission-reports", "impact-research"],
+      Mission: ["operations", "trail-solutions", "project-command", "construction-reports", "mission-reports", "impact-research"],
       Money: [
         "finance-snapshot",
         "finance-banking",
@@ -129,7 +129,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       "Management",
     ],
     sectionViews: {
-      Mission: ["operations", "trail-solutions", "project-board"],
+      Mission: ["operations", "trail-solutions", "project-command", "project-board"],
       People: ["people-directory", "people-payroll", "people-compliance"],
       Development: ["development-grant-pipeline", "finance-grantors"],
       Platform: [
@@ -181,6 +181,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
       Mission: [
         "operations",
         "trail-solutions",
+        "project-command",
         "project-board",
         "construction-reports",
         "chapter-network",
@@ -210,7 +211,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     home: "trail-solutions",
     sections: ["Mission", "People", "Platform"],
     sectionViews: {
-      Mission: ["operations", "trail-solutions", "project-board", "mission-reports", "trail-assets"],
+      Mission: ["operations", "trail-solutions", "project-command", "project-board", "mission-reports", "trail-assets"],
       People: ["people", "capacity", "people-directory", "people-volunteers", "people-training"],
       Platform: ["platform"],
     },

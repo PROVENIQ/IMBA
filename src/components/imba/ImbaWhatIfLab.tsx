@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Term } from '@/components/imba/ImbaTerm';
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -155,6 +156,7 @@ function calculateScenario(inputs: ScenarioInputs): ScenarioResult {
 
 function RangeField({
   label,
+  labelNode,
   value,
   min,
   max,
@@ -163,6 +165,8 @@ function RangeField({
   onChange,
 }: {
   label: string;
+  /** Optional rich label, used to attach a glossary definition. */
+  labelNode?: React.ReactNode;
   value: number;
   min: number;
   max: number;
@@ -174,7 +178,7 @@ function RangeField({
   return (
     <label className="block rounded-2xl border border-[rgb(var(--line)/0.07)] bg-[rgb(var(--line)/0.025)] p-3.5">
       <span className="flex items-center justify-between gap-3">
-        <span className="text-[11px] font-semibold text-[rgb(var(--text-2))]">{label}</span>
+        <span className="text-[11px] font-semibold text-[rgb(var(--text-2))]">{labelNode ?? label}</span>
         <span className="font-mono text-xs font-semibold text-[rgb(var(--text))]">{display}</span>
       </span>
       <input
@@ -282,12 +286,12 @@ export function ImbaWhatIfLab() {
               <RangeField label="Designated funding" value={inputs.designatedFunding} min={0} max={500_000} step={5_000} display={money(inputs.designatedFunding)} onChange={(value) => update('designatedFunding', value)} />
               <RangeField label="Annual earned / raised revenue" value={inputs.annualRevenue} min={0} max={1_500_000} step={10_000} display={money(inputs.annualRevenue)} onChange={(value) => update('annualRevenue', value)} />
               <RangeField label="Annual non-labor cost" value={inputs.annualOperatingCost} min={0} max={600_000} step={5_000} display={money(inputs.annualOperatingCost)} onChange={(value) => update('annualOperatingCost', value)} />
-              <RangeField label="Added team capacity" value={inputs.fte} min={0} max={6} step={0.1} display={`${inputs.fte.toFixed(1)} FTE`} onChange={(value) => update('fte', value)} />
+              <RangeField labelNode={<Term term="FTE">Added team capacity</Term>} label="Added team capacity" value={inputs.fte} min={0} max={6} step={0.1} display={`${inputs.fte.toFixed(1)} FTE`} onChange={(value) => update('fte', value)} />
               <RangeField label="Loaded cost per FTE" value={inputs.loadedCostPerFte} min={60_000} max={160_000} step={2_000} display={money(inputs.loadedCostPerFte)} onChange={(value) => update('loadedCostPerFte', value)} />
               <RangeField label="Revenue confidence" value={inputs.confidence} min={25} max={100} step={1} display={`${inputs.confidence}%`} onChange={(value) => update('confidence', value)} />
               <RangeField label="Launch delay" value={inputs.startDelayMonths} min={0} max={9} step={1} display={`${inputs.startDelayMonths} mo`} onChange={(value) => update('startDelayMonths', value)} />
               <RangeField label="Collection delay" value={inputs.collectionDelayDays} min={0} max={120} step={15} display={`${inputs.collectionDelayDays} days`} onChange={(value) => update('collectionDelayDays', value)} />
-              <RangeField label="Minimum cash floor" value={inputs.cashFloor} min={750_000} max={2_000_000} step={25_000} display={money(inputs.cashFloor)} onChange={(value) => update('cashFloor', value)} />
+              <RangeField labelNode={<Term term="Minimum cash floor">Minimum cash floor</Term>} label="Minimum cash floor" value={inputs.cashFloor} min={750_000} max={2_000_000} step={25_000} display={money(inputs.cashFloor)} onChange={(value) => update('cashFloor', value)} />
             </div>
           </div>
         </section>
@@ -319,7 +323,7 @@ export function ImbaWhatIfLab() {
       {saved.length > 0 ? (
         <section className="rounded-[22px] border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card)/90%)] elev">
           <div className="flex items-center gap-2 border-b border-[rgb(var(--line)/0.07)] px-5 py-4"><Sparkles className="h-4 w-4 text-[rgb(var(--sa-soft))]" /><div><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[rgb(var(--text-3))]">Saved comparison</p><h3 className="mt-1 text-base font-semibold text-[rgb(var(--text))]">Choices side by side</h3></div></div>
-          <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]"><th className="px-5 py-3">Scenario</th><th className="px-3 py-3 text-right">12 month</th><th className="px-3 py-3 text-right">24 month</th><th className="px-3 py-3 text-right">Lowest cash</th><th className="px-3 py-3 text-right">Break even</th><th className="px-5 py-3 text-right">Floor protection</th></tr></thead><tbody>{saved.map((item) => <tr key={item.name} className="border-b border-[rgb(var(--line)/0.05)] last:border-0"><td className="px-5 py-4 text-xs font-semibold text-[rgb(var(--text))]">{item.name}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net12 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net12)}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net24 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net24)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{money(item.minCash)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.breakEvenMonth === null ? '>24 mo' : `Mo ${item.breakEvenMonth}`}</td><td className="px-5 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.floorGap > 0 ? money(item.floorGap) : 'Protected'}</td></tr>)}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[11px] font-black uppercase tracking-wider text-[rgb(var(--text-3))]"><th className="px-5 py-3">Scenario</th><th className="px-3 py-3 text-right">12 month</th><th className="px-3 py-3 text-right">24 month</th><th className="px-3 py-3 text-right">Lowest cash</th><th className="px-3 py-3 text-right"><Term term="Break even" align="right" /></th><th className="px-5 py-3 text-right"><Term term="Floor protection" align="right" /></th></tr></thead><tbody>{saved.map((item) => <tr key={item.name} className="border-b border-[rgb(var(--line)/0.05)] last:border-0"><td className="px-5 py-4 text-xs font-semibold text-[rgb(var(--text))]">{item.name}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net12 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net12)}</td><td className={`px-3 py-4 text-right font-mono text-xs ${item.net24 >= 0 ? 'text-[rgb(var(--sa-soft))]' : 'text-rose-700 dark:text-rose-200'}`}>{money(item.net24)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{money(item.minCash)}</td><td className="px-3 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.breakEvenMonth === null ? '>24 mo' : `Mo ${item.breakEvenMonth}`}</td><td className="px-5 py-4 text-right font-mono text-xs text-[rgb(var(--text))]">{item.floorGap > 0 ? money(item.floorGap) : 'Protected'}</td></tr>)}</tbody></table></div>
         </section>
       ) : null}
     </div>
