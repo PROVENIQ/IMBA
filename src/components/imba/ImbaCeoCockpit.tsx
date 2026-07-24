@@ -77,6 +77,10 @@ import {
   type ImbaFinanceView,
 } from "@/components/imba/ImbaFinanceWorkspace";
 import {
+  ImbaFinanceIntegrationWorkspace,
+  type ImbaFinanceIntegrationView,
+} from "@/components/imba/ImbaFinanceIntegrationWorkspace";
+import {
   ImbaOperationsWorkspace,
   type ImbaOperationsView,
 } from "@/components/imba/ImbaOperationsWorkspace";
@@ -396,6 +400,31 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Liquidity runway",
         description: "Cash you can deploy",
         icon: Gauge,
+      },
+    ],
+  },
+  {
+    label: "Finance Integration",
+    color: "border-emerald-400/30 text-emerald-700 dark:text-emerald-200",
+    active: "bg-emerald-400/10",
+    items: [
+      {
+        id: "reconciliation",
+        label: "Donation reconciliation",
+        description: "EveryAction ↔ QBO batches",
+        icon: GitMerge,
+      },
+      {
+        id: "campaign",
+        label: "Campaign tracker",
+        description: "Development + finance views",
+        icon: Target,
+      },
+      {
+        id: "data-quality",
+        label: "CRM data quality",
+        description: "Catch coding before the GL",
+        icon: ShieldCheck,
       },
     ],
   },
@@ -793,6 +822,7 @@ type SectionAccent = { sa: string; soft: string; softLight: string; ink: string 
 const sectionAccents: Record<string, SectionAccent> = {
   Mission: { sa: '96 165 250', soft: '191 219 254', softLight: '29 78 145', ink: '8 20 35' },
   Money: { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
+  'Finance Integration': { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
   People: { sa: '34 211 238', soft: '165 243 252', softLight: '14 105 128', ink: '6 26 31' },
   Development: { sa: '251 191 36', soft: '253 230 138', softLight: '140 92 8', ink: '38 27 6' },
   Platform: { sa: '192 132 252', soft: '233 213 255', softLight: '126 34 206', ink: '26 12 40' },
@@ -833,6 +863,14 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
       'Internal HR and onboarding records',
     ],
     note: 'Labor and time must map reliably to projects, grants, and organizational functions.',
+  },
+  'Finance Integration': {
+    sources: [
+      'EveryAction — gifts, batches, donor intent, campaign attribution',
+      'QuickBooks Online — deposits, fund coding, pledges, and revenue recognition',
+      'Payment processor settlement files — gross-to-net deposit control',
+    ],
+    note: 'All values and records in these prototype views are illustrative. Production versions would use governed, read-only source connections and a controlled correction workflow.',
   },
   Development: {
     sources: [
@@ -952,6 +990,7 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
     "Management",
     "Mission",
     "Money",
+    "Finance Integration",
     "Governance",
     "People",
     "Development",
@@ -991,6 +1030,11 @@ const financeViews: ImbaFinanceView[] = [
   "finance-vendors",
   "finance-customers",
   "finance-grantors",
+];
+const financeIntegrationViews: ImbaFinanceIntegrationView[] = [
+  "reconciliation",
+  "campaign",
+  "data-quality",
 ];
 const operationsViews: ImbaOperationsView[] = [
   "project-command",
@@ -3767,6 +3811,12 @@ export function ImbaCeoCockpit() {
                 onNavigate={setCurrentView}
                 role={role}
                 filters={filters}
+              />
+            ) : null}
+
+            {financeIntegrationViews.includes(view as ImbaFinanceIntegrationView) ? (
+              <ImbaFinanceIntegrationWorkspace
+                view={view as ImbaFinanceIntegrationView}
               />
             ) : null}
 

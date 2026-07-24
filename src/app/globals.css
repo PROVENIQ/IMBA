@@ -2577,7 +2577,8 @@ table {
   background-image: repeating-linear-gradient(0deg, transparent 0 31px, rgb(47 88 67 / 0.025) 31px 32px);
 }
 
-.workspace-signature--money { border-radius: 3px; box-shadow: 8px 8px 0 rgb(63 96 18 / 0.07); }
+.workspace-signature--money,
+.workspace-signature--finance-integration { border-radius: 3px; box-shadow: 8px 8px 0 rgb(63 96 18 / 0.07); }
 .signature-ledger { height: 100%; overflow: hidden; border: 1px solid rgb(var(--line) / 0.14); background: rgb(var(--card)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .signature-ledger-head, .signature-ledger-row { display: grid; grid-template-columns: 1fr 1.45fr 0.8fr; align-items: center; gap: 14px; }
 .signature-ledger-head { padding: 9px 13px; color: rgb(var(--sa-ink)); background: rgb(var(--sa) / 0.78); font-size: 0.52rem; font-weight: 900; letter-spacing: 0.1em; }

@@ -81,6 +81,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     sections: [
       "Mission",
       "Money",
+      "Finance Integration",
       "People",
       "Development",
       "Platform",
@@ -106,6 +107,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-expenses",
         "liquidity",
       ],
+      "Finance Integration": ["reconciliation", "campaign", "data-quality"],
       People: ["people", "people-directory", "people-reports", "people-volunteers", "people-training", "capacity"],
       Development: ["development", "development-reports", "development-campaigns", "development-donations", "finance-grantors"],
       Platform: ["platform", "platform-health"],
@@ -122,6 +124,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     sections: [
       "Mission",
       "Money",
+      "Finance Integration",
       "People",
       "Development",
       "Platform",
@@ -130,6 +133,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     ],
     sectionViews: {
       Mission: ["operations", "trail-solutions", "project-command", "project-board"],
+      "Finance Integration": ["reconciliation", "campaign", "data-quality"],
       People: ["people-directory", "people-payroll", "people-compliance"],
       Development: ["development-grant-pipeline", "finance-grantors"],
       Platform: [
@@ -259,6 +263,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
     sections: [
       "Development",
       "Money",
+      "Finance Integration",
       "Collaboration",
     ],
     sectionViews: {
@@ -268,6 +273,7 @@ export const imbaRoleProfiles: Record<ImbaRoleKey, ImbaRoleProfile> = {
         "finance-budget",
         "finance-reports",
       ],
+      "Finance Integration": ["reconciliation", "campaign", "data-quality"],
       Collaboration: [
         "collaboration",
         "collaboration-inbox",

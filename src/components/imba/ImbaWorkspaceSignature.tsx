@@ -229,9 +229,10 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
   const mode = workspaceModeForView(viewId);
   const ModeIcon = modeLanguage[mode].icon;
   const active = [...viewId].reduce((total, character) => total + character.charCodeAt(0), 0);
+  const sectionSlug = section.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
   return (
-    <section className={`workspace-signature workspace-signature--${section.toLowerCase()} workspace-signature-mode--${mode}${onClose ? ' workspace-signature--closable' : ''}`}>
+    <section className={`workspace-signature workspace-signature--${sectionSlug} workspace-signature-mode--${mode}${onClose ? ' workspace-signature--closable' : ''}`}>
       {onClose ? (
         <button type="button" onClick={onClose} aria-label={`Dismiss ${section} workspace introduction`} className="workspace-signature-close">
           <X />
@@ -247,6 +248,7 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
       <div className="workspace-signature-visual">
         {section === 'Mission' ? <MissionSignature active={active % 4} /> : null}
         {section === 'Money' ? <MoneySignature title={title} mode={mode} /> : null}
+        {section === 'Finance Integration' ? <MoneySignature title={title} mode={mode} /> : null}
         {section === 'People' ? <PeopleSignature active={active} /> : null}
         {section === 'Development' ? <DevelopmentSignature active={active} /> : null}
         {section === 'Platform' ? <PlatformSignature active={active} /> : null}
