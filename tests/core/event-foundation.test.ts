@@ -5,8 +5,11 @@ import { InMemoryEventStore, StreamVersionConflictError } from "../../src/core/e
 import type { ProposedEvent, StoredEvent } from "../../src/core/events/event-envelope";
 import { EventSchemaRegistry } from "../../src/core/events/upcaster-registry";
 import {
+  asActorId,
+  asCausationId,
   asCorrelationId,
   asEventId,
+  asOrganizationId,
   asStreamId,
 } from "../../src/core/primitives/identity";
 import type { JsonObject } from "../../src/core/primitives/json";
@@ -15,11 +18,14 @@ const eventId = asEventId("11111111-1111-4111-8111-111111111111");
 const secondEventId = asEventId("33333333-3333-4333-8333-333333333333");
 const streamId = asStreamId("22222222-2222-4222-8222-222222222222");
 const correlationId = asCorrelationId("44444444-4444-4444-8444-444444444444");
+const causationId = asCausationId("55555555-5555-4555-8555-555555555555");
+const organizationId = asOrganizationId("66666666-6666-4666-8666-666666666666");
+const actorId = asActorId("77777777-7777-4777-8777-777777777777");
 
 function fixtureRegistry(): EventSchemaRegistry {
   const registry = new EventSchemaRegistry();
   registry.register({
-    eventType: "ArchitectureFixtureRecorded",
+    eventName: "ARCHITECTURE_FIXTURE_RECORDED",
     currentVersion: 2,
     upcasters: {
       1: (payload) => ({ ...payload, classification: "foundation" }),
@@ -49,10 +55,16 @@ function proposed(
     eventId: id,
     streamId,
     streamType: "architecture-fixture",
-    eventType: "ArchitectureFixtureRecorded",
+    eventName: "ARCHITECTURE_FIXTURE_RECORDED",
+    eventVersion: 1,
     schemaVersion: 2,
+    organizationId,
+    chapterScope: { kind: "NATIONAL" },
     occurredAt: "2026-07-19T12:00:00.000Z",
     correlationId,
+    causationId,
+    actor: { actorId, actorType: "SYSTEM", displayRole: "test" },
+    sourceSystem: "SYNTHETIC",
     payload,
   };
 }
@@ -64,8 +76,9 @@ describe("event schema registry", () => {
       schemaVersion: 1,
       streamVersion: 1,
       ledgerPosition: BigInt(1),
+      ingestedAt: "2026-07-19T12:00:30.000Z",
       recordedAt: "2026-07-19T12:01:00.000Z",
-      metadata: {},
+      sourceMetadata: {},
     };
 
     const current = fixtureRegistry().normalize(stored);
@@ -83,7 +96,7 @@ describe("event schema registry", () => {
     const registry = new EventSchemaRegistry();
     expect(() =>
       registry.register({
-        eventType: "BrokenFixture",
+        eventName: "BROKEN_FIXTURE",
         currentVersion: 3,
         upcasters: { 1: (payload) => ({ ...payload }) },
         validateCurrent: () => undefined,
@@ -95,7 +108,7 @@ describe("event schema registry", () => {
     let invocation = 0;
     const registry = new EventSchemaRegistry();
     registry.register({
-      eventType: "UnstableFixture",
+      eventName: "UNSTABLE_FIXTURE",
       currentVersion: 2,
       upcasters: {
         1: (payload) => ({ ...payload, invocation: (invocation += 1) }),
@@ -105,12 +118,13 @@ describe("event schema registry", () => {
 
     const stored: StoredEvent = {
       ...proposed(),
-      eventType: "UnstableFixture",
+      eventName: "UNSTABLE_FIXTURE",
       schemaVersion: 1,
       streamVersion: 1,
       ledgerPosition: BigInt(1),
+      ingestedAt: "2026-07-19T12:00:30.000Z",
       recordedAt: "2026-07-19T12:01:00.000Z",
-      metadata: {},
+      sourceMetadata: {},
     };
 
     expect(() => registry.normalize(stored)).toThrow("non-deterministic upcaster");
@@ -122,8 +136,9 @@ describe("event schema registry", () => {
       schemaVersion: 3,
       streamVersion: 1,
       ledgerPosition: BigInt(1),
+      ingestedAt: "2026-07-19T12:00:30.000Z",
       recordedAt: "2026-07-19T12:01:00.000Z",
-      metadata: {},
+      sourceMetadata: {},
     };
 
     expect(() => fixtureRegistry().normalize(stored)).toThrow("unknown future schema");
@@ -143,7 +158,7 @@ describe("event store invariants", () => {
     expect(first.ledgerPosition).toBe(BigInt(1));
     expect(second.ledgerPosition).toBe(BigInt(2));
     expect(second.streamVersion).toBe(2);
-    expect(store.readAll(BigInt(1))).toEqual([second]);
+    expect(store.readAll(organizationId, BigInt(1))).toEqual([second]);
 
     expect(() =>
       store.append(

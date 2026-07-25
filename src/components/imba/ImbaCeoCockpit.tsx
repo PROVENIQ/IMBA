@@ -24,6 +24,7 @@ import {
   FileText,
   Gauge,
   Gavel,
+  GitCompareArrows,
   GitMerge,
   HeartHandshake,
   Layers3,
@@ -108,6 +109,10 @@ import {
 import type { ImbaCollaborationView } from "@/lib/imba-collaboration-data";
 import { useImbaOsState } from "@/components/imba/ImbaOsState";
 import { ImbaInfoTooltip } from "@/components/imba/ImbaInfoTooltip";
+import {
+  ImbaCrmMigrationWorkspace,
+  type ImbaCrmMigrationView,
+} from "@/components/imba/ImbaCrmMigrationWorkspace";
 import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
 import { ImbaOnboarding } from "@/components/imba/ImbaOnboarding";
 import {
@@ -587,6 +592,43 @@ const imbaNavSections: ImbaNavSection[] = [
     ],
   },
   {
+    label: "CRM Migration",
+    color: "border-violet-300/30 text-violet-800 dark:text-violet-100",
+    active: "bg-violet-300/10",
+    items: [
+      {
+        id: "crm-migration-health",
+        label: "Migration Health",
+        description: "Completeness + readiness",
+        icon: ShieldCheck,
+      },
+      {
+        id: "crm-field-crosswalk",
+        label: "Field Crosswalk",
+        description: "CiviCRM → canonical → EveryAction",
+        icon: Workflow,
+      },
+      {
+        id: "crm-exception-queue",
+        label: "Exception Queue",
+        description: "Differences + decisions",
+        icon: AlertTriangle,
+      },
+      {
+        id: "crm-financial-reconciliation",
+        label: "Financial Reconciliation",
+        description: "Batch → bank → QuickBooks",
+        icon: GitCompareArrows,
+      },
+      {
+        id: "crm-integration-readiness",
+        label: "Integration Readiness",
+        description: "Connectors + replacement registry",
+        icon: Database,
+      },
+    ],
+  },
+  {
     label: "Platform",
     color: "border-purple-400/30 text-purple-700 dark:text-purple-200",
     active: "bg-purple-400/10",
@@ -825,6 +867,7 @@ const sectionAccents: Record<string, SectionAccent> = {
   'Finance Integration': { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
   People: { sa: '34 211 238', soft: '165 243 252', softLight: '14 105 128', ink: '6 26 31' },
   Development: { sa: '251 191 36', soft: '253 230 138', softLight: '140 92 8', ink: '38 27 6' },
+  'CRM Migration': { sa: '139 92 246', soft: '221 214 254', softLight: '91 33 182', ink: '24 10 45' },
   Platform: { sa: '192 132 252', soft: '233 213 255', softLight: '126 34 206', ink: '26 12 40' },
   Governance: { sa: '251 113 133', soft: '254 205 211', softLight: '190 33 60', ink: '42 12 18' },
   Collaboration: { sa: '45 212 191', soft: '153 246 228', softLight: '17 94 89', ink: '4 26 24' },
@@ -878,6 +921,14 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
       'Grant contracts and restriction schedules',
     ],
     note: 'Restricted funding is tracked award-to-close; restrictions carry through to the Money pillar.',
+  },
+  'CRM Migration': {
+    sources: [
+      'Synthetic CiviCRM CSV exports — migration source evidence',
+      'Mock EveryAction adapter — documented capability contract',
+      'Synthetic processor, bank, and QuickBooks references — reconciliation evidence',
+    ],
+    note: 'Synthetic demonstration data only. EveryAction and QuickBooks production writes are disabled.',
   },
   Platform: {
     sources: [
@@ -994,6 +1045,7 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
     "Governance",
     "People",
     "Development",
+    "CRM Migration",
     "Collaboration",
     "Platform",
     "System",
@@ -1084,6 +1136,13 @@ const collaborationViews: ImbaCollaborationView[] = [
   "collaboration-connectors",
   "communications-inbox",
   "communications-templates",
+];
+const crmMigrationViews: ImbaCrmMigrationView[] = [
+  "crm-migration-health",
+  "crm-field-crosswalk",
+  "crm-exception-queue",
+  "crm-financial-reconciliation",
+  "crm-integration-readiness",
 ];
 const enterpriseViews: ImbaEnterpriseView[] = [
   "development-reports",
@@ -3855,6 +3914,13 @@ export function ImbaCeoCockpit() {
               <ImbaCollaborationWorkspace
                 view={view as ImbaCollaborationView}
                 role={role}
+                onNavigate={setCurrentView}
+              />
+            ) : null}
+
+            {crmMigrationViews.includes(view as ImbaCrmMigrationView) ? (
+              <ImbaCrmMigrationWorkspace
+                view={view as ImbaCrmMigrationView}
                 onNavigate={setCurrentView}
               />
             ) : null}
