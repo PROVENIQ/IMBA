@@ -1,0 +1,169 @@
+import { describe, expect, it } from "vitest";
+import ExcelJS from "exceljs";
+
+import {
+  applyImportMapping,
+  inspectParsedImport,
+  parseImportFiles,
+} from "@/integrations/trail-solutions/import-parser";
+import { transformMappedImport } from "@/integrations/trail-solutions/import-transformer";
+import {
+  commitTestWorkspace,
+  deleteTestWorkspace,
+  duplicateTestWorkspace,
+  mergeValidatedPackages,
+} from "@/lib/trail-solutions-test-workspaces";
+import { POST } from "@/app/api/trail-solutions/import/route";
+
+const serverTime = "2026-08-06T14:00:00.000Z";
+
+function csvFile(name: string, contents: string): File {
+  return new File([contents], name, { type: "text/csv" });
+}
+
+function exactPlan(inspection: ReturnType<typeof inspectParsedImport>) {
+  return inspection.tables.map((table) => ({
+    sourceTableId: table.sourceTableId,
+    targetTable: table.targetTable,
+    columns: Object.fromEntries(table.columns.map((column) => [column.sourceHeader, column.targetField])),
+  }));
+}
+
+async function validPackage(projectId = "TS-100") {
+  const files = [
+    csvFile("project-master.csv", [
+      "Project ID,Project Name,Business Line,Customer / Funder,Project Manager,Original Contract Value ($),Start Date,Completion Date,Status",
+      `${projectId},Safe Trail,Planning & Design,Public Client,,100000,2026-01-01,2026-12-31,Active`,
+    ].join("\n")),
+    csvFile("estimate-lines.csv", [
+      "Project ID,Cost Type,Estimated Cost ($),Quantity",
+      `${projectId},Direct labor,60000,1000`,
+    ].join("\n")),
+    csvFile("labor-actuals.csv", [
+      "Project ID,Employee / Resource,Role,Work Date,Hours,Fully Burdened Labor Cost ($)",
+      `${projectId},,Designer,2026-07-01,120,12000`,
+    ].join("\n")),
+    csvFile("project-summary.csv", [
+      "Project ID,Estimate to Complete ($)",
+      `${projectId},30000`,
+    ].join("\n")),
+  ];
+  const parsed = await parseImportFiles(files, "Finance user", serverTime);
+  const inspection = inspectParsedImport(parsed, serverTime);
+  const mapped = applyImportMapping(parsed, exactPlan(inspection));
+  return transformMappedImport({ mapped, files: parsed.files, serverTime });
+}
+
+describe("Trail Solutions Data Import Lab", () => {
+  it("reads the standardized workbook shape with headers below title rows", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Project Master");
+    sheet.addRow(["Trail Solutions import"]);
+    sheet.addRow(["Use test-safe project information only"]);
+    sheet.mergeCells("A2:C2");
+    sheet.addRow([]);
+    sheet.addRow(["Project ID", "Project Name", "Original Contract Value ($)"]);
+    sheet.addRow(["TS-XLSX", "Workbook Project", 250000]);
+    sheet.getCell("A6").value = { formula: "0", result: 0 };
+    sheet.getCell("C6").value = { formula: "0", result: 0 };
+    sheet.getCell("A7").value = { formula: "IF(1=0,1,\"\")" };
+    const bytes = await workbook.xlsx.writeBuffer();
+    const parsed = await parseImportFiles([new File([new Uint8Array(bytes)], "standardized.xlsx")], "Finance user", serverTime);
+
+    expect(parsed.tables[0]).toMatchObject({ sourceTableName: "Project Master", detectedTable: "Project Master", headerRow: 4 });
+    expect(parsed.tables[0].rows).toHaveLength(1);
+    expect(parsed.tables[0].rows[0]).toMatchObject({ "Project ID": "TS-XLSX", "Project Name": "Workbook Project" });
+  });
+
+  it("requires CEO or Finance access before processing files", async () => {
+    const response = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
+    expect(response.status).toBe(403);
+
+    const executiveForm = new FormData();
+    executiveForm.set("action", "inspect");
+    const executiveResponse = await POST(new Request("http://localhost/api/trail-solutions/import", {
+      method: "POST",
+      headers: { "x-imba-demo-role": "executive" },
+      body: executiveForm,
+    }));
+    expect(executiveResponse.status).not.toBe(403);
+  });
+
+  it("detects standardized CSV tables, maps exact headers, and redacts identity samples", async () => {
+    const parsed = await parseImportFiles([
+      csvFile("project-master.csv", "Project ID,Project Name,Project Manager\nTS-1,Project One,Private Name"),
+    ], "Finance user", serverTime);
+    const inspection = inspectParsedImport(parsed, serverTime);
+
+    expect(inspection.tables[0]).toMatchObject({ targetTable: "Project Master", rowCount: 1 });
+    expect(inspection.tables[0].columns.find((column) => column.sourceHeader === "Project ID")).toMatchObject({ targetField: "Project ID", confidence: "high" });
+    expect(inspection.tables[0].columns.find((column) => column.sourceHeader === "Project Manager")?.sampleValues).toEqual(["[redacted]"]);
+  });
+
+  it("blocks unsupported files and obvious prohibited sensitive columns", async () => {
+    await expect(parseImportFiles([new File(["unsafe"], "unsafe.txt")], "Finance user", serverTime)).rejects.toThrow(/not a supported/);
+
+    const parsed = await parseImportFiles([
+      csvFile("project-master.csv", "Project ID,Project Name,SSN\nTS-1,Project One,123-45-6789"),
+    ], "Finance user", serverTime);
+    expect(parsed.securityIssues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: "error", code: "PROHIBITED_SENSITIVE_FIELD", field: "SSN" }),
+    ]));
+
+    const identity = await parseImportFiles([
+      csvFile("labor-actuals.csv", "Project ID,Employee / Resource,Role,Fully Burdened Labor Cost ($)\nTS-1,Private Employee,Designer,100"),
+    ], "Finance user", serverTime);
+    expect(identity.securityIssues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: "error", code: "PROHIBITED_EMPLOYEE_IDENTITY", field: "Employee / Resource" }),
+    ]));
+  });
+
+  it("quarantines unknown project references and never assigns them silently", async () => {
+    const files = [
+      csvFile("project-master.csv", "Project ID,Project Name\nTS-1,Known Project"),
+      csvFile("nonlabor-actuals.csv", "Project ID,Cost Type,Amount ($)\nUNKNOWN,Materials,900"),
+    ];
+    const parsed = await parseImportFiles(files, "Finance user", serverTime);
+    const inspection = inspectParsedImport(parsed, serverTime);
+    const result = await transformMappedImport({ mapped: applyImportMapping(parsed, exactPlan(inspection)), files: parsed.files, serverTime });
+
+    expect(result.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "UNRECOGNIZED_PROJECT_ID", projectCode: "UNKNOWN", quarantined: true }),
+    ]));
+    expect(result.snapshot.projects).toHaveLength(1);
+    expect(result.preview.totalActualCost).toBe(0);
+  });
+
+  it("preserves separate financial facts and makes forecast availability explicit", async () => {
+    const result = await validPackage();
+    const project = result.snapshot.projects[0];
+
+    expect(project).toMatchObject({
+      projectCode: "TS-100",
+      actualLaborHours: 120,
+      actualLaborCost: 12000,
+      estimatedCostToComplete: 30000,
+    });
+    expect(project.forecastFinalCost).toBe(project.actualCostToDate + 30000);
+    expect(result.preview.controlTotals.every((control) => control.status === "reconciled")).toBe(true);
+    expect(JSON.stringify(result.normalizedDataset)).not.toContain("Employee / Resource");
+    expect(JSON.stringify(result.normalizedDataset)).not.toContain("Project Manager");
+  });
+
+  it("keeps test workspaces isolated with independent histories and lifecycle actions", async () => {
+    const first = await validPackage("TS-101");
+    const second = await validPackage("TS-202");
+    const one = commitTestWorkspace({ workspaces: [], mode: "create", name: "Scenario One", description: "First", validatedPackage: first, mappingChangeCount: 0 });
+    const two = commitTestWorkspace({ workspaces: one.workspaces, mode: "create", name: "Scenario Two", description: "Second", validatedPackage: second, mappingChangeCount: 0 });
+
+    expect(two.workspaces).toHaveLength(2);
+    expect(two.workspaces[0].validatedPackage.snapshot.projects.map((project) => project.projectCode)).toEqual(["TS-101"]);
+    expect(two.workspaces[1].validatedPackage.snapshot.projects.map((project) => project.projectCode)).toEqual(["TS-202"]);
+
+    const duplicate = duplicateTestWorkspace(two.workspaces, two.workspaces[0].workspaceId);
+    expect(duplicate.workspace.workspaceId).not.toBe(two.workspaces[0].workspaceId);
+    expect(duplicate.workspace.versions).toEqual(two.workspaces[0].versions);
+    expect(deleteTestWorkspace(duplicate.workspaces, two.workspaces[0].workspaceId)).toHaveLength(2);
+    expect(() => mergeValidatedPackages(first, first)).toThrow(/duplicate Project ID/);
+  });
+});

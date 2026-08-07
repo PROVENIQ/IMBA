@@ -25,6 +25,10 @@ export type CanonicalSourceSystem =
   | "CIVICRM"
   | "EVERYACTION"
   | "QUICKBOOKS"
+  | "ADP"
+  | "MONDAY"
+  | "ERP"
+  | "WORKBOOK_IMPORT"
   | "PAYMENT_PROCESSOR"
   | "BANK"
   | "SYNTHETIC";

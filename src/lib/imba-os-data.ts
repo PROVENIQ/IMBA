@@ -19,6 +19,7 @@ export type ImbaOsView =
   | "mission-reports"
   | "community-progress"
   | "trail-solutions"
+  | "trail-solutions-import"
   | "programs-education"
   | "assessments-designations"
   | "advocacy-policy"

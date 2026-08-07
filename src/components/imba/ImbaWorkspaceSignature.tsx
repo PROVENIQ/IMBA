@@ -2,6 +2,7 @@ import { memo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowUpRight,
+  BarChart3,
   BookOpen,
   Boxes,
   Cable,
@@ -209,6 +210,25 @@ function ManagementSignature({ active }: { active: number }) {
   );
 }
 
+function TrailSolutionsSignature({ active }: { active: number }) {
+  const cards = [
+    ["Portfolio", "Which projects are drifting", Gauge],
+    ["Forecast", "What each project will cost", BarChart3],
+    ["Decision", "What action is required", Target],
+  ] as const;
+  return (
+    <div className="grid h-full grid-cols-3 items-center gap-3" role="img" aria-label="Trail Solutions financial management sequence">
+      {cards.map(([label, detail, Icon], index) => (
+        <div key={label} className={`flex min-h-28 flex-col justify-center rounded-2xl border p-3 ${index === active % cards.length ? "border-teal-300/30 bg-teal-300/15" : "border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card)/0.75)]"}`}>
+          <Icon className="h-4 w-4 text-[rgb(var(--sa-soft))]" />
+          <span className="mt-3 text-[9px] font-black uppercase tracking-wider text-[rgb(var(--text-4))]">{label}</span>
+          <strong className="mt-1 text-[11px] leading-4 text-[rgb(var(--text))]">{detail}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface ImbaWorkspaceSignatureProps {
   section: string;
   viewId: string;
@@ -247,6 +267,7 @@ export const ImbaWorkspaceSignature = memo(function ImbaWorkspaceSignature({
       </div>
       <div className="workspace-signature-visual">
         {section === 'Mission' ? <MissionSignature active={active % 4} /> : null}
+        {section === 'Trail Solutions' ? <TrailSolutionsSignature active={active} /> : null}
         {section === 'Money' ? <MoneySignature title={title} mode={mode} /> : null}
         {section === 'Finance Integration' ? <MoneySignature title={title} mode={mode} /> : null}
         {section === 'People' ? <PeopleSignature active={active} /> : null}

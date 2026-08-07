@@ -115,6 +115,7 @@ import {
 } from "@/components/imba/ImbaCrmMigrationWorkspace";
 import { ImbaSectionInfo } from "@/components/imba/ImbaSectionInfo";
 import { ImbaOnboarding } from "@/components/imba/ImbaOnboarding";
+import { ImbaTrailSolutionsWorkspace } from "@/components/imba/ImbaTrailSolutionsWorkspace";
 import {
   ImbaAlertsDrawer,
   ImbaInsightStrip,
@@ -220,30 +221,6 @@ const imbaNavSections: ImbaNavSection[] = [
         icon: Compass,
       },
       {
-        id: "trail-solutions",
-        label: "Trail Solutions",
-        description: "Plan, build, sign + steward",
-        icon: Mountain,
-      },
-      {
-        id: "project-command",
-        label: "Project job costing",
-        description: "Loaded cost + shared resources",
-        icon: Calculator,
-      },
-      {
-        id: "project-board",
-        label: "Project delivery",
-        description: "Finance-aware Kanban",
-        icon: ListChecks,
-      },
-      {
-        id: "construction-reports",
-        label: "Construction reports",
-        description: "Delivery + crew controls",
-        icon: BarChart3,
-      },
-      {
         id: "mission-reports",
         label: "Mission reports",
         description: "Programs + planning + policy",
@@ -296,6 +273,43 @@ const imbaNavSections: ImbaNavSection[] = [
         label: "Data exchange",
         description: "Synthesize inflows + outflows",
         icon: Workflow,
+      },
+    ],
+  },
+  {
+    label: "Trail Solutions",
+    color: "border-teal-400/30 text-teal-800 dark:text-teal-100",
+    active: "bg-teal-400/10",
+    items: [
+      {
+        id: "trail-solutions",
+        label: "Financial management",
+        description: "Performance, risk + decisions",
+        icon: Mountain,
+      },
+      {
+        id: "trail-solutions-import",
+        label: "Upload data for analysis",
+        description: "Finance validation workspace",
+        icon: Database,
+      },
+      {
+        id: "project-command",
+        label: "Project job costing",
+        description: "Loaded cost + shared resources",
+        icon: Calculator,
+      },
+      {
+        id: "project-board",
+        label: "Project delivery",
+        description: "Finance-aware Kanban",
+        icon: ListChecks,
+      },
+      {
+        id: "construction-reports",
+        label: "Construction reports",
+        description: "Delivery + crew controls",
+        icon: BarChart3,
       },
     ],
   },
@@ -863,6 +877,7 @@ const allNavItems = imbaNavSections.flatMap((section) => section.items);
 type SectionAccent = { sa: string; soft: string; softLight: string; ink: string };
 const sectionAccents: Record<string, SectionAccent> = {
   Mission: { sa: '96 165 250', soft: '191 219 254', softLight: '29 78 145', ink: '8 20 35' },
+  'Trail Solutions': { sa: '45 212 191', soft: '153 246 228', softLight: '17 94 89', ink: '4 26 24' },
   Money: { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
   'Finance Integration': { sa: '183 227 91', soft: '223 247 168', softLight: '63 96 18', ink: '16 32 22' },
   People: { sa: '34 211 238', soft: '165 243 252', softLight: '14 105 128', ink: '6 26 31' },
@@ -889,6 +904,15 @@ const sectionInfo: Record<string, { sources: string[]; note?: string }> = {
       'Public impact and advocacy records',
     ],
     note: 'Illustrative until program systems are connected. Public figures trace to IMBA’s Form 990.',
+  },
+  'Trail Solutions': {
+    sources: [
+      'Workbook-derived synthetic snapshot — discovery and validation structure',
+      'Future ERP — project accounting system of record',
+      'ADP — labor hours and loaded project cost',
+      'Monday.com or successor — operational milestones and forecast drivers',
+    ],
+    note: 'Synthetic demonstration data only. Financial thresholds are configurable assumptions; no production provider writes are enabled.',
   },
   Money: {
     sources: [
@@ -1039,6 +1063,7 @@ function navSectionsForRole(role: ImbaRoleKey): ImbaNavSection[] {
   const profile = imbaRoleProfiles[role];
   const sidebarOrder = [
     "Management",
+    "Trail Solutions",
     "Mission",
     "Money",
     "Finance Integration",
@@ -1097,7 +1122,6 @@ const operationsViews: ImbaOperationsView[] = [
 ];
 const missionViews: ImbaMissionView[] = [
   "community-progress",
-  "trail-solutions",
   "construction-reports",
   "mission-reports",
   "programs-education",
@@ -2237,6 +2261,26 @@ export function ImbaCeoCockpit() {
             tone: onWatch.length ? "warning" : "positive",
             project: onWatch[0]?.name,
             targetView: target("mission-reports"),
+          },
+        ];
+        break;
+      case "Trail Solutions":
+        sectionInsights = [
+          {
+            id: "trail-solutions-decisions",
+            scope,
+            title: "Project warnings now resolve into decisions",
+            detail: "Open Financial management to see forecast effect, supporting evidence, owner, and due date together.",
+            tone: "warning",
+            targetView: target("trail-solutions"),
+          },
+          {
+            id: "trail-solutions-data",
+            scope,
+            title: "Incomplete data blocks false precision",
+            detail: "Projects with unresolved mappings or no estimate to complete show Data incomplete instead of a misleading margin.",
+            tone: "positive",
+            targetView: target("trail-solutions"),
           },
         ];
         break;
@@ -3883,6 +3927,14 @@ export function ImbaCeoCockpit() {
               <ImbaOperationsWorkspace
                 view={view as ImbaOperationsView}
                 onNavigate={setCurrentView}
+              />
+            ) : null}
+
+            {view === "trail-solutions" || view === "trail-solutions-import" ? (
+              <ImbaTrailSolutionsWorkspace
+                key={view}
+                role={role}
+                initialView={view === "trail-solutions-import" ? "import-lab" : "portfolio"}
               />
             ) : null}
 

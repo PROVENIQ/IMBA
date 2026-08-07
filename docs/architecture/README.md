@@ -11,6 +11,7 @@ This directory is the binding architecture record. It deliberately separates tec
 - [PII_RETENTION_AND_ERASURE.md](./PII_RETENTION_AND_ERASURE.md) defines how immutable history coexists with erasure obligations.
 - [ACCOUNTING_BOUNDARY.md](./ACCOUNTING_BOUNDARY.md) defines the accounting packet contract and QuickBooks boundary without deciding accounting policy.
 - [PROJECTIONS_AND_OPERATIONS.md](./PROJECTIONS_AND_OPERATIONS.md) defines projection classes, rebuilds, replay, and operational controls.
+- [TRAIL_SOLUTIONS_FINANCIAL_MANAGEMENT.md](./TRAIL_SOLUTIONS_FINANCIAL_MANAGEMENT.md) defines the workbook, management-read-model, and future ERP boundaries for Trail Solutions.
 
 ## Non-negotiable invariants
 

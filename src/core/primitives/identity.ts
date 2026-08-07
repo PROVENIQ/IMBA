@@ -24,6 +24,26 @@ export type ExternalIdentityId = Brand<string, "ExternalIdentityId">;
 export type ActorId = Brand<string, "ActorId">;
 export type AccountingPacketId = Brand<string, "AccountingPacketId">;
 export type PiiContextId = Brand<string, "PiiContextId">;
+export type ProjectId = Brand<string, "ProjectId">;
+export type ProjectIdentifierCrosswalkId = Brand<string, "ProjectIdentifierCrosswalkId">;
+export type EstimateVersionId = Brand<string, "EstimateVersionId">;
+export type EstimateLineId = Brand<string, "EstimateLineId">;
+export type LaborActualId = Brand<string, "LaborActualId">;
+export type NonlaborActualId = Brand<string, "NonlaborActualId">;
+export type RevenueBillingRecordId = Brand<string, "RevenueBillingRecordId">;
+export type ChangeOrderId = Brand<string, "ChangeOrderId">;
+export type OperationalDriverId = Brand<string, "OperationalDriverId">;
+export type GrantFundingRecordId = Brand<string, "GrantFundingRecordId">;
+export type LaborRateId = Brand<string, "LaborRateId">;
+export type CostCodeMappingId = Brand<string, "CostCodeMappingId">;
+export type DataExceptionId = Brand<string, "DataExceptionId">;
+export type BenchmarkId = Brand<string, "BenchmarkId">;
+export type DecisionItemId = Brand<string, "DecisionItemId">;
+export type DataRefreshStatusId = Brand<string, "DataRefreshStatusId">;
+export type TestWorkspaceId = Brand<string, "TestWorkspaceId">;
+export type ImportAttemptId = Brand<string, "ImportAttemptId">;
+export type ImportVersionId = Brand<string, "ImportVersionId">;
+export type MappingTemplateId = Brand<string, "MappingTemplateId">;
 
 const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -86,6 +106,46 @@ export const asAccountingPacketId = (value: string): AccountingPacketId =>
   asDomainId<AccountingPacketId>(value, "accountingPacketId");
 export const asPiiContextId = (value: string): PiiContextId =>
   asDomainId<PiiContextId>(value, "piiContextId");
+export const asProjectId = (value: string): ProjectId =>
+  asDomainId<ProjectId>(value, "projectId");
+export const asProjectIdentifierCrosswalkId = (value: string): ProjectIdentifierCrosswalkId =>
+  asDomainId<ProjectIdentifierCrosswalkId>(value, "projectIdentifierCrosswalkId");
+export const asEstimateVersionId = (value: string): EstimateVersionId =>
+  asDomainId<EstimateVersionId>(value, "estimateVersionId");
+export const asEstimateLineId = (value: string): EstimateLineId =>
+  asDomainId<EstimateLineId>(value, "estimateLineId");
+export const asLaborActualId = (value: string): LaborActualId =>
+  asDomainId<LaborActualId>(value, "laborActualId");
+export const asNonlaborActualId = (value: string): NonlaborActualId =>
+  asDomainId<NonlaborActualId>(value, "nonlaborActualId");
+export const asRevenueBillingRecordId = (value: string): RevenueBillingRecordId =>
+  asDomainId<RevenueBillingRecordId>(value, "revenueBillingRecordId");
+export const asChangeOrderId = (value: string): ChangeOrderId =>
+  asDomainId<ChangeOrderId>(value, "changeOrderId");
+export const asOperationalDriverId = (value: string): OperationalDriverId =>
+  asDomainId<OperationalDriverId>(value, "operationalDriverId");
+export const asGrantFundingRecordId = (value: string): GrantFundingRecordId =>
+  asDomainId<GrantFundingRecordId>(value, "grantFundingRecordId");
+export const asLaborRateId = (value: string): LaborRateId =>
+  asDomainId<LaborRateId>(value, "laborRateId");
+export const asCostCodeMappingId = (value: string): CostCodeMappingId =>
+  asDomainId<CostCodeMappingId>(value, "costCodeMappingId");
+export const asDataExceptionId = (value: string): DataExceptionId =>
+  asDomainId<DataExceptionId>(value, "dataExceptionId");
+export const asBenchmarkId = (value: string): BenchmarkId =>
+  asDomainId<BenchmarkId>(value, "benchmarkId");
+export const asDecisionItemId = (value: string): DecisionItemId =>
+  asDomainId<DecisionItemId>(value, "decisionItemId");
+export const asDataRefreshStatusId = (value: string): DataRefreshStatusId =>
+  asDomainId<DataRefreshStatusId>(value, "dataRefreshStatusId");
+export const asTestWorkspaceId = (value: string): TestWorkspaceId =>
+  asDomainId<TestWorkspaceId>(value, "testWorkspaceId");
+export const asImportAttemptId = (value: string): ImportAttemptId =>
+  asDomainId<ImportAttemptId>(value, "importAttemptId");
+export const asImportVersionId = (value: string): ImportVersionId =>
+  asDomainId<ImportVersionId>(value, "importVersionId");
+export const asMappingTemplateId = (value: string): MappingTemplateId =>
+  asDomainId<MappingTemplateId>(value, "mappingTemplateId");
 
 export function newUuidV4(): UuidV4 {
   return asUuidV4(crypto.randomUUID());

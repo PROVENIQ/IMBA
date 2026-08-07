@@ -19,7 +19,6 @@ import { imbaProjectTasks } from "@/lib/imba-detail-data";
 
 export type ImbaMissionView =
   | "community-progress"
-  | "trail-solutions"
   | "construction-reports"
   | "mission-reports"
   | "programs-education"
@@ -124,64 +123,6 @@ const configs: Record<ImbaMissionOperatingView, MissionConfig> = {
         relationships: ["Regional coalition", "Land agency", "Tourism bureau", "IMBA designation lead"],
         touchpoints: ["Designation", "Impact study", "Maintenance plan", "Marketing"],
         linkedView: "impact-research",
-      },
-    ],
-  },
-  "trail-solutions": {
-    eyebrow: "Mission / earned-revenue delivery",
-    title: "Trail Solutions",
-    description:
-      "Control the complete service chain from vision and inventory through planning, design, construction, signage, maintenance, and client acceptance.",
-    valueLabel: "Delivery phase",
-    metrics: [
-      { label: "Planning projects", value: "53", note: "Across 27 states" },
-      { label: "Miles planned", value: "703.7", note: "2025 public baseline" },
-      { label: "Construction projects", value: "11", note: "Across 10 states" },
-      { label: "Miles built", value: "41.2", note: "2025 public baseline" },
-    ],
-    workflow: ["Qualify", "Plan + design", "Build + sign", "Accept + steward"],
-    records: [
-      {
-        id: "TS-26018",
-        name: "Regional Trail Master Plan",
-        secondary: "Planning and design",
-        value: "Plan + design",
-        owner: "Senior Planner",
-        next: "30% concept review",
-        status: "Healthy",
-        detail:
-          "Community engagement, asset inventory, concept alternatives, funding assumptions, and land-manager approvals share one controlled project record.",
-        relationships: ["Client sponsor", "Land agency", "Local organization", "Design lead"],
-        touchpoints: ["Signed SOW", "Field inventory", "Community session", "Billing milestone"],
-        linkedView: "project-command",
-      },
-      {
-        id: "TS-26023",
-        name: "Urban Bike Park Build",
-        secondary: "Professional construction",
-        value: "Build + sign",
-        owner: "Construction PM",
-        next: "Change-order decision",
-        status: "Decision",
-        detail:
-          "Field production, equipment, subcontractors, safety, client decisions, estimate-to-complete, and billing triggers are joined.",
-        relationships: ["Municipal client", "General contractor", "Safety lead", "Project accountant"],
-        touchpoints: ["Mobilization", "Daily production", "Change request", "Inspection"],
-        linkedView: "project-board",
-      },
-      {
-        id: "TS-26031",
-        name: "Destination Wayfinding System",
-        secondary: "Signage and wayfinding",
-        value: "Build + sign",
-        owner: "Signage Lead",
-        next: "Fabrication release",
-        status: "On track",
-        detail:
-          "Sign inventory, design standards, approvals, fabrication, placement, accessibility, and final asset ownership move together.",
-        relationships: ["Tourism office", "Land manager", "Fabricator", "Brand owner"],
-        touchpoints: ["Sign plan", "Proof approval", "Fabrication", "Installation map"],
-        linkedView: "trail-assets",
       },
     ],
   },
@@ -740,8 +681,8 @@ function ConstructionReports() {
 }
 
 const missionReportSourcesByRole: Partial<Record<ImbaRoleKey, ImbaMissionOperatingView[]>> = {
-  executive: ["community-progress", "trail-solutions", "programs-education", "assessments-designations", "advocacy-policy", "trail-assets", "impact-research"],
-  "planning-design": ["trail-solutions", "trail-assets"],
+  executive: ["community-progress", "programs-education", "assessments-designations", "advocacy-policy", "trail-assets", "impact-research"],
+  "planning-design": ["trail-assets"],
   "local-programs": ["community-progress", "programs-education", "assessments-designations", "trail-assets", "impact-research"],
   "government-affairs": ["advocacy-policy", "impact-research"],
 };
