@@ -9,10 +9,11 @@ const VALID_ROLES: ReadonlySet<ImbaRoleKey> = new Set(
   Object.keys(imbaRoleProfiles) as ImbaRoleKey[],
 );
 
-// The role a signed-in user gets when nothing more specific is known. "executive"
-// gives invited pitch viewers the full CEO experience; the real safeguards are the
-// invite-only allowlist (Clerk) and the server-side upload gate — not this default.
-export const DEFAULT_ROLE: ImbaRoleKey = "executive";
+// The role a signed-in user gets when no role is assigned to their identity. Kept
+// deliberately LIMITED ("board" = oversight only: no Trail data writes, no admin
+// actions) so an invited-but-unassigned person never lands with CEO access. Real
+// users should be assigned an explicit role via Clerk publicMetadata.role.
+export const DEFAULT_ROLE: ImbaRoleKey = "board";
 
 // Configurable allowlist pinning specific invited people to a role. Lowercase emails.
 // Edit as the audience is confirmed, e.g. { "kent@imba.com": "executive" }.
