@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
+import { resolveImbaRole } from "@/lib/auth-roles";
 import {
   IMPORT_TABLE_SPECS,
   type ImportMappingPlanEntry,
@@ -42,7 +44,22 @@ function parseMappingPlan(value: FormDataEntryValue | null): ImportMappingPlanEn
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const role = request.headers.get("x-imba-demo-role");
+  // Identity is verified server-side from the Clerk session, never from a
+  // client-supplied header. Middleware already blocks anonymous requests; this
+  // is defense-in-depth plus the finance/executive capability check.
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      { error: "You must be signed in to upload data." },
+      { status: 401, headers: responseHeaders },
+    );
+  }
+  const user = await currentUser();
+  const email =
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.emailAddresses?.[0]?.emailAddress ??
+    null;
+  const role = resolveImbaRole({ email, publicMetadataRole: user?.publicMetadata?.role });
   if (role !== "finance" && role !== "executive") {
     return NextResponse.json(
       { error: "CEO or Finance access is required for Data Import Lab uploads." },
@@ -56,7 +73,7 @@ export async function POST(request: Request): Promise<Response> {
     if (action !== "inspect" && action !== "validate") throw new TypeError("Import action must be inspect or validate.");
     const files = formData.getAll("files").filter((value): value is File => value instanceof File);
     const serverTime = new Date().toISOString();
-    const actorLabel = role === "executive" ? "CEO user (prototype role)" : "Finance user (prototype role)";
+    const actorLabel = user?.fullName ?? email ?? (role === "executive" ? "CEO user" : "Finance user");
     const parsed = await parseImportFiles(files, actorLabel, serverTime);
     if (action === "inspect") {
       return NextResponse.json(inspectParsedImport(parsed, serverTime), { headers: responseHeaders });

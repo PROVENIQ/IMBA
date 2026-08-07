@@ -246,7 +246,7 @@ export function ImbaTrailSolutionsWorkspace({
       {view === "benchmarks" ? <BenchmarksView benchmarks={snapshot.benchmarks} /> : null}
       {view === "exceptions" ? <ExceptionsView exceptions={snapshot.dataHealth.exceptions} projects={snapshot.projects} finance={canViewDataHealth} onOpenProject={openProject} /> : null}
       {view === "data-health" ? canViewDataHealth ? <DataHealthView snapshot={snapshot} /> : <ErrorState message="CEO or Finance access is required for detailed import and mapping controls." /> : null}
-      {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab role={role} workspaces={workspaces} onWorkspacesChange={setWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
+      {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab workspaces={workspaces} onWorkspacesChange={setWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
     </div>
   );
 }

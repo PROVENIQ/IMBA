@@ -41,7 +41,6 @@ import {
   saveMappingTemplate,
   setTestWorkspaceArchived,
 } from "@/lib/trail-solutions-test-workspaces";
-import type { ImbaRoleKey } from "@/lib/imba-intelligence-data";
 
 const steps = ["Workspace", "Upload", "Map", "Validate", "Preview", "Import", "Review"] as const;
 
@@ -102,13 +101,11 @@ function CardTitle({ eyebrow, title, note }: { eyebrow: string; title: string; n
 }
 
 export function ImbaTrailSolutionsImportLab({
-  role,
   workspaces,
   onWorkspacesChange,
   onOpenWorkspace,
   onOpenPortfolio,
 }: {
-  role: ImbaRoleKey;
   workspaces: readonly TrailSolutionsTestWorkspace[];
   onWorkspacesChange: (workspaces: TrailSolutionsTestWorkspace[]) => void;
   onOpenWorkspace: (workspace: TrailSolutionsTestWorkspace) => void;
@@ -177,7 +174,6 @@ export function ImbaTrailSolutionsImportLab({
       if (action === "validate") formData.set("mappingPlan", JSON.stringify(mappingPlan));
       const response = await fetch("/api/trail-solutions/import", {
         method: "POST",
-        headers: { "x-imba-demo-role": role },
         body: formData,
       });
       const body = await response.json() as ImportInspectionResult | ValidatedImportPackage | { error: string };

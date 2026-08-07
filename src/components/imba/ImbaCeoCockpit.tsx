@@ -2018,7 +2018,7 @@ function ImbaRoadmapView({
   );
 }
 
-export function ImbaCeoCockpit() {
+export function ImbaCeoCockpit({ initialRole }: { initialRole?: ImbaRoleKey } = {}) {
   const { connectors, syncJobs, addAuditEvent } = useImbaOsState();
   const [view, setView] = useState<ImbaOsView>("brief");
   const workspaceScrollRef = useRef<HTMLElement | null>(null);
@@ -2046,7 +2046,7 @@ export function ImbaCeoCockpit() {
       /* storage unavailable */
     }
   }, [decisionRecords]);
-  const [role, setRole] = useState<ImbaRoleKey>("executive");
+  const [role, setRole] = useState<ImbaRoleKey>(initialRole ?? "executive");
   const [filters, setFilters] = useState<ImbaFilterState>(initialImbaFilters);
   const [savedViews, setSavedViews] = useState<ImbaSavedView[]>([]);
   const [alerts, setAlerts] = useState<ImbaAlertRule[]>(initialImbaAlerts);

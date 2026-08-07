@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        {children}
+        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+          {children}
+        </ClerkProvider>
         <Analytics />
         <GoogleAnalytics gaId="G-99H4GKBKPB" />
       </body>

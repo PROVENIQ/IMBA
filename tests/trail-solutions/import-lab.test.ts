@@ -1,5 +1,27 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import ExcelJS from "exceljs";
+
+// The import route now authorizes via the server-side Clerk session rather than a
+// client header. Mock Clerk so the route can be unit-tested for signed-out (401),
+// under-privileged (403), and authorized (pass) cases.
+const clerkState = vi.hoisted(() => ({
+  userId: null as string | null,
+  role: null as string | null,
+  email: null as string | null,
+}));
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: async () => ({ userId: clerkState.userId }),
+  currentUser: async () =>
+    clerkState.userId
+      ? {
+          id: clerkState.userId,
+          fullName: "Test User",
+          primaryEmailAddress: clerkState.email ? { emailAddress: clerkState.email } : null,
+          emailAddresses: clerkState.email ? [{ emailAddress: clerkState.email }] : [],
+          publicMetadata: clerkState.role ? { role: clerkState.role } : {},
+        }
+      : null,
+}));
 
 import {
   applyImportMapping,
@@ -75,18 +97,30 @@ describe("Trail Solutions Data Import Lab", () => {
     expect(parsed.tables[0].rows[0]).toMatchObject({ "Project ID": "TS-XLSX", "Project Name": "Workbook Project" });
   });
 
-  it("requires CEO or Finance access before processing files", async () => {
-    const response = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
-    expect(response.status).toBe(403);
+  it("requires a signed-in CEO or Finance user before processing files", async () => {
+    // Signed out → 401 (middleware also blocks this in production; defense in depth).
+    clerkState.userId = null;
+    clerkState.role = null;
+    const anonymous = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
+    expect(anonymous.status).toBe(401);
 
+    // Signed in but under-privileged role → 403.
+    clerkState.userId = "user_board";
+    clerkState.role = "board";
+    const forbidden = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
+    expect(forbidden.status).toBe(403);
+
+    // Signed in as CEO → allowed past the auth gate.
+    clerkState.userId = "user_exec";
+    clerkState.role = "executive";
     const executiveForm = new FormData();
     executiveForm.set("action", "inspect");
     const executiveResponse = await POST(new Request("http://localhost/api/trail-solutions/import", {
       method: "POST",
-      headers: { "x-imba-demo-role": "executive" },
       body: executiveForm,
     }));
     expect(executiveResponse.status).not.toBe(403);
+    expect(executiveResponse.status).not.toBe(401);
   });
 
   it("detects standardized CSV tables, maps exact headers, and redacts identity samples", async () => {
