@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   AlertTriangle,
@@ -38,8 +38,8 @@ import {
   workbookDerivedTrailSolutionsDataSource,
 } from "@/integrations/trail-solutions/workbook-derived-adapter";
 import {
+  fetchTestWorkspaces,
   getActiveTestWorkspaceId,
-  loadTestWorkspaces,
   setActiveTestWorkspaceId,
 } from "@/lib/trail-solutions-test-workspaces";
 import { ImbaTrailSolutionsTour } from "@/components/imba/ImbaTrailSolutionsTour";
@@ -154,15 +154,24 @@ export function ImbaTrailSolutionsWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [decisionStatuses, setDecisionStatuses] = useState<Record<string, DecisionItem["status"]>>({});
 
+  const reloadWorkspaces = useCallback(async () => {
+    if (!canManageTrailData) return;
+    try {
+      setWorkspaces(await fetchTestWorkspaces());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Saved workspaces could not be loaded.");
+    }
+  }, [canManageTrailData]);
+
   useEffect(() => {
     let active = true;
     workbookDerivedTrailSolutionsDataSource.getSnapshot(trailSolutionsDemoContext)
       .then((next) => { if (active) setDemoSnapshot(next); })
       .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Unknown adapter error"); });
-    setWorkspaces(loadTestWorkspaces());
+    void reloadWorkspaces();
     setActiveWorkspaceIdState(getActiveTestWorkspaceId());
     return () => { active = false; };
-  }, []);
+  }, [reloadWorkspaces]);
 
   const activeWorkspace = canManageTrailData
     ? workspaces.find((workspace) => workspace.workspaceId === activeWorkspaceId && !workspace.archived)
@@ -246,7 +255,7 @@ export function ImbaTrailSolutionsWorkspace({
       {view === "benchmarks" ? <BenchmarksView benchmarks={snapshot.benchmarks} /> : null}
       {view === "exceptions" ? <ExceptionsView exceptions={snapshot.dataHealth.exceptions} projects={snapshot.projects} finance={canViewDataHealth} onOpenProject={openProject} /> : null}
       {view === "data-health" ? canViewDataHealth ? <DataHealthView snapshot={snapshot} /> : <ErrorState message="CEO or Finance access is required for detailed import and mapping controls." /> : null}
-      {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab workspaces={workspaces} onWorkspacesChange={setWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
+      {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab role={role} workspaces={workspaces} onReload={reloadWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
     </div>
   );
 }

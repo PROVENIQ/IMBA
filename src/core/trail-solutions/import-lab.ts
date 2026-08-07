@@ -312,7 +312,7 @@ export interface TrailSolutionsTestWorkspace {
   readonly organizationId: string;
   readonly name: string;
   readonly description: string;
-  readonly environment: "uploaded-test";
+  readonly environment: "uploaded-test" | "validated-production-derived";
   readonly firstImportedAt: string;
   readonly lastImportedAt: string;
   readonly importedBy: string;

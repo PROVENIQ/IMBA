@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArrowLeft,
   ArrowRight,
   Check,
-  Copy,
   Download,
   FileSpreadsheet,
   FolderOpen,
@@ -32,15 +31,16 @@ import {
   type ValidatedImportPackage,
 } from "@/core/trail-solutions/import-lab";
 import {
-  commitTestWorkspace,
-  deleteTestWorkspace,
-  duplicateTestWorkspace,
-  loadMappingTemplates,
-  persistTestWorkspaces,
-  renameTestWorkspace,
-  saveMappingTemplate,
-  setTestWorkspaceArchived,
+  archiveTestWorkspaceRemote,
+  commitTestWorkspaceRemote,
+  deleteTestWorkspaceRemote,
+  fetchMappingTemplates,
+  promoteTestWorkspaceRemote,
+  renameTestWorkspaceRemote,
+  resetTestDataRemote,
+  saveMappingTemplateRemote,
 } from "@/lib/trail-solutions-test-workspaces";
+import type { ImbaRoleKey } from "@/lib/imba-intelligence-data";
 
 const steps = ["Workspace", "Upload", "Map", "Validate", "Preview", "Import", "Review"] as const;
 
@@ -101,16 +101,19 @@ function CardTitle({ eyebrow, title, note }: { eyebrow: string; title: string; n
 }
 
 export function ImbaTrailSolutionsImportLab({
+  role,
   workspaces,
-  onWorkspacesChange,
+  onReload,
   onOpenWorkspace,
   onOpenPortfolio,
 }: {
+  role: ImbaRoleKey;
   workspaces: readonly TrailSolutionsTestWorkspace[];
-  onWorkspacesChange: (workspaces: TrailSolutionsTestWorkspace[]) => void;
+  onReload: () => Promise<void>;
   onOpenWorkspace: (workspace: TrailSolutionsTestWorkspace) => void;
   onOpenPortfolio: () => void;
 }) {
+  const canAdminister = role === "executive";
   const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<ImportWorkspaceMode>("create");
@@ -124,8 +127,14 @@ export function ImbaTrailSolutionsImportLab({
   const [acknowledgedWarnings, setAcknowledgedWarnings] = useState(false);
   const [saveTemplate, setSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
-  const [templates, setTemplates] = useState<ImportMappingTemplate[]>(() => loadMappingTemplates());
+  const [templates, setTemplates] = useState<ImportMappingTemplate[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchMappingTemplates().then((next) => { if (active) setTemplates(next); }).catch(() => { /* templates are optional */ });
+    return () => { active = false; };
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [completedWorkspace, setCompletedWorkspace] = useState<TrailSolutionsTestWorkspace | null>(null);
 
@@ -140,11 +149,6 @@ export function ImbaTrailSolutionsImportLab({
       return total + fieldChanges + (source.targetTable !== entry.targetTable ? 1 : 0);
     }, 0);
   }, [inspection, mappingPlan]);
-
-  const updateWorkspaces = (next: TrailSolutionsTestWorkspace[]) => {
-    persistTestWorkspaces(next);
-    onWorkspacesChange(next);
-  };
 
   const chooseMode = (nextMode: ImportWorkspaceMode) => {
     setMode(nextMode);
@@ -187,7 +191,7 @@ export function ImbaTrailSolutionsImportLab({
         const result = body as ValidatedImportPackage;
         setValidated(result);
         if (saveTemplate && templateName.trim()) {
-          const template = saveMappingTemplate({ name: templateName, sourceLabel: files.map((file) => file.name).join(", "), savedAt: result.recordedAt, mappings: mappingPlan });
+          const template = await saveMappingTemplateRemote({ name: templateName, sourceLabel: files.map((file) => file.name).join(", "), mappings: mappingPlan });
           setTemplates((current) => [...current.filter((candidate) => candidate.name.toLowerCase() !== template.name.toLowerCase()), template]);
         }
         setStep(4);
@@ -222,28 +226,50 @@ export function ImbaTrailSolutionsImportLab({
     }));
   };
 
-  const commit = () => {
-    if (!validated) return;
-    if (mode === "replace" && !window.confirm(`Replace the active data in “${selectedWorkspace?.name}”? Earlier import versions will remain in local history.`)) return;
+  const commit = async () => {
+    if (!validated || busy) return;
+    if (mode === "replace" && !window.confirm(`Replace the active data in “${selectedWorkspace?.name}”? Earlier import versions remain in history.`)) return;
+    setBusy(true);
     try {
-      const result = commitTestWorkspace({ workspaces, mode, workspaceId: workspaceId || undefined, name: workspaceName, description, validatedPackage: validated, mappingTemplateName: saveTemplate ? templateName : undefined, mappingChangeCount });
-      updateWorkspaces(result.workspaces);
-      setCompletedWorkspace(result.workspace);
-      onOpenWorkspace(result.workspace);
+      const workspace = await commitTestWorkspaceRemote({ mode, workspaceId: workspaceId || undefined, name: workspaceName, description, validatedPackage: validated, mappingTemplateName: saveTemplate ? templateName : undefined, mappingChangeCount });
+      await onReload();
+      setCompletedWorkspace(workspace);
+      onOpenWorkspace(workspace);
       setStep(7);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The workspace could not be saved.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runMutation = async (mutate: () => Promise<void>) => {
+    try {
+      await mutate();
+      await onReload();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "The workspace could not be updated.");
     }
   };
 
   const rename = (workspace: TrailSolutionsTestWorkspace) => {
     const next = window.prompt("New workspace name", workspace.name)?.trim();
-    if (next) updateWorkspaces(renameTestWorkspace(workspaces, workspace.workspaceId, next));
+    if (next) void runMutation(() => renameTestWorkspaceRemote(workspace.workspaceId, next));
   };
 
   const remove = (workspace: TrailSolutionsTestWorkspace) => {
-    if (!window.confirm(`Delete “${workspace.name}”? This removes its browser-local test data and cannot affect demonstration or production data.`)) return;
-    updateWorkspaces(deleteTestWorkspace(workspaces, workspace.workspaceId));
+    if (!window.confirm(`Delete “${workspace.name}”? This soft-deletes the workspace (recoverable, audited) and never affects demonstration or production data.`)) return;
+    void runMutation(() => deleteTestWorkspaceRemote(workspace.workspaceId));
+  };
+
+  const promote = (workspace: TrailSolutionsTestWorkspace) => {
+    if (!window.confirm(`Promote “${workspace.name}” to production-derived data? It will be excluded from "Clear test data".`)) return;
+    void runMutation(() => promoteTestWorkspaceRemote(workspace.workspaceId));
+  };
+
+  const clearAllTestData = () => {
+    if (!window.confirm("Clear ALL test workspaces for the organization? Production-promoted workspaces are kept. This is soft-delete + audited.")) return;
+    void runMutation(async () => { await resetTestDataRemote(); });
   };
 
   const resetWizard = () => {
@@ -256,7 +282,7 @@ export function ImbaTrailSolutionsImportLab({
       <LabCard className="overflow-hidden">
         <div className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]">
           <div><p className="text-[10px] font-black uppercase tracking-[0.17em] text-blue-800 dark:text-blue-100">Finance control surface</p><h2 className="mt-2 text-xl font-semibold text-[rgb(var(--text))]">Data Import Lab</h2><p className="mt-2 max-w-3xl text-xs leading-6 text-[rgb(var(--text-2))]">Upload, inspect, map, validate, reconcile, and test historical job-cost data without changing accounting records. The Import Lab is a quality-control checkpoint, not a one-click dashboard replacement.</p></div>
-          <div className="max-w-sm rounded-2xl border border-amber-300/20 bg-amber-300/[0.055] p-4"><p className="flex gap-2 text-[11px] font-semibold text-amber-900 dark:text-amber-100"><ShieldAlert className="h-4 w-4 shrink-0" />{TEST_DATA_BANNER}</p><p className="mt-2 text-[10px] leading-4 text-[rgb(var(--text-3))]">Prototype workspaces are isolated in this browser. Production persistence and authorization are not enabled.</p></div>
+          <div className="max-w-sm rounded-2xl border border-amber-300/20 bg-amber-300/[0.055] p-4"><p className="flex gap-2 text-[11px] font-semibold text-amber-900 dark:text-amber-100"><ShieldAlert className="h-4 w-4 shrink-0" />{TEST_DATA_BANNER}</p><p className="mt-2 text-[10px] leading-4 text-[rgb(var(--text-3))]">Uploaded workspaces are stored server-side, shared across your organization, and isolated from demonstration and production accounting systems.</p></div>
         </div>
         <ol className="grid grid-cols-4 border-t border-[rgb(var(--line)/0.08)] md:grid-cols-7">{steps.map((label, index) => <li key={label} className={`border-r border-[rgb(var(--line)/0.06)] px-2 py-3 text-center text-[9px] font-black uppercase tracking-wide last:border-r-0 ${step === index + 1 ? "bg-blue-300 text-[#102030]" : step > index + 1 ? "text-emerald-800 dark:text-emerald-100" : "text-[rgb(var(--text-4))]"}`}><span className="mr-1">{index + 1}</span>{label}</li>)}</ol>
       </LabCard>
@@ -265,7 +291,7 @@ export function ImbaTrailSolutionsImportLab({
 
       {step === 1 ? <>
         <LabCard><CardTitle eyebrow="Step 1" title="Choose the test-workspace operation" note="Uploaded data can never target the demonstration environment or a production system." /><div className="grid gap-3 p-4 md:grid-cols-3">{([['create', 'Create new', 'Start a separately named test workspace.'], ['replace', 'Replace existing', 'Create a new version while preserving prior import history.'], ['add', 'Add to existing', 'Add projects only when Project IDs do not collide.']] as const).map(([value, label, note]) => <button key={value} type="button" onClick={() => chooseMode(value)} className={`rounded-2xl border p-4 text-left ${mode === value ? "border-blue-300/40 bg-blue-300/10" : "border-[rgb(var(--line)/0.1)]"}`}><p className="text-xs font-semibold text-[rgb(var(--text))]">{label}</p><p className="mt-2 text-[11px] leading-5 text-[rgb(var(--text-3))]">{note}</p></button>)}</div><div className="grid gap-3 border-t border-[rgb(var(--line)/0.07)] p-4 md:grid-cols-2">{mode !== "create" ? <label className="text-[10px] font-bold uppercase text-[rgb(var(--text-3))]">Existing workspace<select value={workspaceId} onChange={(event) => selectExistingWorkspace(event.target.value)} className="mt-2 w-full rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card))] px-3 py-2.5 text-xs font-normal normal-case text-[rgb(var(--text))]"><option value="">Select workspace</option>{workspaces.filter((workspace) => !workspace.archived).map((workspace) => <option key={workspace.workspaceId} value={workspace.workspaceId}>{workspace.name}</option>)}</select></label> : <label className="text-[10px] font-bold uppercase text-[rgb(var(--text-3))]">Workspace name<input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="Historical Pilot — Planning Projects" className="mt-2 w-full rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card))] px-3 py-2.5 text-xs font-normal normal-case text-[rgb(var(--text))]" /></label>}<label className="text-[10px] font-bold uppercase text-[rgb(var(--text-3))]">Description<input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What this workspace is testing" className="mt-2 w-full rounded-xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card))] px-3 py-2.5 text-xs font-normal normal-case text-[rgb(var(--text))]" /></label></div><div className="flex justify-end p-4 pt-0"><button type="button" disabled={!workspaceName.trim() || (mode !== "create" && !workspaceId)} onClick={() => setStep(2)} className="inline-flex items-center gap-2 rounded-xl bg-blue-300 px-4 py-2.5 text-[10px] font-black uppercase text-[#102030] disabled:opacity-40">Continue to upload <ArrowRight className="h-3.5 w-3.5" /></button></div></LabCard>
-        <WorkspaceLibrary workspaces={workspaces} onOpen={onOpenWorkspace} onRename={rename} onRefresh={(workspace) => { chooseMode("replace"); selectExistingWorkspace(workspace.workspaceId); setStep(1); }} onDuplicate={(workspace) => { const result = duplicateTestWorkspace(workspaces, workspace.workspaceId); updateWorkspaces(result.workspaces); }} onArchive={(workspace) => updateWorkspaces(setTestWorkspaceArchived(workspaces, workspace.workspaceId, !workspace.archived))} onDelete={remove} />
+        <WorkspaceLibrary workspaces={workspaces} canAdminister={canAdminister} onOpen={onOpenWorkspace} onRename={rename} onRefresh={(workspace) => { chooseMode("replace"); selectExistingWorkspace(workspace.workspaceId); setStep(1); }} onPromote={promote} onArchive={(workspace) => void runMutation(() => archiveTestWorkspaceRemote(workspace.workspaceId, !workspace.archived))} onDelete={remove} onClearAll={clearAllTestData} />
       </> : null}
 
       {step === 2 ? <LabCard><CardTitle eyebrow="Step 2" title="Upload workbook or table CSVs" note="Accepted: .xlsx and .csv. Up to 12 files, 12 MB each, 30 MB combined, and 25,000 rows in this prototype." /><div onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); setFiles(Array.from(event.dataTransfer.files)); }} className="m-4 rounded-2xl border border-dashed border-blue-300/30 bg-blue-300/[0.035] p-8 text-center"><UploadCloud className="mx-auto h-8 w-8 text-blue-800 dark:text-blue-100" /><p className="mt-3 text-sm font-semibold text-[rgb(var(--text))]">Drop the standardized workbook or CSV tables here</p><p className="mt-1 text-[11px] text-[rgb(var(--text-3))]">Original files are read for validation and are not modified.</p><input ref={inputRef} type="file" multiple accept=".xlsx,.csv" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} className="sr-only" /><button type="button" onClick={() => inputRef.current?.click()} className="mt-4 rounded-xl border border-[rgb(var(--line)/0.12)] px-4 py-2 text-[10px] font-black uppercase text-[rgb(var(--text-2))]">Select files</button></div><div className="space-y-2 px-4">{files.map((file) => <div key={`${file.name}-${file.size}`} className="flex items-center justify-between rounded-xl border border-[rgb(var(--line)/0.08)] px-3 py-2 text-[11px]"><span className="flex items-center gap-2 text-[rgb(var(--text))]"><FileSpreadsheet className="h-4 w-4 text-emerald-700 dark:text-emerald-100" />{file.name}</span><span className="text-[rgb(var(--text-4))]">{bytes(file.size)} · pending server receipt</span></div>)}</div><div className="flex justify-between p-4"><button type="button" onClick={() => setStep(1)} className="inline-flex items-center gap-2 text-[10px] font-bold text-[rgb(var(--text-3))]"><ArrowLeft className="h-3.5 w-3.5" />Back</button><button type="button" disabled={!files.length || busy} onClick={() => submitFiles("inspect")} className="rounded-xl bg-blue-300 px-4 py-2.5 text-[10px] font-black uppercase text-[#102030] disabled:opacity-40">{busy ? "Inspecting…" : "Inspect files"}</button></div></LabCard> : null}
@@ -283,11 +309,18 @@ export function ImbaTrailSolutionsImportLab({
   );
 }
 
-function WorkspaceLibrary({ workspaces, onOpen, onRename, onRefresh, onDuplicate, onArchive, onDelete }: { workspaces: readonly TrailSolutionsTestWorkspace[]; onOpen: (workspace: TrailSolutionsTestWorkspace) => void; onRename: (workspace: TrailSolutionsTestWorkspace) => void; onRefresh: (workspace: TrailSolutionsTestWorkspace) => void; onDuplicate: (workspace: TrailSolutionsTestWorkspace) => void; onArchive: (workspace: TrailSolutionsTestWorkspace) => void; onDelete: (workspace: TrailSolutionsTestWorkspace) => void }) {
+function WorkspaceLibrary({ workspaces, canAdminister, onOpen, onRename, onRefresh, onPromote, onArchive, onDelete, onClearAll }: { workspaces: readonly TrailSolutionsTestWorkspace[]; canAdminister: boolean; onOpen: (workspace: TrailSolutionsTestWorkspace) => void; onRename: (workspace: TrailSolutionsTestWorkspace) => void; onRefresh: (workspace: TrailSolutionsTestWorkspace) => void; onPromote: (workspace: TrailSolutionsTestWorkspace) => void; onArchive: (workspace: TrailSolutionsTestWorkspace) => void; onDelete: (workspace: TrailSolutionsTestWorkspace) => void; onClearAll: () => void }) {
   if (!workspaces.length) return null;
+  const hasTestData = workspaces.some((workspace) => workspace.environment === "uploaded-test");
   return (
     <LabCard>
-      <CardTitle eyebrow="Test workspaces" title="Open or manage isolated test environments" note="Each workspace has its own projects, import versions, source list, exceptions, and analysis output." />
+      <CardTitle eyebrow="Test workspaces" title="Open or manage isolated test environments" note="Workspaces are shared across your organization and stored server-side. Deletes are soft (recoverable) and audited." />
+      {canAdminister && hasTestData ? (
+        <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--line)/0.07)] px-4 py-3">
+          <p className="text-[10px] leading-4 text-[rgb(var(--text-3))]">Preserve integrity: remove every uploaded <strong>test</strong> workspace at once. Production-promoted data is never touched.</p>
+          <button type="button" onClick={onClearAll} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-rose-300/25 bg-rose-300/[0.06] px-3 py-2 text-[10px] font-black uppercase text-rose-800 dark:text-rose-100"><Trash2 className="h-3.5 w-3.5" />Clear all test data</button>
+        </div>
+      ) : null}
       <div className="grid gap-3 p-4 lg:grid-cols-2">
         {workspaces.map((workspace) => (
           <article key={workspace.workspaceId} className={`rounded-2xl border border-[rgb(var(--line)/0.09)] p-4 ${workspace.archived ? "opacity-60" : ""}`}>
@@ -318,7 +351,8 @@ function WorkspaceLibrary({ workspaces, onOpen, onRename, onRefresh, onDuplicate
               <button type="button" onClick={() => onOpen(workspace)} className="inline-flex items-center gap-1 rounded-lg bg-blue-300 px-2.5 py-2 text-[9px] font-black uppercase text-[#102030]"><FolderOpen className="h-3 w-3" />Open</button>
               <button type="button" onClick={() => onRename(workspace)} className="rounded-lg border border-[rgb(var(--line)/0.1)] px-2.5 py-2 text-[9px] font-bold">Rename</button>
               <button type="button" onClick={() => onRefresh(workspace)} className="inline-flex items-center gap-1 rounded-lg border border-[rgb(var(--line)/0.1)] px-2.5 py-2 text-[9px] font-bold"><RefreshCw className="h-3 w-3" />Refresh</button>
-              <button type="button" onClick={() => onDuplicate(workspace)} className="inline-flex items-center gap-1 rounded-lg border border-[rgb(var(--line)/0.1)] px-2.5 py-2 text-[9px] font-bold"><Copy className="h-3 w-3" />Duplicate</button>
+              {canAdminister && workspace.environment === "uploaded-test" ? <button type="button" onClick={() => onPromote(workspace)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-300/25 px-2.5 py-2 text-[9px] font-bold text-emerald-800 dark:text-emerald-100"><Check className="h-3 w-3" />Promote</button> : null}
+              {workspace.environment === "validated-production-derived" ? <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-300/10 px-2.5 py-2 text-[9px] font-black uppercase text-emerald-800 dark:text-emerald-100"><Check className="h-3 w-3" />Production</span> : null}
               <button type="button" onClick={() => onArchive(workspace)} className="inline-flex items-center gap-1 rounded-lg border border-[rgb(var(--line)/0.1)] px-2.5 py-2 text-[9px] font-bold"><Archive className="h-3 w-3" />{workspace.archived ? "Restore" : "Archive"}</button>
               <button type="button" onClick={() => onDelete(workspace)} className="inline-flex items-center gap-1 rounded-lg border border-rose-300/20 px-2.5 py-2 text-[9px] font-bold text-rose-800 dark:text-rose-100"><Trash2 className="h-3 w-3" />Delete</button>
             </div>
