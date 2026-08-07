@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -2793,6 +2794,7 @@ export function ImbaCeoCockpit({ initialRole }: { initialRole?: ImbaRoleKey } = 
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <ImbaOnboarding role={role} currentView={view} onNavigate={setCurrentView} theme={theme} />
+            <UserButton />
             <div className="hidden items-center gap-1.5 md:flex" data-tour="role-control">
               <div className="relative">
                 <select
