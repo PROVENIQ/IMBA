@@ -31,7 +31,7 @@ describe("Trail Solutions primary demonstration path", () => {
   it("is a primary module with portfolio-to-project progressive disclosure", () => {
     expect(cockpit).toContain('label: "Trail Solutions"');
     expect(cockpit).toContain("<ImbaTrailSolutionsWorkspace");
-    expect(workspace).toContain('type WorkspaceView = "portfolio" | "project" | "benchmarks" | "exceptions" | "data-health" | "import-lab"');
+    expect(workspace).toContain('type WorkspaceView = "portfolio" | "project" | "benchmarks" | "estimator" | "exceptions" | "data-health" | "import-lab"');
     expect(workspace).toContain("Open project");
     expect(workspace).toContain("Finance drill-down");
   });

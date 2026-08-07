@@ -74,7 +74,7 @@ export function summarizeBilling(records: readonly RevenueBillingRecord[], asOfD
   };
 }
 
-const COST_CATEGORIES: readonly CostCategory[] = [
+export const COST_CATEGORIES: readonly CostCategory[] = [
   "Direct labor",
   "Payroll burden",
   "Travel and lodging",

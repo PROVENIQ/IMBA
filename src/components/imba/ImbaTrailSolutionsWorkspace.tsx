@@ -44,12 +44,17 @@ import {
 } from "@/lib/trail-solutions-test-workspaces";
 import { ImbaTrailSolutionsTour } from "@/components/imba/ImbaTrailSolutionsTour";
 
+const ImbaTrailSolutionsEstimator = dynamic(
+  () => import("@/components/imba/ImbaTrailSolutionsEstimator").then((module) => module.ImbaTrailSolutionsEstimator),
+  { loading: () => <LoadingState /> },
+);
+
 const ImbaTrailSolutionsImportLab = dynamic(
   () => import("@/components/imba/ImbaTrailSolutionsImportLab").then((module) => module.ImbaTrailSolutionsImportLab),
   { loading: () => <LoadingState /> },
 );
 
-type WorkspaceView = "portfolio" | "project" | "benchmarks" | "exceptions" | "data-health" | "import-lab";
+type WorkspaceView = "portfolio" | "project" | "benchmarks" | "estimator" | "exceptions" | "data-health" | "import-lab";
 
 const healthMeta: Record<FinancialHealthStatus, { label: string; className: string; dot: string }> = {
   "on-track": {
@@ -204,6 +209,7 @@ export function ImbaTrailSolutionsWorkspace({
   const tabs: Array<{ id: WorkspaceView; label: string }> = [
     { id: "portfolio", label: "Portfolio" },
     { id: "benchmarks", label: "Benchmarks" },
+    { id: "estimator", label: "Estimator" },
     ...(canViewExceptions ? [{ id: "exceptions" as const, label: "Exceptions" }] : []),
     ...(canViewDataHealth ? [{ id: "data-health" as const, label: "Data health" }] : []),
     ...(canViewDataHealth ? [{ id: "import-lab" as const, label: "Data Import Lab" }] : []),
@@ -244,6 +250,7 @@ export function ImbaTrailSolutionsWorkspace({
       {view === "portfolio" ? <PortfolioView snapshot={snapshot} onOpenProject={openProject} decisionStatuses={decisionStatuses} onDecisionStatus={(id, status) => setDecisionStatuses((current) => ({ ...current, [id]: status }))} /> : null}
       {view === "project" ? loadingProject ? <LoadingState /> : projectDetail ? <ProjectView detail={projectDetail} role={role} onBack={() => setView("portfolio")} decisionStatuses={decisionStatuses} onDecisionStatus={(id, status) => setDecisionStatuses((current) => ({ ...current, [id]: status }))} /> : <ErrorState message={`No project detail found for ${selectedProjectId ?? "the selected project"}.`} /> : null}
       {view === "benchmarks" ? <BenchmarksView benchmarks={snapshot.benchmarks} /> : null}
+      {view === "estimator" ? <ImbaTrailSolutionsEstimator benchmarks={snapshot.benchmarks} /> : null}
       {view === "exceptions" ? <ExceptionsView exceptions={snapshot.dataHealth.exceptions} projects={snapshot.projects} finance={canViewDataHealth} onOpenProject={openProject} /> : null}
       {view === "data-health" ? canViewDataHealth ? <DataHealthView snapshot={snapshot} /> : <ErrorState message="CEO or Finance access is required for detailed import and mapping controls." /> : null}
       {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab workspaces={workspaces} onWorkspacesChange={setWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
