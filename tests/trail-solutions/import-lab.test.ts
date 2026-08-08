@@ -29,12 +29,7 @@ import {
   parseImportFiles,
 } from "@/integrations/trail-solutions/import-parser";
 import { transformMappedImport } from "@/integrations/trail-solutions/import-transformer";
-import {
-  commitTestWorkspace,
-  deleteTestWorkspace,
-  duplicateTestWorkspace,
-  mergeValidatedPackages,
-} from "@/lib/trail-solutions-test-workspaces";
+import { buildVersionRecord, mergeValidatedPackages } from "@/core/trail-solutions/workspace-transforms";
 import { POST } from "@/app/api/trail-solutions/import/route";
 
 const serverTime = "2026-08-06T14:00:00.000Z";
@@ -184,20 +179,23 @@ describe("Trail Solutions Data Import Lab", () => {
     expect(JSON.stringify(result.normalizedDataset)).not.toContain("Project Manager");
   });
 
-  it("keeps test workspaces isolated with independent histories and lifecycle actions", async () => {
+  it("merges add-mode packages, guards against duplicate project ids, and records the real actor", async () => {
     const first = await validPackage("TS-101");
     const second = await validPackage("TS-202");
-    const one = commitTestWorkspace({ workspaces: [], mode: "create", name: "Scenario One", description: "First", validatedPackage: first, mappingChangeCount: 0 });
-    const two = commitTestWorkspace({ workspaces: one.workspaces, mode: "create", name: "Scenario Two", description: "Second", validatedPackage: second, mappingChangeCount: 0 });
 
-    expect(two.workspaces).toHaveLength(2);
-    expect(two.workspaces[0].validatedPackage.snapshot.projects.map((project) => project.projectCode)).toEqual(["TS-101"]);
-    expect(two.workspaces[1].validatedPackage.snapshot.projects.map((project) => project.projectCode)).toEqual(["TS-202"]);
+    // Add mode merges disjoint packages into one snapshot.
+    const merged = mergeValidatedPackages(first, second);
+    expect(merged.snapshot.projects.map((project) => project.projectCode).sort()).toEqual(["TS-101", "TS-202"]);
+    expect(merged.preview.projectCount).toBe(first.preview.projectCount + second.preview.projectCount);
 
-    const duplicate = duplicateTestWorkspace(two.workspaces, two.workspaces[0].workspaceId);
-    expect(duplicate.workspace.workspaceId).not.toBe(two.workspaces[0].workspaceId);
-    expect(duplicate.workspace.versions).toEqual(two.workspaces[0].versions);
-    expect(deleteTestWorkspace(duplicate.workspaces, two.workspaces[0].workspaceId)).toHaveLength(2);
+    // Integrity guard: the same project id cannot be added twice.
     expect(() => mergeValidatedPackages(first, first)).toThrow(/duplicate Project ID/);
+
+    // Version records carry the authenticated identity (not a hardcoded prototype label).
+    const record = buildVersionRecord({ package: first, mode: "create", importedBy: "Kent McNeill", mappingChangeCount: 2 });
+    expect(record.importedBy).toBe("Kent McNeill");
+    expect(record.mode).toBe("create");
+    expect(record.mappingChangeCount).toBe(2);
+    expect(record.recordsAccepted).toBe(first.preview.projectCount + first.preview.transactionCount);
   });
 });
