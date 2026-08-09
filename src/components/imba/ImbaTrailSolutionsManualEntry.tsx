@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 import type { GrantAgreementStatus, GrantFundingRole, ProjectBusinessLine, ProjectStage } from "@/core/trail-solutions/model";
@@ -89,6 +90,9 @@ export function ManualEntryModal({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const title =
     mode.kind === "new-project" ? "New project"
@@ -99,9 +103,11 @@ export function ManualEntryModal({
     : mode.kind === "funding" ? `Funding / agreement — ${mode.projectName}`
     : `Decision / action — ${mode.projectName}`;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-8" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="w-full max-w-2xl rounded-2xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] p-5 shadow-xl">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[220] flex items-start justify-center overflow-y-auto bg-black/45 p-4 backdrop-blur-[2px] sm:p-8" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="my-2 w-full max-w-2xl max-h-[calc(100vh-1rem)] overflow-y-auto rounded-2xl border border-[rgb(var(--line)/0.16)] bg-[rgb(var(--card))] p-5 text-[rgb(var(--text))] shadow-2xl sm:my-0 sm:max-h-[calc(100vh-4rem)]">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[rgb(var(--text))]">{title}</h2>
           <button type="button" onClick={onCancel} aria-label="Close" className="rounded-lg p-1 text-[rgb(var(--text-3))] hover:bg-[rgb(var(--line)/0.06)]"><X className="h-4 w-4" /></button>
@@ -196,7 +202,8 @@ export function ManualEntryModal({
           <p className="mt-4 text-[11px] text-rose-800 dark:text-rose-100">Select a saved workspace before adding records.</p>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
