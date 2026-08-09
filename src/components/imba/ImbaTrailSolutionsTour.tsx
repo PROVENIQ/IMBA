@@ -14,6 +14,7 @@ import { ArrowLeft, ArrowRight, Compass, X } from "lucide-react";
 
 interface TrailTourStep {
   readonly anchor: string | null;
+  readonly spotlightAnchor?: string;
   readonly eyebrow: string;
   readonly title: string;
   readonly body: string;
@@ -52,18 +53,21 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
   },
   {
     anchor: "tabs",
+    spotlightAnchor: "benchmarks",
     eyebrow: "Go deeper when needed",
     title: "Benchmarks, exceptions, and finance controls",
     body: "The tabs hold validated benchmarks from past projects, the exception queue, and — for Finance and the CEO — Data health and the Data Import Lab for loading your own project data.",
   },
   {
     anchor: null,
+    spotlightAnchor: "new-project",
     eyebrow: "Create without a workbook",
     title: "Start a project directly in IMBA-OS",
     body: "New Project creates a normalized project in the active workspace. It captures identity, contract assumptions, business-line drivers, and optional funding details. Manual and imported projects appear together in the same portfolio.",
   },
   {
     anchor: null,
+    spotlightAnchor: "upload-data",
     eyebrow: "Bring in source data",
     title: "Import historical or source-system data",
     body: "Upload Project Data opens the controlled Data Import Lab for bulk historical/source data, validation, mapping, control totals, and exception review. Both entry paths use the same normalized model.",
@@ -76,6 +80,7 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
   },
   {
     anchor: null,
+    spotlightAnchor: "estimator",
     eyebrow: "Plan before you commit",
     title: "Benchmark-grounded planning estimates",
     body: "The Estimator compares business-line benchmarks, records assumptions and confidence, and can save an estimate or prefill a New Project form. An estimate is planning evidence, not an approved quote.",
@@ -141,11 +146,12 @@ export function ImbaTrailSolutionsTour() {
   // page scrolls or resizes. Anchorless steps (the intro) center the card.
   useLayoutEffect(() => {
     if (!open || !step) return;
-    if (step.anchor === null) {
+    const spotlightAnchor = step.spotlightAnchor ?? step.anchor;
+    if (spotlightAnchor === null) {
       setSpotlight(null);
       return;
     }
-    const selector = anchorSelector(step.anchor);
+    const selector = anchorSelector(spotlightAnchor);
     const measure = () => {
       const element = document.querySelector(selector);
       if (!element) {
