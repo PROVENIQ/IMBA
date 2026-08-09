@@ -163,13 +163,18 @@ export function ImbaTrailSolutionsTour() {
     };
     const target = document.querySelector(selector);
     target?.scrollIntoView({ block: "center", behavior: "smooth" });
-    // Measure after the smooth scroll has a chance to settle, plus immediately.
+    // Controls can mount after the tour opens (workspace data and role-gated
+    // actions are client-rendered). Keep measuring until the target appears and
+    // while the page settles, rather than losing the spotlight permanently.
     measure();
-    const timer = window.setTimeout(measure, 320);
+    const timer = window.setInterval(measure, 180);
+    const observer = new MutationObserver(measure);
+    observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("scroll", measure, true);
     window.addEventListener("resize", measure);
     return () => {
-      window.clearTimeout(timer);
+      window.clearInterval(timer);
+      observer.disconnect();
       window.removeEventListener("scroll", measure, true);
       window.removeEventListener("resize", measure);
     };
