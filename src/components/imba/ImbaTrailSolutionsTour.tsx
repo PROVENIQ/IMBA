@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, Compass, X } from "lucide-react";
 
 // A small, self-contained guided tour for the Trail Solutions module. It is
@@ -55,6 +56,30 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
     title: "Benchmarks, exceptions, and finance controls",
     body: "The tabs hold validated benchmarks from past projects, the exception queue, and — for Finance and the CEO — Data health and the Data Import Lab for loading your own project data.",
   },
+  {
+    anchor: "new-project",
+    eyebrow: "Create without a workbook",
+    title: "Start a project directly in IMBA-OS",
+    body: "New Project creates a normalized project in the active workspace. It captures identity, contract assumptions, business-line drivers, and optional funding details. Manual and imported projects appear together in the same portfolio.",
+  },
+  {
+    anchor: "upload-data",
+    eyebrow: "Bring in source data",
+    title: "Import historical or source-system data",
+    body: "Upload Project Data opens the controlled Data Import Lab for bulk historical/source data, validation, mapping, control totals, and exception review. Both entry paths use the same normalized model.",
+  },
+  {
+    anchor: null,
+    eyebrow: "Manage at project level",
+    title: "Use + Add for the work between imports",
+    body: "Open any project and use + Add to record a forecast update, change order, operational driver, funding/agreement, match activity, or decision/action. Forecast history is preserved; only approved change orders affect contract value; eligible match activity rolls into grant controls.",
+  },
+  {
+    anchor: "estimator",
+    eyebrow: "Plan before you commit",
+    title: "Benchmark-grounded planning estimates",
+    body: "The Estimator compares business-line benchmarks, records assumptions and confidence, and can save an estimate or prefill a New Project form. An estimate is planning evidence, not an approved quote.",
+  },
 ];
 
 function anchorSelector(anchor: string): string {
@@ -80,6 +105,9 @@ export function ImbaTrailSolutionsTour() {
   const [steps, setSteps] = useState<readonly TrailTourStep[]>(TRAIL_TOUR_STEPS);
   const [index, setIndex] = useState(0);
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const step = steps[index];
 
@@ -165,8 +193,8 @@ export function ImbaTrailSolutionsTour() {
         Take the tour
       </button>
 
-      {open && step ? (
-        <div className="fixed inset-0 z-[160]" role="dialog" aria-modal="true" aria-label="Trail Solutions guided tour">
+      {mounted && open && step ? createPortal(
+        <div className="fixed inset-0 z-[240]" role="dialog" aria-modal="true" aria-label="Trail Solutions guided tour">
           {/* Click-catcher: dims interaction with the page during the tour. */}
           <div className="absolute inset-0" onClick={close} aria-hidden="true" />
 
@@ -214,7 +242,8 @@ export function ImbaTrailSolutionsTour() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
