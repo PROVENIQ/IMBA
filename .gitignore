@@ -6,3 +6,7 @@ npm-debug.log*
 *.log
 tmp/
 .vercel/
+
+# clerk configuration (can include secrets)
+/.clerk/
+.vercel

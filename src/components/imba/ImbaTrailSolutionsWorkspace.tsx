@@ -13,6 +13,7 @@ import {
   Filter,
   Layers3,
   MapPin,
+  Plus,
   Search,
   ShieldCheck,
   Target,
@@ -25,14 +26,19 @@ import type {
   DataException,
   DecisionItem,
   FinancialHealthStatus,
+  ForecastUpdate,
   ProjectDetail,
   ProjectFinancialSummary,
   ProjectFilters,
   TrailSolutionsSnapshot,
 } from "@/core/trail-solutions/model";
-import { TRAIL_SOLUTIONS_SYNTHETIC_BANNER } from "@/core/trail-solutions/model";
+import { provenanceOf, TRAIL_SOLUTIONS_SYNTHETIC_BANNER } from "@/core/trail-solutions/model";
+import type { ManualActor } from "@/core/trail-solutions/manual-entry";
+import { IMBA_ORGANIZATION_ID } from "@/lib/imba-organization";
+import { ManualEntryModal, type ManualEntryMode } from "@/components/imba/ImbaTrailSolutionsManualEntry";
 import { TEST_DATA_BANNER, type TrailSolutionsTestWorkspace } from "@/core/trail-solutions/import-lab";
 import { demoFinancialHealthPolicy } from "@/core/trail-solutions/policy";
+import { calculateGrantAgreementControls, isCrossProjectLabor } from "@/core/trail-solutions/funding-controls";
 import {
   trailSolutionsDemoContext,
   workbookDerivedTrailSolutionsDataSource,
@@ -157,14 +163,20 @@ export function ImbaTrailSolutionsWorkspace({
   const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistenceNotice, setPersistenceNotice] = useState<string | null>(null);
   const [decisionStatuses, setDecisionStatuses] = useState<Record<string, DecisionItem["status"]>>({});
+  const [manualEntry, setManualEntry] = useState<ManualEntryMode | null>(null);
+
+  const manualActor: ManualActor = { organizationId: IMBA_ORGANIZATION_ID, label: role === "executive" ? "CEO user" : "Finance user" };
 
   const reloadWorkspaces = useCallback(async () => {
     if (!canManageTrailData) return;
     try {
+      setPersistenceNotice(null);
       setWorkspaces(await fetchTestWorkspaces());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Saved workspaces could not be loaded.");
+      setWorkspaces([]);
+      setPersistenceNotice(reason instanceof Error ? reason.message : "Saved workspaces are unavailable; synthetic demo data remains available.");
     }
   }, [canManageTrailData]);
 
@@ -213,6 +225,28 @@ export function ImbaTrailSolutionsWorkspace({
       .finally(() => setLoadingProject(false));
   };
 
+  const handleManualDone = async (result: { workspaceId: string; projectCode?: string }, reopenProjectId?: string) => {
+    setManualEntry(null);
+    let fresh: TrailSolutionsTestWorkspace[] = [];
+    try {
+      fresh = await fetchTestWorkspaces();
+      setWorkspaces(fresh);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Saved workspaces could not be reloaded.");
+      return;
+    }
+    setActiveWorkspaceIdState(result.workspaceId);
+    setActiveTestWorkspaceId(result.workspaceId);
+    const workspace = fresh.find((candidate) => candidate.workspaceId === result.workspaceId);
+    if (reopenProjectId && workspace) {
+      setSelectedProjectId(reopenProjectId);
+      setProjectDetail(workspace.validatedPackage.projectDetails[reopenProjectId] ?? null);
+      setView("project");
+    } else {
+      setView("portfolio");
+    }
+  };
+
   const canViewExceptions = ["executive", "finance", "trail-solutions", "planning-design"].includes(role);
   const canViewDataHealth = canManageTrailData;
   const tabs: Array<{ id: WorkspaceView; label: string }> = [
@@ -246,8 +280,9 @@ export function ImbaTrailSolutionsWorkspace({
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-4))]">Active environment</p>
               {canManageTrailData ? <select aria-label="Active Trail Solutions environment" value={activeWorkspace?.workspaceId ?? "demo"} onChange={(event) => selectWorkspace(event.target.value === "demo" ? null : workspaces.find((workspace) => workspace.workspaceId === event.target.value) ?? null)} className="mt-2 w-full rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] px-3 py-2 text-[11px] text-[rgb(var(--text))]"><option value="demo">Synthetic demonstration</option>{workspaces.filter((workspace) => !workspace.archived).map((workspace) => <option key={workspace.workspaceId} value={workspace.workspaceId}>{workspace.name}</option>)}</select> : <p className="mt-1.5 text-[11px] leading-5 text-[rgb(var(--text-3))]">Synthetic demonstration environment</p>}
               <p className="mt-2 text-[10px] leading-4 text-[rgb(var(--text-4))]">{activeWorkspace ? "Browser-local test data is isolated from the demonstration and production environments." : demoFinancialHealthPolicy.assumptionsLabel}</p>
+              {persistenceNotice ? <p className="mt-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.06] px-2.5 py-2 text-[10px] leading-4 text-amber-900 dark:text-amber-100">{persistenceNotice} Manual saves require the configured Neon database.</p> : null}
             </div>
-            {canManageTrailData ? <button type="button" onClick={() => setView("import-lab")} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-2.5 text-[10px] font-black uppercase text-[#102030]"><UploadCloud className="h-3.5 w-3.5" />Upload Project Data</button> : null}
+            {canManageTrailData ? <div className="mt-3 grid gap-2"><button type="button" onClick={() => setManualEntry({ kind: "new-project" })} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-3 py-2.5 text-[10px] font-black uppercase text-[#102030]"><Plus className="h-3.5 w-3.5" />New Project</button><button type="button" onClick={() => setView("import-lab")} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-300 px-3 py-2.5 text-[10px] font-black uppercase text-[#102030]"><UploadCloud className="h-3.5 w-3.5" />Upload Project Data</button><p className="text-[9px] leading-4 text-[rgb(var(--text-4))]">Add information by entering a project directly or importing a workbook. Both use the same model.</p></div> : null}
           </div>
         </div> : <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div><p className="text-xs font-semibold text-[rgb(var(--text))]">Trail Solutions financial management</p><p className="mt-1 text-[10px] text-[rgb(var(--text-4))]">As of {snapshot.portfolio.lastDataRefresh}</p></div><p data-testid="trail-solutions-environment-banner" className={`flex items-center gap-2 text-[10px] font-semibold ${activeWorkspace ? "text-blue-800 dark:text-blue-100" : "text-amber-900 dark:text-amber-100"}`}><ShieldCheck className="h-3.5 w-3.5 shrink-0" />{activeWorkspace ? `${TEST_DATA_BANNER} · ${activeWorkspace.name}` : TRAIL_SOLUTIONS_SYNTHETIC_BANNER}</p></div>}
         <div data-tour-ts="tabs" className="flex gap-1 overflow-x-auto border-t border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card)/72%)] px-3 py-2" aria-label="Trail Solutions views">
@@ -257,12 +292,14 @@ export function ImbaTrailSolutionsWorkspace({
       </section>
 
       {view === "portfolio" ? <PortfolioView snapshot={snapshot} onOpenProject={openProject} decisionStatuses={decisionStatuses} onDecisionStatus={(id, status) => setDecisionStatuses((current) => ({ ...current, [id]: status }))} /> : null}
-      {view === "project" ? loadingProject ? <LoadingState /> : projectDetail ? <ProjectView detail={projectDetail} role={role} onBack={() => setView("portfolio")} decisionStatuses={decisionStatuses} onDecisionStatus={(id, status) => setDecisionStatuses((current) => ({ ...current, [id]: status }))} /> : <ErrorState message={`No project detail found for ${selectedProjectId ?? "the selected project"}.`} /> : null}
+      {view === "project" ? loadingProject ? <LoadingState /> : projectDetail ? <ProjectView detail={projectDetail} role={role} onBack={() => setView("portfolio")} decisionStatuses={decisionStatuses} onDecisionStatus={(id, status) => setDecisionStatuses((current) => ({ ...current, [id]: status }))} onAddRecord={activeWorkspace && selectedProjectId ? (kind) => setManualEntry({ kind, projectId: selectedProjectId, projectName: projectDetail.summary.projectName }) : undefined} /> : <ErrorState message={`No project detail found for ${selectedProjectId ?? "the selected project"}.`} /> : null}
       {view === "benchmarks" ? <BenchmarksView benchmarks={snapshot.benchmarks} /> : null}
-      {view === "estimator" ? <ImbaTrailSolutionsEstimator benchmarks={snapshot.benchmarks} /> : null}
+      {view === "estimator" ? <ImbaTrailSolutionsEstimator benchmarks={snapshot.benchmarks} canManage={canManageTrailData} onCreateProject={(prefill) => setManualEntry({ kind: "new-project", prefill })} /> : null}
       {view === "exceptions" ? <ExceptionsView exceptions={snapshot.dataHealth.exceptions} projects={snapshot.projects} finance={canViewDataHealth} onOpenProject={openProject} /> : null}
       {view === "data-health" ? canViewDataHealth ? <DataHealthView snapshot={snapshot} /> : <ErrorState message="CEO or Finance access is required for detailed import and mapping controls." /> : null}
       {view === "import-lab" ? canViewDataHealth ? <ImbaTrailSolutionsImportLab role={role} workspaces={workspaces} onReload={reloadWorkspaces} onOpenWorkspace={selectWorkspace} onOpenPortfolio={() => setView("portfolio")} /> : <ErrorState message="CEO or Finance access is required to upload and validate project data." /> : null}
+
+      {manualEntry ? <ManualEntryModal mode={manualEntry} actor={manualActor} workspace={activeWorkspace ?? null} onDone={(result) => void handleManualDone(result, manualEntry.kind === "new-project" ? undefined : manualEntry.projectId)} onCancel={() => setManualEntry(null)} /> : null}
     </div>
   );
 }
@@ -313,6 +350,15 @@ function PortfolioView({ snapshot, onOpenProject, decisionStatuses, onDecisionSt
         <Kpi label="Decisions required" value={`${snapshot.portfolio.projectsRequiringDecisions}`} note="Each item names effect, owner, due date, and action" tone="rose" />
         <Kpi label="Data exceptions" value={`${snapshot.portfolio.projectsWithDataExceptions}`} note="Unreliable projects show Data incomplete" tone="violet" />
       </div>
+      <Card dataTour="funding-controls">
+        <SectionHeading eyebrow="Funding and agreement controls" title="Award cost, match, and cash exposure" note="Agreement calculations are derived from classified project costs and documented match activity. Unclassified costs remain review items." />
+        <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Kpi label="Outstanding reimbursement" value={money(snapshot.portfolio.outstandingReimbursement ?? 0, true)} note="Requested less received" tone="amber" />
+          <Kpi label="Award cash exposure" value={money(snapshot.portfolio.awardCashExposure ?? 0, true)} note="Eligible cost not yet covered by award cash" tone="rose" />
+          <Kpi label="Remaining match" value={money(snapshot.portfolio.remainingMatchRequirement ?? 0, true)} note="Across active agreements" tone="violet" />
+          <Kpi label="Match reviews" value={`${snapshot.portfolio.pendingMatchEligibilityReviews ?? 0}`} note={`${snapshot.portfolio.crossProjectLaborRecordsRequiringReview ?? 0} cross-project labor rows`} tone="blue" />
+        </div>
+      </Card>
 
       <Card dataTour="portfolio">
         <SectionHeading eyebrow="Portfolio" title="Which projects need attention?" note="Open a project only when you need the explanation behind its status." action={<button type="button" onClick={() => setAdvanced((current) => !current)} aria-expanded={advanced} className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text-2))]"><Filter className="h-3.5 w-3.5" />{advanced ? "Fewer filters" : "More filters"}</button>} />
@@ -364,6 +410,19 @@ function ProjectPortfolioRow({ project, onOpenProject }: { project: ProjectFinan
   );
 }
 
+function FundingAgreementPanel({ detail }: { detail: ProjectDetail }) {
+  const grants = detail.grantFunding;
+  return <Card><SectionHeading eyebrow="Funding and agreement" title="Agreement decision support" note="Funding treatment is explicit: award cost, cash match, unrestricted, or ineligible. The module does not post to an ERP or grant system." />{grants.length ? <div className="divide-y divide-[rgb(var(--line)/0.07)]">{grants.map((grant) => { const controls = calculateGrantAgreementControls({ grant, laborActuals: detail.laborActuals, nonlaborActuals: detail.nonlaborActuals, matchActivities: detail.matchActivities ?? [] }); return <article key={grant.grantFundingRecordId} className="grid gap-4 p-4 lg:grid-cols-[1.2fr_1fr_1fr_1fr]"><AgreementColumn label="Agreement" value={`${grant.funder} · ${grant.externalAwardId}`} detail={`${grant.agreementStatus ?? "Under Review"} · ${grant.fundingRole ?? "Prime Recipient"} · ${grant.agreementOwner ?? "Owner not assigned"}`} /><AgreementColumn label="Cost and recovery" value={`${money(controls.eligibleCostToDate)} eligible cost`} detail={`${money(controls.outstandingReimbursement)} outstanding reimbursement · ${money(controls.awardCashExposure)} cash exposure`} /><AgreementColumn label="Match" value={`${money(controls.totalMatchAccumulated)} accumulated`} detail={`${money(controls.remainingMatchRequirement)} remaining · ${grant.matchType}`} /><AgreementColumn label="Compliance" value={grant.documentationStatus ?? "Documentation review"} detail={`${grant.reimbursementBasis} · ${grant.reviewException ?? "No open agreement note"}`} /></article>; })}</div> : <p className="p-5 text-[11px] text-[rgb(var(--text-3))]">No agreement records are loaded for this project.</p>}</Card>;
+}
+
+function AgreementColumn({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return <div className="rounded-2xl border border-[rgb(var(--line)/0.08)] bg-[rgb(var(--card-2))] p-4"><p className="text-[9px] font-black uppercase tracking-wider text-[rgb(var(--text-4))]">{label}</p><p className="mt-2 text-xs font-semibold text-[rgb(var(--text))]">{value}</p><p className="mt-1 text-[10px] leading-4 text-[rgb(var(--text-3))]">{detail}</p></div>;
+}
+
+function ForecastHistoryPanel({ forecasts, currentContractValue }: { forecasts: readonly ForecastUpdate[]; currentContractValue: number }) {
+  return <Card><SectionHeading eyebrow="Forecast history" title="Immutable forecast snapshots" note="Each update keeps its date, owner, ETC source, confidence, and required action so management can see how the forecast changed." />{forecasts.length ? <div className="divide-y divide-[rgb(var(--line)/0.07)]">{[...forecasts].sort((a, b) => b.forecastDate.localeCompare(a.forecastDate)).map((forecast) => <article key={forecast.forecastUpdateId} className="grid gap-3 p-4 sm:grid-cols-[.8fr_1.1fr_1fr_1.2fr]"><AgreementColumn label={forecast.forecastDate} value={`${money(forecast.forecastFinalCost)} final cost`} detail={`${forecast.status} · ${forecast.confidence} confidence`} /><AgreementColumn label="Margin" value={money(forecast.forecastMargin)} detail={forecast.forecastMarginPercent === null ? "Margin not available" : `${percent(forecast.forecastMarginPercent)} of ${money(currentContractValue)} contract`} /><AgreementColumn label="Source and owner" value={forecast.etcSource} detail={`${forecast.forecastOwner} · ${forecast.notes ?? "No notes"}`} /><AgreementColumn label="Required action" value={forecast.requiredAction ?? "Continue cadence"} detail={forecast.keyVarianceDriver ?? "No variance driver recorded"} /></article>)}</div> : <p className="p-5 text-[11px] text-[rgb(var(--text-3))]">No dated forecast snapshots loaded. The next approved update will appear here without replacing prior history.</p>}</Card>;
+}
+
 function MiniStat({ label, value }: { label: string; value: string }) {
   return <div><p className="text-[9px] font-black uppercase tracking-wider text-[rgb(var(--text-4))]">{label}</p><p className="mt-1 font-mono text-[11px] text-[rgb(var(--text))]">{value}</p></div>;
 }
@@ -372,18 +431,24 @@ function DecisionCard({ decision, project, status, onStatus, onOpenProject }: { 
   return <article className="flex min-h-[270px] flex-col rounded-2xl border border-[rgb(var(--line)/0.1)] bg-[rgb(var(--card-2))] p-4"><div className="flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wide ${status === "complete" ? "bg-emerald-300/10 text-emerald-800 dark:text-emerald-100" : status === "in-progress" ? "bg-amber-300/10 text-amber-900 dark:text-amber-100" : "bg-rose-300/10 text-rose-800 dark:text-rose-100"}`}>{status.replace("-", " ")}</span><span className="text-[10px] text-[rgb(var(--text-4))]">Due {decision.dueDate}</span></div><h3 className="mt-3 text-xs font-semibold leading-5 text-[rgb(var(--text))]">{decision.issue}</h3>{project ? <p className="mt-1 text-[10px] text-[rgb(var(--text-4))]">{project.projectName}</p> : null}<div className="mt-3 rounded-xl border border-rose-300/15 bg-rose-300/[0.055] px-3 py-2"><p className="text-[9px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-100">Financial effect</p><p className="mt-1 text-[11px] leading-4 text-[rgb(var(--text-2))]">{decision.financialEffectLabel}</p></div><p className="mt-3 text-[11px] leading-5 text-[rgb(var(--text-2))]">{decision.recommendedAction}</p><p className="mt-2 text-[10px] text-[rgb(var(--text-4))]">Owner · {decision.owner}</p><div className="mt-auto flex gap-2 pt-4">{status === "open" ? <button type="button" onClick={() => onStatus("in-progress")} className="rounded-lg bg-blue-300 px-2.5 py-2 text-[10px] font-black uppercase text-[#102030]">Start</button> : null}{status !== "complete" ? <button type="button" onClick={() => onStatus("complete")} className="rounded-lg border border-[rgb(var(--line)/0.12)] px-2.5 py-2 text-[10px] font-black uppercase text-[rgb(var(--text-2))]">Complete demo</button> : null}{project && onOpenProject ? <button type="button" onClick={() => onOpenProject(project)} className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-blue-800 dark:text-blue-100">Evidence <ArrowRight className="h-3 w-3" /></button> : null}</div></article>;
 }
 
-function ProjectView({ detail, role, onBack, decisionStatuses, onDecisionStatus }: { detail: ProjectDetail; role: ImbaRoleKey; onBack: () => void; decisionStatuses: Record<string, DecisionItem["status"]>; onDecisionStatus: (id: string, status: DecisionItem["status"]) => void }) {
+function ProjectView({ detail, role, onBack, decisionStatuses, onDecisionStatus, onAddRecord }: { detail: ProjectDetail; role: ImbaRoleKey; onBack: () => void; decisionStatuses: Record<string, DecisionItem["status"]>; onDecisionStatus: (id: string, status: DecisionItem["status"]) => void; onAddRecord?: (kind: "forecast" | "match" | "change-order" | "operational-driver" | "funding" | "decision") => void }) {
   const project = detail.summary;
   const [showCostDetail, setShowCostDetail] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
   const canSeeTransactions = role === "finance" || role === "executive";
   const maxCost = Math.max(...project.costBreakdown.map((line) => line.forecast ?? line.actual), 1);
+  const sourceType = provenanceOf(project).sourceType;
+  const openDecisions = project.decisionsRequired.filter((decision) => (decisionStatuses[decision.decisionItemId] ?? decision.status) !== "complete");
   return (
     <>
       <Card>
         <div className="p-5">
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-[11px] font-bold text-blue-800 dark:text-blue-100"><ArrowLeft className="h-3.5 w-3.5" />Back to portfolio</button>
-          <div className="mt-4 flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><HealthBadge status={project.healthStatus} /><span className="font-mono text-[10px] text-[rgb(var(--text-4))]">{project.projectCode}</span></div><h2 className="mt-3 text-xl font-semibold text-[rgb(var(--text))]">{project.projectName}</h2><p className="mt-1 text-xs text-[rgb(var(--text-2))]">{project.clientName} · {project.businessLine} · {project.projectStage}</p></div><div className="grid gap-2 text-right text-[11px] text-[rgb(var(--text-3))]"><span>Last refresh <strong className="text-[rgb(var(--text))]">{project.lastDataRefresh}</strong></span><span>Start date <strong className="text-[rgb(var(--text))]">{project.startDate}</strong></span><span>Expected completion <strong className="text-[rgb(var(--text))]">{project.expectedCompletionDate}</strong></span></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-[11px] font-bold text-blue-800 dark:text-blue-100"><ArrowLeft className="h-3.5 w-3.5" />Back to portfolio</button>
+            {onAddRecord ? <details className="relative"><summary className="cursor-pointer list-none rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] font-bold text-[rgb(var(--text-2))]">+ Add</summary><div className="absolute right-0 z-10 mt-2 grid min-w-52 gap-1 rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] p-2 shadow-xl"><button type="button" onClick={() => onAddRecord("forecast")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Forecast update</button><button type="button" onClick={() => onAddRecord("change-order")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Change order</button><button type="button" onClick={() => onAddRecord("operational-driver")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Operational driver</button><button type="button" onClick={() => onAddRecord("funding")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Funding / agreement</button><button type="button" onClick={() => onAddRecord("match")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Match activity</button><button type="button" onClick={() => onAddRecord("decision")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Decision / action</button></div></details> : null}
+          </div>
+          {openDecisions.length ? <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-900 dark:text-amber-100"><AlertTriangle className="h-3.5 w-3.5" />{openDecisions.length} unresolved {openDecisions.length === 1 ? "decision" : "decisions"} require attention</p> : null}
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><HealthBadge status={project.healthStatus} /><span className="font-mono text-[10px] text-[rgb(var(--text-4))]">{project.projectCode}</span><span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${sourceType === "manual" ? "border-blue-300/30 bg-blue-300/10 text-blue-800 dark:text-blue-100" : "border-[rgb(var(--line)/0.14)] bg-[rgb(var(--line)/0.05)] text-[rgb(var(--text-3))]"}`}>{sourceType === "manual" ? "Manual entry" : "Imported"}</span></div><h2 className="mt-3 text-xl font-semibold text-[rgb(var(--text))]">{project.projectName}</h2><p className="mt-1 text-xs text-[rgb(var(--text-2))]">{project.clientName} · {project.businessLine} · {project.projectStage}</p></div><div className="grid gap-2 text-right text-[11px] text-[rgb(var(--text-3))]"><span>Last refresh <strong className="text-[rgb(var(--text))]">{project.lastDataRefresh}</strong></span><span>Start date <strong className="text-[rgb(var(--text))]">{project.startDate}</strong></span><span>Expected completion <strong className="text-[rgb(var(--text))]">{project.expectedCompletionDate}</strong></span></div></div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><MiniInfo icon={Users} label="Project manager" value={project.projectManager} /><MiniInfo icon={MapPin} label="Region" value={project.region} /><MiniInfo icon={Layers3} label="Contract type" value={project.contractType} /><MiniInfo icon={Target} label="Funding" value={project.fundingType} /></div>
         </div>
       </Card>
@@ -408,7 +473,10 @@ function ProjectView({ detail, role, onBack, decisionStatuses, onDecisionStatus 
         <Card><SectionHeading eyebrow="Billing and cash" title="Do not confuse earned, invoiced, and collected" /><div className="space-y-3 p-4">{[["Current contract value", money(project.currentContractValue)], ["Recognized revenue / documented progress", money(project.recognizedRevenue)], ["Invoice amount", money(project.invoicedAmount)], ["Cash received", money(project.cashCollected)], ["Outstanding receivables", money(project.outstandingReceivables)], ["Unbilled earned amount", money(project.unbilledAmount)], ["Collection status", project.collectionStatus.replace("-", " ")], ["Last invoice date", project.lastInvoiceDate ?? "No invoice"]].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b border-[rgb(var(--line)/0.06)] pb-2 text-[11px] last:border-0"><span className="text-[rgb(var(--text-3))]">{label}</span><strong className="font-mono font-semibold capitalize text-[rgb(var(--text))]">{value}</strong></div>)}</div></Card>
       </div>
 
-      {canSeeTransactions ? <Card><SectionHeading eyebrow="Finance drill-down" title="Source-level supporting records" note="Employee names and compensation are not exposed; project labor is summarized by role." action={<button type="button" onClick={() => setShowTransactions((current) => !current)} aria-expanded={showTransactions} className="rounded-xl border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text-2))]">{showTransactions ? "Close drill-down" : "Open drill-down"}</button>} />{showTransactions ? <div className="grid gap-4 p-4 lg:grid-cols-3"><TransactionList title="Labor actuals" rows={detail.laborActuals.map((item) => [item.source.sourceRecordId, `${item.resourceRole} · ${number(item.hours)} hours`, money(item.fullyBurdenedLaborCost)])} /><TransactionList title="Nonlabor actuals" rows={detail.nonlaborActuals.map((item) => [item.source.sourceRecordId, `${item.costCategory} · ${item.description}`, money(item.amount)])} /><TransactionList title="Billing records" rows={detail.billingRecords.map((item) => [item.documentNumber, item.recordType.replaceAll("-", " "), money(item.amount)])} /></div> : null}</Card> : null}
+      <FundingAgreementPanel detail={detail} />
+      <ForecastHistoryPanel forecasts={detail.forecastUpdates ?? []} currentContractValue={project.currentContractValue} />
+
+      {canSeeTransactions ? <Card><SectionHeading eyebrow="Finance drill-down" title="Source-level supporting records" note="Employee names and compensation are not exposed; project labor is summarized by role." action={<button type="button" onClick={() => setShowTransactions((current) => !current)} aria-expanded={showTransactions} className="rounded-xl border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text-2))]">{showTransactions ? "Close drill-down" : "Open drill-down"}</button>} />{showTransactions ? <div className="grid gap-4 p-4 lg:grid-cols-4"><TransactionList title="Labor actuals" rows={detail.laborActuals.map((item) => [item.source.sourceRecordId, `${item.resourceRole} · ${number(item.hours)} hours`, money(item.fullyBurdenedLaborCost)])} /><TransactionList title="Nonlabor actuals" rows={detail.nonlaborActuals.map((item) => [item.source.sourceRecordId, `${item.costCategory} · ${item.description}`, money(item.amount)])} /><TransactionList title="Billing records" rows={detail.billingRecords.map((item) => [item.documentNumber, item.recordType.replaceAll("-", " "), money(item.amount)])} /><TransactionList title="Cross-project labor" rows={detail.laborActuals.filter(isCrossProjectLabor).map((item) => [item.source.sourceRecordId, `${item.employeeOrResource ?? "Redacted resource"} · ${item.workPerformedProjectId ?? "Unknown work project"} → ${item.adpChargedProjectId ?? "Unknown charged project"}`, `${number(item.hours)} hours · ${money(item.fullyBurdenedLaborCost)}`])} /></div> : null}</Card> : null}
     </>
   );
 }
@@ -448,6 +516,9 @@ function DataHealthView({ snapshot }: { snapshot: TrailSolutionsSnapshot }) {
     ["Billing reconciliation issues", health.billingReconciliationIssues],
     ["Funding classifications requiring review", health.fundingClassificationsRequiringReview],
     ["Stale project forecasts", health.staleForecasts],
+    ["Cross-project labor rows", health.crossProjectLaborRecordsRequiringReview ?? 0],
+    ["Match eligibility reviews", health.pendingMatchEligibilityReviews ?? 0],
+    ["Awards above cash-exposure threshold", health.awardCashExposureAboveThreshold ?? 0],
   ] as const;
   return <><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{checks.slice(0, 5).map(([label, value]) => <Kpi key={label} label={label} value={`${value}`} note={value ? "Review required" : "No current exception"} tone={value ? "rose" : "green"} />)}</div><Card><SectionHeading eyebrow="Finance data health" title="Can leadership trust the project output?" note="This secondary view exposes the controls behind the management summary. Production writes remain disabled." /><div className="grid gap-4 p-4 lg:grid-cols-2"><div className="rounded-2xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] p-4"><h3 className="text-xs font-semibold text-[rgb(var(--text))]">Validation checks</h3><div className="mt-3 space-y-2">{checks.map(([label, value]) => <div key={label} className="flex items-center justify-between gap-4 border-b border-[rgb(var(--line)/0.06)] pb-2 text-[11px] last:border-0"><span className="text-[rgb(var(--text-2))]">{label}</span><span className={`font-mono font-semibold ${value ? "text-rose-700 dark:text-rose-100" : "text-emerald-800 dark:text-emerald-100"}`}>{value}</span></div>)}</div></div><div className="rounded-2xl border border-[rgb(var(--line)/0.09)] bg-[rgb(var(--card-2))] p-4"><h3 className="text-xs font-semibold text-[rgb(var(--text))]">Source refresh status</h3><div className="mt-3 space-y-3">{health.refreshStatuses.map((status) => <div key={status.dataRefreshStatusId} className="rounded-xl border border-[rgb(var(--line)/0.07)] p-3"><div className="flex items-center justify-between gap-3"><p className="text-[11px] font-semibold text-[rgb(var(--text))]">{status.sourceName}</p><span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase ${status.status === "current" ? "bg-emerald-300/10 text-emerald-800 dark:text-emerald-100" : "bg-[rgb(var(--line)/0.08)] text-[rgb(var(--text-3))]"}`}>{status.status}</span></div><p className="mt-1 text-[10px] leading-4 text-[rgb(var(--text-3))]">{status.sourceCoverage}</p><p className="mt-2 text-[9px] font-black uppercase text-rose-700 dark:text-rose-100">Production writes disabled</p></div>)}</div></div></div></Card><Card><SectionHeading eyebrow="Control totals" title="Source totals and quarantined differences" /><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left"><thead><tr className="border-b border-[rgb(var(--line)/0.07)] text-[10px] font-black uppercase tracking-wider text-[rgb(var(--text-4))]"><th className="px-5 py-3">Source</th><th className="px-3 py-3">Record type</th><th className="px-3 py-3 text-right">Count</th><th className="px-3 py-3 text-right">Amount</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{health.sourceControlTotals.map((total) => <tr key={`${total.source}-${total.recordType}`} className="border-b border-[rgb(var(--line)/0.06)] last:border-0"><td className="px-5 py-3 text-[11px] font-semibold text-[rgb(var(--text))]">{total.source}</td><td className="px-3 py-3 text-[11px] text-[rgb(var(--text-2))]">{total.recordType}</td><td className="px-3 py-3 text-right font-mono text-[11px] text-[rgb(var(--text))]">{total.count}</td><td className="px-3 py-3 text-right font-mono text-[11px] text-[rgb(var(--text))]">{money(total.amount)}</td><td className="px-5 py-3"><span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase ${total.status === "reconciled" ? "bg-emerald-300/10 text-emerald-800 dark:text-emerald-100" : "bg-rose-300/10 text-rose-800 dark:text-rose-100"}`}>{total.status}</span></td></tr>)}</tbody></table></div></Card></>;
 }

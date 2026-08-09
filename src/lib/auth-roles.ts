@@ -9,11 +9,10 @@ const VALID_ROLES: ReadonlySet<ImbaRoleKey> = new Set(
   Object.keys(imbaRoleProfiles) as ImbaRoleKey[],
 );
 
-// The role a signed-in user gets when no role is assigned to their identity. Kept
-// deliberately LIMITED ("board" = oversight only: no Trail data writes, no admin
-// actions) so an invited-but-unassigned person never lands with CEO access. Real
-// users should be assigned an explicit role via Clerk publicMetadata.role.
-export const DEFAULT_ROLE: ImbaRoleKey = "board";
+// No role is a hard deny. An invited-but-unassigned person must not inherit
+// Board visibility or any other IMBA data. Real users must receive an explicit
+// role via Clerk publicMetadata.role or organization membership.
+export const DEFAULT_ROLE: ImbaRoleKey | null = null;
 
 // Configurable allowlist pinning specific invited people to a role. Lowercase emails.
 // Edit as the audience is confirmed, e.g. { "kent@imba.com": "executive" }.
@@ -23,13 +22,29 @@ export function isImbaRoleKey(value: unknown): value is ImbaRoleKey {
   return typeof value === "string" && VALID_ROLES.has(value as ImbaRoleKey);
 }
 
-// Precedence: an explicit Clerk publicMetadata.role wins, then the email map,
+function canonicalRole(value: unknown): ImbaRoleKey | null {
+  if (isImbaRoleKey(value)) return value;
+  if (typeof value === "string" && value.startsWith("org:")) {
+    const organizationRole = value.slice("org:".length);
+    return isImbaRoleKey(organizationRole) ? organizationRole : null;
+  }
+  return null;
+}
+
+// Clerk publicMetadata.role uses the canonical keys directly: "executive" is
+// the CEO role, while "board" is the Board oversight role. Clerk organization
+// roles are accepted as either "executive" or the token form "org:executive".
+// Precedence: explicit public metadata wins, then the organization role, then
+// the email map,
 // then the safe default. Invalid values are ignored rather than trusted.
 export function resolveImbaRole(
-  input: { email?: string | null; publicMetadataRole?: unknown },
+  input: { email?: string | null; publicMetadataRole?: unknown; organizationRole?: unknown },
   emailRoleMap: Readonly<Record<string, ImbaRoleKey>> = EMAIL_ROLE_MAP,
-): ImbaRoleKey {
-  if (isImbaRoleKey(input.publicMetadataRole)) return input.publicMetadataRole;
+): ImbaRoleKey | null {
+  const metadataRole = canonicalRole(input.publicMetadataRole);
+  if (metadataRole) return metadataRole;
+  const organizationRole = canonicalRole(input.organizationRole);
+  if (organizationRole) return organizationRole;
   const email = input.email?.toLowerCase().trim();
   if (email) {
     const mapped = emailRoleMap[email];

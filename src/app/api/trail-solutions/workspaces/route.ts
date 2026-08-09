@@ -38,6 +38,9 @@ export async function POST(request: Request): Promise<Response> {
       validatedPackage: body.validatedPackage as ValidatedImportPackage,
       mappingTemplateName: typeof body.mappingTemplateName === "string" ? body.mappingTemplateName : undefined,
       mappingChangeCount: typeof body.mappingChangeCount === "number" ? body.mappingChangeCount : 0,
+      audit: body.audit && typeof body.audit === "object"
+        ? (body.audit as Parameters<typeof commitWorkspace>[0]["audit"])
+        : undefined,
     });
     return NextResponse.json({ workspace }, { headers: trailResponseHeaders });
   } catch (error) {

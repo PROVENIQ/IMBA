@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Calculator, Info, TrendingUp } from "lucide-react";
+import { AlertTriangle, Calculator, FilePlus2, Info, Save, TrendingUp } from "lucide-react";
 
-import { estimateJobCost, type EstimateConfidence } from "@/core/trail-solutions/estimator";
+import { estimateJobCost, type EstimateConfidence, type EstimateDriverInput } from "@/core/trail-solutions/estimator";
 import { COST_CATEGORIES } from "@/core/trail-solutions/financials";
 import type { Benchmark, ProjectBusinessLine } from "@/core/trail-solutions/model";
+import type { ManualProjectInput } from "@/core/trail-solutions/manual-entry";
+import { saveEstimateRemote } from "@/lib/trail-solutions-test-workspaces";
 import { money, number, percent } from "@/lib/trail-format";
 
 const confidenceClass: Record<EstimateConfidence, string> = {
@@ -26,7 +28,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputClass =
   "w-full rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] px-3 py-2.5 text-xs text-[rgb(var(--text))] outline-none focus:border-blue-300/40";
 
-export function ImbaTrailSolutionsEstimator({ benchmarks }: { benchmarks: readonly Benchmark[] }) {
+export function ImbaTrailSolutionsEstimator({ benchmarks, canManage = false, onCreateProject }: { benchmarks: readonly Benchmark[]; canManage?: boolean; onCreateProject?: (prefill: Partial<ManualProjectInput>) => void }) {
   const businessLines = useMemo(
     () => Array.from(new Set(benchmarks.map((benchmark) => benchmark.businessLine))) as ProjectBusinessLine[],
     [benchmarks],
@@ -47,18 +49,54 @@ export function ImbaTrailSolutionsEstimator({ benchmarks }: { benchmarks: readon
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
-  const result = useMemo(
-    () =>
-      estimateJobCost(benchmarks, {
-        businessLine,
-        region: region || undefined,
-        trailMiles: toNumber(trailMiles),
-        installedUnits: toNumber(installedUnits),
-        projectCount: toNumber(projectCount),
-        proposedContractValue: toNumber(bid),
-      }),
-    [benchmarks, businessLine, region, trailMiles, installedUnits, projectCount, bid],
+  const driverInput = useMemo<EstimateDriverInput>(
+    () => ({
+      businessLine,
+      region: region || undefined,
+      trailMiles: toNumber(trailMiles),
+      installedUnits: toNumber(installedUnits),
+      projectCount: toNumber(projectCount),
+      proposedContractValue: toNumber(bid),
+    }),
+    [businessLine, region, trailMiles, installedUnits, projectCount, bid],
   );
+  const result = useMemo(() => estimateJobCost(benchmarks, driverInput), [benchmarks, driverInput]);
+
+  const [estimateName, setEstimateName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  async function handleSaveEstimate() {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      await saveEstimateRemote({
+        name: estimateName.trim() || `${businessLine} planning estimate`,
+        businessLine,
+        input: driverInput,
+        result,
+      });
+      setSaveMessage("Estimate saved.");
+    } catch (reason) {
+      setSaveMessage(reason instanceof Error ? reason.message : "The estimate could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCreateProject() {
+    onCreateProject?.({
+      businessLine,
+      region: region || undefined,
+      originalContractValue: toNumber(bid) ?? 0,
+      initialEstimatedCost: Math.round(result.totalMedian),
+      drivers: {
+        trailMiles: toNumber(trailMiles),
+        ...(businessLine === "Signage" ? { signsInstalled: toNumber(installedUnits) } : {}),
+      },
+      pricingNotes: `Benchmark-grounded planning estimate — median ${money(result.totalMedian)} (range ${money(result.totalLow)}–${money(result.totalHigh)}).`,
+    });
+  }
 
   const linesByCategory = COST_CATEGORIES.map((category) => ({
     category,
@@ -162,6 +200,19 @@ export function ImbaTrailSolutionsEstimator({ benchmarks }: { benchmarks: readon
                         <p className="mt-1 text-[9px] text-[rgb(var(--text-4))]">{quantity.unit} · n={quantity.sampleSize} · {quantity.confidence}</p>
                       </div>
                     ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {canManage ? (
+                <div className="rounded-[20px] border border-emerald-300/20 bg-emerald-300/[0.05] p-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[rgb(var(--text-4))]">Save &amp; use this estimate</p>
+                  <p className="mt-1 text-[11px] leading-5 text-[rgb(var(--text-3))]">A saved estimate is a benchmark-grounded planning estimate, not an approved quote. &ldquo;Create project&rdquo; prefills a new project you can review before saving.</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <input value={estimateName} onChange={(event) => setEstimateName(event.target.value)} placeholder="Estimate name" className={`${inputClass} max-w-[240px]`} />
+                    <button type="button" onClick={handleSaveEstimate} disabled={saving} className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] px-3 py-2.5 text-[11px] font-bold text-[rgb(var(--text-2))] disabled:opacity-50"><Save className="h-3.5 w-3.5" />{saving ? "Saving…" : "Save estimate"}</button>
+                    {onCreateProject ? <button type="button" onClick={handleCreateProject} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-3 py-2.5 text-[11px] font-black uppercase text-[#102030]"><FilePlus2 className="h-3.5 w-3.5" />Create project from estimate</button> : null}
+                    {saveMessage ? <span className="text-[11px] text-[rgb(var(--text-3))]">{saveMessage}</span> : null}
                   </div>
                 </div>
               ) : null}

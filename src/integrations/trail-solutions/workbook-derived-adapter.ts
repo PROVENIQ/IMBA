@@ -8,13 +8,16 @@ import {
   asEstimateLineId,
   asEstimateVersionId,
   asGrantFundingRecordId,
+  asForecastUpdateId,
   asLaborActualId,
   asNonlaborActualId,
+  asMatchActivityId,
   asOperationalDriverId,
   asOrganizationId,
   asProjectId,
   asProjectIdentifierCrosswalkId,
   asRevenueBillingRecordId,
+  asSharedCostAllocationRuleId,
   type OrganizationId,
   type ProjectId,
 } from "@/core/primitives/identity";
@@ -30,8 +33,10 @@ import type {
   EstimateLine,
   EstimateVersion,
   FinancialHealthStatus,
+  ForecastUpdate,
   GrantFundingRecord,
   LaborActual,
+  MatchActivity,
   NonlaborActual,
   OperationalDriver,
   PortfolioSummary,
@@ -42,6 +47,7 @@ import type {
   ProjectFinancialSummary,
   ProjectIdentifierCrosswalk,
   RevenueBillingRecord,
+  SharedCostAllocationRule,
   SourceEvidence,
   StaffingMixLine,
   TrailSolutionsSnapshot,
@@ -53,6 +59,7 @@ import type {
 } from "@/core/trail-solutions/data-source";
 import { calculateProjectFinancials, summarizeBilling } from "@/core/trail-solutions/financials";
 import { demoFinancialHealthPolicy, evaluateFinancialHealth } from "@/core/trail-solutions/policy";
+import { calculateGrantAgreementControls, forecastIsStale, isCrossProjectLabor } from "@/core/trail-solutions/funding-controls";
 
 type RawCostLine = [CostBreakdownLine["category"], number, number, number | null];
 type RawStaffingLine = [string, number, number, number];
@@ -151,6 +158,11 @@ interface RawProjectPackage {
     approvalOwner: string;
   };
   grant?: Omit<GrantFundingRecord, "grantFundingRecordId" | "organizationId" | "chapterScope" | "projectId" | "restricted">;
+  laborActuals?: Omit<LaborActual, "laborActualId" | "organizationId" | "chapterScope" | "projectId">[];
+  nonlaborActuals?: Omit<NonlaborActual, "nonlaborActualId" | "organizationId" | "chapterScope" | "projectId">[];
+  matchActivities?: Omit<MatchActivity, "matchActivityId" | "organizationId" | "chapterScope" | "projectId">[];
+  forecastUpdates?: Omit<ForecastUpdate, "forecastUpdateId" | "organizationId" | "chapterScope" | "projectId">[];
+  sharedCostAllocationRules?: Omit<SharedCostAllocationRule, "sharedCostAllocationRuleId" | "organizationId" | "chapterScope">[];
   exceptions?: RawException[];
   decisions: RawDecision[];
 }
@@ -292,6 +304,9 @@ function projectEntities(
   changeOrders: ChangeOrder[];
   operationalDrivers: OperationalDriver[];
   grantFunding: GrantFundingRecord[];
+  matchActivities: MatchActivity[];
+  forecastUpdates: ForecastUpdate[];
+  sharedCostAllocationRules: SharedCostAllocationRule[];
   decisions: DecisionItem[];
   exceptions: DataException[];
   summary: ProjectFinancialSummary;
@@ -366,7 +381,17 @@ function projectEntities(
   const directLaborActual = raw.costBreakdown.find(([category]) => category === "Direct labor")?.[2] ?? 0;
   const payrollBurdenActual = raw.costBreakdown.find(([category]) => category === "Payroll burden")?.[2] ?? 0;
   const totalActualHours = raw.staffingMix.reduce((total, [, , actual]) => total + actual, 0);
-  const laborActuals = raw.staffingMix.map(([role, , actualHours], index): LaborActual => {
+  const laborActuals = raw.laborActuals?.length
+    ? raw.laborActuals.map((labor, index): LaborActual => Object.freeze({
+      ...common,
+      laborActualId: asLaborActualId(fixtureUuid(0x41 + projectSequence, index + 1)),
+      projectId,
+      ...labor,
+      workPerformedProjectId: labor.workPerformedProjectId ?? projectId,
+      employeeOrResource: labor.employeeOrResource ?? labor.resourceRole,
+      crossProjectLabor: Boolean(labor.workPerformedProjectId && labor.adpChargedProjectId && labor.workPerformedProjectId !== labor.adpChargedProjectId),
+    }))
+    : raw.staffingMix.map(([role, , actualHours], index): LaborActual => {
     const share = totalActualHours > 0
       ? actualHours / totalActualHours
       : raw.staffingMix.length > 0
@@ -391,8 +416,15 @@ function projectEntities(
       costCode: `LAB-${index + 1}`,
       source: evidence("ADP", `${raw.projectCode}-LAB-${index + 1}`, sourceName),
     });
-  });
-  const nonlaborActuals = raw.costBreakdown
+    });
+  const nonlaborActuals = raw.nonlaborActuals?.length
+    ? raw.nonlaborActuals.map((nonlabor, index): NonlaborActual => Object.freeze({
+      ...common,
+      nonlaborActualId: asNonlaborActualId(fixtureUuid(0x51 + projectSequence, index + 1)),
+      projectId,
+      ...nonlabor,
+    }))
+    : raw.costBreakdown
     .filter(([category, , actual]) => category !== "Direct labor" && category !== "Payroll burden" && actual > 0)
     .map(([category, , actual], index): NonlaborActual => Object.freeze({
       ...common,
@@ -480,6 +512,27 @@ function projectEntities(
     restricted: true,
     ...raw.grant,
   })] : [];
+  const matchActivities: MatchActivity[] = (raw.matchActivities ?? []).map((activity, index) => Object.freeze({
+    ...common,
+    matchActivityId: asMatchActivityId(fixtureUuid(0x83 + projectSequence, index + 1)),
+    projectId,
+    ...activity,
+    calculatedActivityValue: activity.calculatedActivityValue ?? Math.max(activity.quantityHours ?? 0, 0) * Math.max(activity.valuationRate ?? 0, 0),
+    eligibleMatchValue: activity.eligibilityStatus === "Eligible"
+      ? Math.max(activity.calculatedActivityValue ?? Math.max(activity.quantityHours ?? 0, 0) * Math.max(activity.valuationRate ?? 0, 0), 0) + Math.max(activity.documentedCashMatch, 0)
+      : 0,
+  }));
+  const forecastUpdates: ForecastUpdate[] = (raw.forecastUpdates ?? []).map((forecast, index) => Object.freeze({
+    ...common,
+    forecastUpdateId: asForecastUpdateId(fixtureUuid(0x84 + projectSequence, index + 1)),
+    projectId,
+    ...forecast,
+  }));
+  const sharedCostAllocationRules: SharedCostAllocationRule[] = (raw.sharedCostAllocationRules ?? []).map((rule, index) => Object.freeze({
+    ...common,
+    sharedCostAllocationRuleId: asSharedCostAllocationRuleId(fixtureUuid(0x85, index + 1)),
+    ...rule,
+  }));
   const decisions = raw.decisions.map((decision, index): DecisionItem => Object.freeze({
     ...common,
     decisionItemId: asDecisionItemId(fixtureUuid(0x91 + projectSequence, index + 1)),
@@ -582,6 +635,9 @@ function projectEntities(
     changeOrders,
     operationalDrivers,
     grantFunding,
+    matchActivities,
+    forecastUpdates,
+    sharedCostAllocationRules,
     decisions,
     exceptions,
     summary,
@@ -673,6 +729,9 @@ function materialize(inputValue: unknown): MaterializedData {
       summary: entities.summary,
       operationalDrivers: entities.operationalDrivers,
       grantFunding: entities.grantFunding,
+      matchActivities: entities.matchActivities,
+      forecastUpdates: entities.forecastUpdates,
+      sharedCostAllocationRules: entities.sharedCostAllocationRules,
       changeOrders: entities.changeOrders,
       laborActuals: entities.laborActuals,
       nonlaborActuals: entities.nonlaborActuals,
@@ -733,6 +792,21 @@ function materialize(inputValue: unknown): MaterializedData {
   const reliableContract = reliable.reduce((total, summary) => total + summary.currentContractValue, 0);
   const forecastFinalCost = reliable.reduce((total, summary) => total + (summary.forecastFinalCost ?? 0), 0);
   const forecastGrossMargin = reliableContract - forecastFinalCost;
+  const allDetails = Array.from(details.values());
+  const agreementControls = allDetails.flatMap((detail) => detail.grantFunding.map((grant) => calculateGrantAgreementControls({
+    grant,
+    laborActuals: detail.laborActuals,
+    nonlaborActuals: detail.nonlaborActuals,
+    matchActivities: detail.matchActivities ?? [],
+  })));
+  const allForecasts = allDetails.flatMap((detail) => detail.forecastUpdates ?? []);
+  const allLabor = allDetails.flatMap((detail) => detail.laborActuals);
+  const staleForecastCount = allForecasts.filter((forecast) => forecast.status === "Stale" || forecastIsStale(forecast.forecastDate, input.metadata.sourceAsOfDate)).length;
+  const crossProjectLaborCount = allLabor.filter(isCrossProjectLabor).length;
+  const pendingMatchCount = allDetails.flatMap((detail) => detail.matchActivities ?? []).filter((activity) => activity.eligibilityStatus === "Pending").length;
+  const outstandingReimbursement = allDetails.flatMap((detail) => detail.grantFunding).reduce((total, grant) => total + Math.max(0, grant.reimbursementsRequested - grant.reimbursementsReceived), 0);
+  const awardCashExposure = agreementControls.reduce((total, controls) => total + controls.awardCashExposure, 0);
+  const remainingMatchRequirement = agreementControls.reduce((total, controls) => total + controls.remainingMatchRequirement, 0);
   const healthCounts: Record<FinancialHealthStatus, number> = { "on-track": 0, watch: 0, "at-risk": 0, "data-incomplete": 0 };
   summaries.forEach((summary) => { healthCounts[summary.healthStatus] += 1; });
   const portfolio: PortfolioSummary = Object.freeze({
@@ -751,6 +825,12 @@ function materialize(inputValue: unknown): MaterializedData {
     projectsWithDataExceptions: new Set(exceptions.filter((exception) => exception.status === "open").map((exception) => exception.suggestedProjectId ?? exception.projectId).filter(Boolean)).size,
     healthCounts,
     lastDataRefresh: input.metadata.sourceAsOfDate,
+    outstandingReimbursement,
+    awardCashExposure,
+    remainingMatchRequirement,
+    staleForecasts: staleForecastCount,
+    crossProjectLaborRecordsRequiringReview: crossProjectLaborCount,
+    pendingMatchEligibilityReviews: pendingMatchCount,
   });
   const openExceptions = exceptions.filter((exception) => exception.status === "open" || exception.status === "pending-review");
   const typeCount = (type: DataException["exceptionType"]) => openExceptions.filter((exception) => exception.exceptionType === type).length;
@@ -768,7 +848,10 @@ function materialize(inputValue: unknown): MaterializedData {
     projectsWithoutEstimateToComplete: typeCount("missing-estimate-to-complete"),
     billingReconciliationIssues: typeCount("billing-reconciliation"),
     fundingClassificationsRequiringReview: typeCount("funding-classification"),
-    staleForecasts: summaries.filter((summary) => summary.healthStatus === "data-incomplete" && summary.lastDataRefresh < "2026-07-23").length,
+    staleForecasts: staleForecastCount,
+    crossProjectLaborRecordsRequiringReview: crossProjectLaborCount,
+    pendingMatchEligibilityReviews: pendingMatchCount,
+    awardCashExposureAboveThreshold: allDetails.reduce((count, detail) => count + detail.grantFunding.filter((grant) => calculateGrantAgreementControls({ grant, laborActuals: detail.laborActuals, nonlaborActuals: detail.nonlaborActuals, matchActivities: detail.matchActivities ?? [] }).awardCashExposure > 10000).length, 0),
     sourceControlTotals: Object.freeze([
       { source: "Workbook-derived JSON", recordType: "Projects", count: summaries.length, amount: portfolio.totalCurrentContractValue, status: "reconciled" as const },
       { source: "Workbook-derived JSON", recordType: "Actual project cost", count: summaries.length, amount: portfolio.actualCostToDate, status: "reconciled" as const },

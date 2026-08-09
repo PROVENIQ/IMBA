@@ -5,6 +5,8 @@ import type {
   TrailSolutionsTestWorkspace,
   ValidatedImportPackage,
 } from "@/core/trail-solutions/import-lab";
+import type { EstimateDriverInput, EstimateResult } from "@/core/trail-solutions/estimator";
+import type { SavedEstimate } from "@/lib/job-estimate-repo";
 
 // Client data-access for Trail Solutions workspaces. Uploaded data is persisted
 // server-side in Neon (org-scoped, shared) via the /api/trail-solutions routes —
@@ -13,6 +15,7 @@ import type {
 
 const WORKSPACES_URL = "/api/trail-solutions/workspaces";
 const TEMPLATES_URL = "/api/trail-solutions/mapping-templates";
+const ESTIMATES_URL = "/api/trail-solutions/estimates";
 const ACTIVE_WORKSPACE_KEY = "imba-trail-active-test-workspace-v1";
 
 async function readJson(response: Response): Promise<Record<string, unknown>> {
@@ -37,6 +40,7 @@ export async function commitTestWorkspaceRemote(input: {
   validatedPackage: ValidatedImportPackage;
   mappingTemplateName?: string;
   mappingChangeCount: number;
+  audit?: { action: string; entityType: string; entityId?: string | null; detail?: Record<string, unknown> };
 }): Promise<TrailSolutionsTestWorkspace> {
   const response = await fetch(WORKSPACES_URL, {
     method: "POST",
@@ -97,6 +101,34 @@ export async function saveMappingTemplateRemote(input: {
   });
   const body = await readJson(response);
   return body.template as ImportMappingTemplate;
+}
+
+export async function fetchSavedEstimates(): Promise<SavedEstimate[]> {
+  const response = await fetch(ESTIMATES_URL, { method: "GET", headers: { "Cache-Control": "no-store" } });
+  const body = await readJson(response);
+  return (body.estimates ?? []) as SavedEstimate[];
+}
+
+export async function saveEstimateRemote(input: {
+  name: string;
+  businessLine: string;
+  input: EstimateDriverInput;
+  result: EstimateResult;
+  benchmarkVersion?: string;
+  linkedProjectCode?: string;
+}): Promise<SavedEstimate> {
+  const response = await fetch(ESTIMATES_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await readJson(response);
+  return body.estimate as SavedEstimate;
+}
+
+export async function deleteSavedEstimateRemote(estimateId: string): Promise<void> {
+  const response = await fetch(`${ESTIMATES_URL}/${estimateId}`, { method: "DELETE" });
+  await readJson(response);
 }
 
 // --- Per-browser UI preference: which workspace is active in the dashboard. ---

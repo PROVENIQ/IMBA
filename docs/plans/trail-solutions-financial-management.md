@@ -1,6 +1,6 @@
 # Trail Solutions Financial Management — ExecPlan
 
-Status: Complete — Data Import Lab prototype extension  
+Status: Phase 2 in progress — Manual management workflow
 Started: 2026-08-06  
 Owner: Codex implementation task
 
@@ -16,6 +16,20 @@ a discovery and migration-design source. A future ERP remains the financial
 system of record; IMBA-OS is the management and decision-support layer.
 
 ## Data Import Lab extension
+
+### Revised mart alignment
+
+- [x] Extend labor/nonlabor/grant models with award treatment, ADP
+  charged-versus-work project IDs, agreement ownership/status, reimbursement,
+  match, and cash-exposure fields.
+- [x] Add Match Activity Detail, Forecast Updates, Unmapped Exceptions, and
+  Shared Cost Allocation Rules import contracts.
+- [x] Add grant agreement controls, cross-project labor review, stale forecast
+  detection, and immutable forecast-history presentation.
+- [x] Surface funding and agreement KPIs at portfolio and project level while
+  preserving benchmark/estimator behavior and the no-ERP-shadow boundary.
+- [x] Give the CEO complete IMBA-OS navigation and direct access to the data
+  upload/analysis workspace.
 
 The follow-up increment adds a Finance-only, self-service testing loop:
 
@@ -35,6 +49,26 @@ Production persistence, server-enforced authorization, malware scanning, object
 storage, retention, and legal deletion controls remain entry conditions for a
 live deployment.
 
+## Manual management workflow (Phase 2)
+
+The current increment adds the missing project-management path between bulk
+imports. It must keep using the existing `ValidatedImportPackage` / workspace
+version write path; it must not become a general ledger or transaction-entry
+system.
+
+- [x] Add a durable manual project create form and estimator handoff.
+- [x] Add durable forecast and match activity records with provenance.
+- [x] Add project-level change orders, operational-driver updates, funding /
+  agreement updates, and decision/action records.
+- [x] Add the complete project-level Add menu and persist every action with a
+  precise audit event.
+- [ ] Verify the estimator → project → forecast → match → refresh /
+  re-authentication / second-user acceptance path end to end. This remains
+  blocked until the production Vercel environment has a `DATABASE_URL`.
+- [x] Run local verification and deploy the completed code increment to
+  production. Durable production saves remain disabled until the database is
+  provisioned and migrated.
+
 ### Data Import Lab milestones
 
 - [x] Add import/workspace types, expected-table specifications, mapping rules,
@@ -51,6 +85,9 @@ live deployment.
   without mixing it with demonstration data.
 - [x] Add parser, mapping, reconciliation, security, isolation, calculation, and
   UI contract tests.
+- [x] Add funding-control tests for award eligibility, match valuation,
+  reimbursement/exposure calculations, cross-project labor, and forecast
+  snapshots.
 - [x] Re-run lint, typecheck, tests, production build, desktop/mobile browser
   verification, and the finance-control audit.
 
@@ -229,8 +266,8 @@ Key controls to preserve:
 
 - `npm run lint`: passed with zero warnings.
 - `npm run typecheck`: passed.
-- `npm test`: 14 files and 61 tests passed.
-- `npm run build`: passed; the root route and application icon prerendered.
+- `npm test`: 17 files and 79 tests passed.
+- `npm run build`: passed; the root route, import API, and application icon prerendered.
 - Desktop browser flow: portfolio loaded, decision evidence opened project
   detail, supported variance explanations rendered, and no error overlay was
   present.
@@ -254,6 +291,11 @@ Key controls to preserve:
   effect); npm's supported remediation is a breaking Next.js 16.3 upgrade, which
   is intentionally left for a dedicated framework-upgrade task.
 - No formatter script is configured; no unrelated formatting stack was added.
+
+The final local-browser refresh reached the Clerk sign-in gate after the demo
+server restart, so the CEO upload navigation could not be clicked in that
+session without user authentication. The server is running at
+`http://localhost:3910/` for the user to sign in and continue testing.
 
 ## Completion notes
 

@@ -15,6 +15,7 @@ import type {
   ImportVersionRecord,
   ValidatedImportPackage,
 } from "@/core/trail-solutions/import-lab";
+import type { EstimateDriverInput, EstimateResult } from "@/core/trail-solutions/estimator";
 
 // Trail Solutions persistence. Every row is scoped to an organization (multi-tenant
 // from day one; IMBA is the first org). Large computed bundles (the validated import
@@ -43,6 +44,18 @@ export const auditAction = pgEnum("audit_action", [
   "restore",
   "reset",
   "promote",
+  // Manual create/edit workflow events (§15). These flow through the same
+  // commitWorkspace write path as imports, but record the precise entity action.
+  "manual_create",
+  "forecast_update",
+  "match_activity",
+  "change_order_added",
+  "operational_driver_added",
+  "funding_updated",
+  "decision_action_added",
+  "estimate_saved",
+  "estimate_deleted",
+  "project_from_estimate",
 ]);
 
 export const organizations = pgTable("organizations", {
@@ -105,6 +118,25 @@ export const trailMappingTemplates = pgTable("trail_mapping_templates", {
   sourceLabel: text("source_label").notNull(),
   mappings: jsonb("mappings").$type<readonly ImportMappingPlanEntry[]>().notNull(),
   createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Saved job-cost estimates. A benchmark-grounded planning artifact — explicitly NOT
+// an approved quote — so it lives in its own table rather than the project snapshot.
+// linkedProjectCode optionally ties a saved estimate to a project once one exists.
+export const jobEstimates = pgTable("job_estimates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  name: text("name").notNull(),
+  businessLine: text("business_line").notNull(),
+  input: jsonb("input").$type<EstimateDriverInput>().notNull(),
+  result: jsonb("result").$type<EstimateResult>().notNull(),
+  benchmarkVersion: text("benchmark_version"),
+  linkedProjectCode: text("linked_project_code"),
+  createdBy: text("created_by").notNull(),
+  createdByLabel: text("created_by_label"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

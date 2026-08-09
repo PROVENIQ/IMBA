@@ -44,6 +44,9 @@ export type TestWorkspaceId = Brand<string, "TestWorkspaceId">;
 export type ImportAttemptId = Brand<string, "ImportAttemptId">;
 export type ImportVersionId = Brand<string, "ImportVersionId">;
 export type MappingTemplateId = Brand<string, "MappingTemplateId">;
+export type MatchActivityId = Brand<string, "MatchActivityId">;
+export type ForecastUpdateId = Brand<string, "ForecastUpdateId">;
+export type SharedCostAllocationRuleId = Brand<string, "SharedCostAllocationRuleId">;
 
 const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -146,6 +149,12 @@ export const asImportVersionId = (value: string): ImportVersionId =>
   asDomainId<ImportVersionId>(value, "importVersionId");
 export const asMappingTemplateId = (value: string): MappingTemplateId =>
   asDomainId<MappingTemplateId>(value, "mappingTemplateId");
+export const asMatchActivityId = (value: string): MatchActivityId =>
+  asDomainId<MatchActivityId>(value, "matchActivityId");
+export const asForecastUpdateId = (value: string): ForecastUpdateId =>
+  asDomainId<ForecastUpdateId>(value, "forecastUpdateId");
+export const asSharedCostAllocationRuleId = (value: string): SharedCostAllocationRuleId =>
+  asDomainId<SharedCostAllocationRuleId>(value, "sharedCostAllocationRuleId");
 
 export function newUuidV4(): UuidV4 {
   return asUuidV4(crypto.randomUUID());

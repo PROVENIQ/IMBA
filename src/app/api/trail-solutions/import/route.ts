@@ -47,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
   // Identity is verified server-side from the Clerk session, never from a
   // client-supplied header. Middleware already blocks anonymous requests; this
   // is defense-in-depth plus the finance/executive capability check.
-  const { userId } = await auth();
+  const { userId, orgRole } = await auth();
   if (!userId) {
     return NextResponse.json(
       { error: "You must be signed in to upload data." },
@@ -59,7 +59,11 @@ export async function POST(request: Request): Promise<Response> {
     user?.primaryEmailAddress?.emailAddress ??
     user?.emailAddresses?.[0]?.emailAddress ??
     null;
-  const role = resolveImbaRole({ email, publicMetadataRole: user?.publicMetadata?.role });
+  const role = resolveImbaRole({
+    email,
+    publicMetadataRole: user?.publicMetadata?.role,
+    organizationRole: orgRole,
+  });
   if (role !== "finance" && role !== "executive") {
     return NextResponse.json(
       { error: "CEO or Finance access is required for Data Import Lab uploads." },

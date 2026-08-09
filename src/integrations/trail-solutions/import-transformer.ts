@@ -6,6 +6,12 @@ import {
 import type {
   CostCategory,
   DataExceptionType,
+  ForecastUpdate,
+  GrantFundingRecord,
+  LaborActual,
+  MatchActivity,
+  NonlaborActual,
+  SharedCostAllocationRule,
   ProjectBusinessLine,
   ProjectStage,
 } from "@/core/trail-solutions/model";
@@ -186,8 +192,8 @@ function rawExceptionType(code: string): DataExceptionType {
 function validateMappedValues(mapped: MappedImportTables, issues: ImportIssue[]): void {
   for (const tableSpec of [
     "Project Master", "Project Crosswalk", "Estimate Lines", "Labor Actuals", "Nonlabor Actuals",
-    "Revenue & Billing", "Change Orders", "Operational Drivers", "Grant Funding", "Labor Rate Library",
-    "Cost Code Map", "Project Summary", "Benchmark Library",
+    "Revenue & Billing", "Change Orders", "Operational Drivers", "Grant Funding", "Match Activity Detail", "Forecast Updates", "Labor Rate Library",
+    "Cost Code Map", "Unmapped Exceptions", "Project Summary", "Benchmark Library", "Shared Cost Allocation Rules",
   ] as const) {
     const sourceRows = rows(mapped, tableSpec);
     if (!sourceRows.length) continue;
@@ -259,7 +265,7 @@ function validateProjectRelationships(mapped: MappedImportTables, issues: Import
     }
     known.add(projectCode);
   });
-  const childTables: ImportTableName[] = ["Project Crosswalk", "Estimate Lines", "Labor Actuals", "Nonlabor Actuals", "Revenue & Billing", "Change Orders", "Operational Drivers", "Grant Funding", "Project Summary"];
+  const childTables: ImportTableName[] = ["Project Crosswalk", "Estimate Lines", "Labor Actuals", "Nonlabor Actuals", "Revenue & Billing", "Change Orders", "Operational Drivers", "Grant Funding", "Match Activity Detail", "Forecast Updates", "Project Summary"];
   for (const table of childTables) {
     rows(mapped, table).forEach((row, index) => {
       const projectCode = text(row, "Project ID");
@@ -280,7 +286,7 @@ function validateProjectRelationships(mapped: MappedImportTables, issues: Import
   return known;
 }
 
-function additionalControlIssues(mapped: MappedImportTables, knownProjects: ReadonlySet<string>, issues: ImportIssue[]): void {
+function additionalControlIssues(mapped: MappedImportTables, knownProjects: ReadonlySet<string>, issues: ImportIssue[], serverTime: string): void {
   const costCodeRows = rows(mapped, "Cost Code Map");
   const mappedCostCodes = new Set(costCodeRows.filter((row) => /mapped|approved/i.test(text(row, "Mapping Status", "mapped"))).map((row) => text(row, "Source Code")).filter(Boolean));
   for (const table of ["Labor Actuals", "Nonlabor Actuals"] as const) {
@@ -326,6 +332,43 @@ function additionalControlIssues(mapped: MappedImportTables, knownProjects: Read
       }));
     }
   });
+  const awardIds = new Set(rows(mapped, "Grant Funding").map((row) => text(row, "Grant / Award ID")).filter(Boolean));
+  const fundingRows = [
+    ["Labor Actuals", rows(mapped, "Labor Actuals"), "Fully Burdened Labor Cost ($)"],
+    ["Nonlabor Actuals", rows(mapped, "Nonlabor Actuals"), "Amount ($)"],
+  ] as const;
+  for (const [table, sourceRows] of fundingRows) {
+    sourceRows.forEach((row, index) => {
+      const awardId = text(row, "Grant / Award ID");
+      const treatment = text(row, "Funding Treatment");
+      if (awardId && !awardIds.has(awardId)) issues.push(issue({ severity: "warning", code: "AWARD_ID_NOT_FOUND", table, rowNumber: index + 1, projectCode: text(row, "Project ID"), field: "Grant / Award ID", description: `${table} row ${index + 1} references Grant/Award ID ${awardId}, which is not present in Grant Funding.`, resolution: "Load the agreement row or quarantine the transaction.", quarantined: true }));
+      if (treatment === "Award Cost" && !awardId) issues.push(issue({ severity: "warning", code: "AWARD_COST_MISSING_AWARD_ID", table, rowNumber: index + 1, projectCode: text(row, "Project ID"), field: "Grant / Award ID", description: `${table} row ${index + 1} is classified as Award Cost without a Grant/Award ID.`, resolution: "Supply the funding relationship before treating this cost as eligible.", quarantined: true }));
+      if (treatment === "Cash Match" && !awardId) issues.push(issue({ severity: "warning", code: "CASH_MATCH_MISSING_AWARD_ID", table, rowNumber: index + 1, projectCode: text(row, "Project ID"), field: "Grant / Award ID", description: `${table} row ${index + 1} is classified as Cash Match without a Grant/Award ID.`, resolution: "Supply the agreement reference before counting match.", quarantined: true }));
+    });
+  }
+  rows(mapped, "Labor Actuals").forEach((row, index) => {
+    const workProject = text(row, "Work Performed Project ID") || text(row, "Project ID");
+    const chargedProject = text(row, "ADP Charged Project ID");
+    if (workProject && chargedProject && workProject !== chargedProject) issues.push(issue({ severity: "warning", code: "CROSS_PROJECT_LABOR_REQUIRES_REVIEW", table: "Labor Actuals", rowNumber: index + 1, projectCode: workProject, field: "ADP Charged Project ID", description: `${text(row, "Employee / Resource", "A labor resource")} performed work on ${workProject} but payroll is charged to ${chargedProject}.`, resolution: "Finance should review the coding difference; IMBA-OS does not automatically reclassify the transaction.", quarantined: false }));
+  });
+  rows(mapped, "Grant Funding").forEach((row, index) => {
+    const requested = nonnegative(row, "Reimbursements Requested ($)");
+    const received = nonnegative(row, "Reimbursements Received ($)");
+    const eligible = nonnegative(row, "Eligible Cost to Date ($)");
+    if (received > requested) issues.push(issue({ severity: "warning", code: "REIMBURSEMENT_RECEIVED_EXCEEDS_REQUESTED", table: "Grant Funding", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Grant ${text(row, "Grant / Award ID", "without an ID")} shows reimbursements received above reimbursements requested.`, resolution: "Reconcile the agreement cash records before using exposure metrics.", quarantined: false }));
+    if (requested > eligible && eligible > 0) issues.push(issue({ severity: "warning", code: "REIMBURSEMENT_EXCEEDS_ELIGIBLE_COST", table: "Grant Funding", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Reimbursements requested exceed eligible cost to date for Grant ${text(row, "Grant / Award ID", "without an ID")}.`, resolution: "Explain the timing difference or reconcile agreement and cost records.", quarantined: false }));
+    const endDate = date(row, "End Date", serverTime.slice(0, 10));
+    const remainingMatch = Math.max(nonnegative(row, "Match Requirement ($)") - nonnegative(row, "Total Match Accumulated ($)"), 0);
+    if (remainingMatch > 0 && Date.parse(endDate) - Date.parse(serverTime) <= 45 * 86_400_000) issues.push(issue({ severity: "warning", code: "AWARD_END_APPROACHING_WITH_REMAINING_MATCH", table: "Grant Funding", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Grant ${text(row, "Grant / Award ID", "without an ID")} is approaching its end date with ${remainingMatch.toLocaleString()} of match remaining.`, resolution: "Review eligible match activity and the agreement owner’s closeout plan.", quarantined: false }));
+  });
+  rows(mapped, "Match Activity Detail").forEach((row, index) => {
+    if (!text(row, "Documentation Source Record ID")) issues.push(issue({ severity: "warning", code: "MATCH_RECORD_LACKS_DOCUMENTATION", table: "Match Activity Detail", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Match activity row ${index + 1} has no documentation/source record.`, resolution: "Attach a supporting source record before relying on the match value.", quarantined: false }));
+    if (/pending/i.test(text(row, "Eligibility Status"))) issues.push(issue({ severity: "warning", code: "MATCH_PENDING_ELIGIBILITY_REVIEW", table: "Match Activity Detail", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Match activity row ${index + 1} is awaiting eligibility review.`, resolution: "Resolve eligibility and approval before counting the match toward the requirement.", quarantined: false }));
+  });
+  rows(mapped, "Forecast Updates").forEach((row, index) => {
+    if (amount(row, "Estimate to Complete ($)") !== null && (!text(row, "Forecast Date") || !text(row, "ETC Source") || !text(row, "Forecast Owner"))) issues.push(issue({ severity: "warning", code: "FORECAST_MISSING_SNAPSHOT_CONTEXT", table: "Forecast Updates", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Forecast row ${index + 1} has ETC but is missing date, source, or owner context.`, resolution: "Complete the snapshot metadata before relying on forecast history.", quarantined: false }));
+    if (text(row, "Forecast Date") && Date.parse(serverTime) - Date.parse(text(row, "Forecast Date")) > 30 * 86_400_000) issues.push(issue({ severity: "warning", code: "FORECAST_STALE", table: "Forecast Updates", rowNumber: index + 1, projectCode: text(row, "Project ID"), description: `Forecast row ${index + 1} is stale relative to the import date.`, resolution: "Refresh ETC and forecast ownership before using it for current decisions.", quarantined: false }));
+  });
 }
 
 function projectManagerAliases(projectRows: readonly Row[]): Map<string, string> {
@@ -359,6 +402,9 @@ function buildRawInput(mapped: MappedImportTables, issues: ImportIssue[], server
     const changeRows = projectRows(rows(mapped, "Change Orders"), projectCode);
     const driverRows = projectRows(rows(mapped, "Operational Drivers"), projectCode);
     const grantRows = projectRows(rows(mapped, "Grant Funding"), projectCode);
+    const matchRows = projectRows(rows(mapped, "Match Activity Detail"), projectCode);
+    const forecastRows = projectRows(rows(mapped, "Forecast Updates"), projectCode);
+    const allocationRows = rows(mapped, "Shared Cost Allocation Rules");
     const summaryRow = projectRows(rows(mapped, "Project Summary"), projectCode).at(-1);
     const crosswalkRows = projectRows(rows(mapped, "Project Crosswalk"), projectCode);
 
@@ -464,6 +510,20 @@ function buildRawInput(mapped: MappedImportTables, issues: ImportIssue[], server
       trailMiles: nonnegative(master, "Trail Miles") || nonnegative(driver, "Trail Miles"),
       costBreakdown: COST_CATEGORIES.map((category) => [category, estimated.get(category) ?? 0, actual.get(category) ?? 0, remaining.get(category) ?? null]),
       staffingMix, billing,
+      laborActuals: laborRows.map((row, index) => {
+        const workCode = text(row, "Work Performed Project ID") || text(row, "Project ID");
+        const chargedCode = text(row, "ADP Charged Project ID");
+        const workPerformedProjectId = sourceToCanonical.get(workCode);
+        const adpChargedProjectId = chargedCode ? sourceToCanonical.get(chargedCode) : undefined;
+        const hours = nonnegative(row, "Hours");
+        const directWages = nonnegative(row, "Direct Wages ($)");
+        const employerTaxes = nonnegative(row, "Employer Taxes ($)");
+        const benefits = nonnegative(row, "Benefits ($)");
+        const otherBurden = nonnegative(row, "Other Burden ($)");
+        const fullyBurdenedLaborCost = nonnegative(row, "Fully Burdened Labor Cost ($)") || directWages + employerTaxes + benefits + otherBurden;
+        return { resourceRole: text(row, "Role", "Unspecified role"), seniority: /lead/i.test(text(row, "Role")) ? "lead" : /senior/i.test(text(row, "Role")) ? "senior" : /crew|installer/i.test(text(row, "Role")) ? "crew" : "standard", region: text(row, "Region", text(master, "Region", "Unspecified")), workDate: date(row, "Work Date", serverDate), payPeriodEnd: date(row, "Pay Period End", serverDate), hours, directWages, payrollBurden: employerTaxes + benefits + otherBurden, fullyBurdenedLaborCost, baseRate: amount(row, "Base Rate ($/hr)") ?? undefined, employerTaxes, benefits, otherBurden, employeeOrResource: text(row, "Employee / Resource", "Redacted resource"), workPerformedProjectId: workPerformedProjectId ? asProjectId(workPerformedProjectId) : undefined, adpChargedProjectId: adpChargedProjectId ? asProjectId(adpChargedProjectId) : undefined, adpJobCode: text(row, "ADP Job Code") || undefined, projectPhase: text(row, "Project Phase", "Project delivery"), costCode: text(row, "Cost Code", `LAB-${index + 1}`), homeBusinessLine: mapBusinessLine(text(row, "Home Business Line")) || undefined, homeDepartmentOrTeam: text(row, "Home Department / Team") || undefined, grantAwardId: text(row, "Grant / Award ID") || undefined, fundingTreatment: text(row, "Funding Treatment") as LaborActual["fundingTreatment"], transferAllocationNotes: text(row, "Transfer / Allocation Notes") || undefined, source: { sourceSystem: "ADP", sourceRecordId: text(row, "Source Record ID", `${projectCode}-LAB-${index + 1}`), sourceName: "Data Import Lab", fingerprint: `${projectCode}-LAB-${index + 1}` } };
+      }),
+      nonlaborActuals: nonlaborRows.map((row, index) => ({ vendorOrPayee: text(row, "Vendor / Payee", "Redacted source"), businessDate: date(row, "Business Date", serverDate), accountingDate: date(row, "Accounting Date", serverDate), documentNumber: text(row, "Document No.", `${projectCode}-COST-${index + 1}`), glAccount: text(row, "GL Account", text(row, "Cost Type", "Unclassified")), costCategory: mapCostCategory(text(row, "Cost Type")), directOrIndirect: /indirect|overhead/i.test(text(row, "Direct / Indirect")) ? "indirect" : "direct", projectPhase: text(row, "Project Phase", "Project delivery"), costCode: text(row, "Cost Code", `COST-${index + 1}`), quantity: amount(row, "Quantity") ?? undefined, unit: text(row, "Unit") || undefined, amount: nonnegative(row, "Amount ($)"), description: text(row, "Description", "Imported nonlabor actual"), supportStatus: text(row, "Support Status", "missing") as NonlaborActual["supportStatus"], grantAwardId: text(row, "Grant / Award ID") || undefined, fundingTreatment: text(row, "Funding Treatment") as NonlaborActual["fundingTreatment"], fundingEligibilityNotes: text(row, "Funding Eligibility Notes") || undefined, source: { sourceSystem: text(row, "Source System", "QuickBooks Online"), sourceRecordId: text(row, "Source Record ID", `${projectCode}-COST-${index + 1}`), sourceName: "Data Import Lab", fingerprint: `${projectCode}-COST-${index + 1}` } })),
       operationalDriver: {
         terrainClass: text(driver, "Terrain Class", "Unavailable"), siteAccessComplexity: text(driver, "Site Access Complexity", "Unavailable"),
         siteVisits: nonnegative(driver, "Site Visits"), stakeholderMeetings: nonnegative(driver, "Stakeholder Meetings"), designRevisions: nonnegative(driver, "Design Revisions"),
@@ -486,7 +546,24 @@ function buildRawInput(mapped: MappedImportTables, issues: ImportIssue[], server
         reimbursementBasis: text(grant, "Reimbursement Basis", "Unavailable"), matchType: text(grant, "Match Type", "Unavailable"), matchRequirement: nonnegative(grant, "Match Requirement ($)"),
         eligibleCostToDate: nonnegative(grant, "Eligible Cost to Date ($)"), reimbursementsRequested: nonnegative(grant, "Reimbursements Requested ($)"), reimbursementsReceived: nonnegative(grant, "Reimbursements Received ($)"),
         matchDocumented: nonnegative(grant, "Match Documented ($)"), indirectRate: nonnegative(grant, "Indirect Rate"), reportingFrequency: text(grant, "Reporting Frequency", "Unavailable"), nextReportDue: date(grant, "Next Report Due", serverDate),
+        fundingRole: text(grant, "Funding Role", "Other") as GrantFundingRecord["fundingRole"], nonReimbursementAwardCashReceived: nonnegative(grant, "Non-Reimbursement Award Cash Received ($)"),
+        cashMatch: nonnegative(grant, "Cash Match ($)"), inKindActivityMatch: nonnegative(grant, "In-Kind Activity Match ($)"), totalMatchAccumulated: nonnegative(grant, "Total Match Accumulated ($)"), remainingMatchRequirement: nonnegative(grant, "Remaining Match Requirement ($)"),
+        indirectMethod: text(grant, "Indirect Method", "Unavailable"), outstandingReimbursement: nonnegative(grant, "Outstanding Reimbursement ($)"), awardCashExposure: nonnegative(grant, "Award Cash Exposure ($)"), agreementOwner: text(grant, "Agreement Owner", "Unassigned"), documentationStatus: text(grant, "Documentation Status", "Unknown"), agreementStatus: text(grant, "Agreement Status", "Under Review") as GrantFundingRecord["agreementStatus"], sourceSystem: text(grant, "Source System", "Imported workbook"), lastUpdated: date(grant, "Last Updated", serverDate), reviewException: text(grant, "Review / Exception") || undefined,
       } : undefined,
+      matchActivities: matchRows.map((row) => {
+        const quantityHours = amount(row, "Quantity Hours") ?? 0;
+        const valuationRate = amount(row, "Valuation Rate ($/hr)") ?? 0;
+        const calculatedActivityValue = amount(row, "Calculated Activity Value ($)") ?? quantityHours * valuationRate;
+        const documentedCashMatch = nonnegative(row, "Documented Cash Match ($)");
+        const eligibilityStatus = text(row, "Eligibility Status", "Pending") as MatchActivity["eligibilityStatus"];
+        return {
+          grantAwardId: text(row, "Grant / Award ID", "Unavailable"), activityDate: date(row, "Activity Date", serverDate), matchType: text(row, "Match Type", "Other") as MatchActivity["matchType"], contributorOrResource: text(row, "Contributor / Resource", "Unspecified"), activityDescription: text(row, "Activity Description", "Imported match activity"), quantityHours: quantityHours || undefined, unit: text(row, "Unit") || undefined, valuationRate: valuationRate || undefined, calculatedActivityValue, documentedCashMatch, eligibilityStatus, eligibleMatchValue: eligibilityStatus === "Eligible" ? calculatedActivityValue + documentedCashMatch : 0, documentationSourceRecordId: text(row, "Documentation Source Record ID") || undefined, supportStatus: text(row, "Support Status", "Missing") as MatchActivity["supportStatus"], approvalStatus: text(row, "Approval Status", "Pending") as MatchActivity["approvalStatus"], sourceSystem: text(row, "Source System", "Imported workbook"), notes: text(row, "Notes") || undefined,
+        };
+      }),
+      forecastUpdates: forecastRows.map((row) => ({
+        forecastDate: date(row, "Forecast Date", serverDate), forecastOwner: text(row, "Forecast Owner", "Unassigned"), etcSource: text(row, "ETC Source", "Unspecified"), currentContractValueSnapshot: nonnegative(row, "Current Contract Value Snapshot ($)"), actualCostToDateSnapshot: nonnegative(row, "Actual Cost to Date Snapshot ($)"), estimateToComplete: amount(row, "Estimate to Complete ($)"), forecastFinalCost: amount(row, "Forecast Final Cost ($)"), forecastMargin: amount(row, "Forecast Margin ($)"), forecastMarginPercent: amount(row, "Forecast Margin %"), forecastCompletionDate: text(row, "Forecast Completion Date") || undefined, keyVarianceDriver: text(row, "Key Variance Driver") || undefined, requiredAction: text(row, "Required Action") || undefined, confidence: text(row, "Confidence", "Moderate") as ForecastUpdate["confidence"], status: text(row, "Status", "Current") as ForecastUpdate["status"], notes: text(row, "Notes") || undefined,
+      })),
+      sharedCostAllocationRules: allocationRows.map((row) => ({ costPool: text(row, "Cost Pool", "Unspecified"), appliesTo: text(row, "Applies To", "Unspecified"), allocationBasis: text(row, "Allocation Basis", "Unspecified"), driverMeasure: text(row, "Driver Measure", "Unspecified"), methodRate: amount(row, "Method Rate") ?? 0, effectiveStart: date(row, "Effective Start", serverDate), effectiveEnd: text(row, "Effective End") || undefined, approvalStatus: text(row, "Approval Status", "Draft") as SharedCostAllocationRule["approvalStatus"], approvedBy: text(row, "Approved By") || undefined, sourceSupport: text(row, "Source Support") || undefined, rationale: text(row, "Rationale") || undefined })),
       exceptions: projectIssues.map((candidate, index) => ({ sourceSystem: "Import Lab", sourceRecordId: `${projectCode}-ISSUE-${index + 1}`, recordDate: serverDate, rawProjectCode: projectCode, exceptionType: rawExceptionType(candidate.code), description: candidate.description, severity: candidate.severity === "error" ? "high" : "moderate", owner: "Finance data steward", openedAt: serverTime })),
       decisions,
     });
@@ -580,7 +657,7 @@ export async function transformMappedImport(input: {
   const issues: ImportIssue[] = [...input.mapped.issues];
   validateMappedValues(input.mapped, issues);
   const knownProjects = validateProjectRelationships(input.mapped, issues);
-  additionalControlIssues(input.mapped, knownProjects, issues);
+  additionalControlIssues(input.mapped, knownProjects, issues, input.serverTime);
   const raw = buildRawInput(input.mapped, issues, input.serverTime);
   const source = new WorkbookDerivedTrailSolutionsDataSource(raw);
   const snapshot = await source.getSnapshot(trailSolutionsDemoContext);

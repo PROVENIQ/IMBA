@@ -1,4 +1,5 @@
-import type { FinancialHealthStatus, PortfolioSummary, TrailSolutionsSnapshot } from "@/core/trail-solutions/model";
+import type { DataHealthSummary, FinancialHealthStatus, PortfolioSummary, ProjectDetail, TrailSolutionsSnapshot } from "@/core/trail-solutions/model";
+import { calculateGrantAgreementControls, forecastIsStale, isCrossProjectLabor } from "@/core/trail-solutions/funding-controls";
 import type {
   ImportReadiness,
   ImportVersionRecord,
@@ -16,7 +17,41 @@ export function combinedReadiness(left: ImportReadiness, right: ImportReadiness)
   return "ready";
 }
 
-export function portfolioFromSnapshotProjects(snapshot: TrailSolutionsSnapshot): PortfolioSummary {
+interface DetailMetrics {
+  readonly outstandingReimbursement: number;
+  readonly awardCashExposure: number;
+  readonly remainingMatchRequirement: number;
+  readonly staleForecasts: number;
+  readonly crossProjectLaborRecordsRequiringReview: number;
+  readonly pendingMatchEligibilityReviews: number;
+}
+
+function detailMetrics(snapshot: TrailSolutionsSnapshot, projectDetails: Readonly<Record<string, ProjectDetail>>): DetailMetrics {
+  const details = snapshot.projects.map((project) => projectDetails[project.projectId]).filter((detail): detail is ProjectDetail => Boolean(detail));
+  const asOfDate = snapshot.portfolio.lastDataRefresh;
+  const controls = details.flatMap((detail) => detail.grantFunding.map((grant) => calculateGrantAgreementControls({
+    grant,
+    laborActuals: detail.laborActuals,
+    nonlaborActuals: detail.nonlaborActuals,
+    matchActivities: detail.matchActivities ?? [],
+  })));
+  const forecasts = details.flatMap((detail) => detail.forecastUpdates ?? []);
+  const labor = details.flatMap((detail) => detail.laborActuals);
+  const matches = details.flatMap((detail) => detail.matchActivities ?? []);
+  return {
+    outstandingReimbursement: controls.reduce((total, control) => total + control.outstandingReimbursement, 0),
+    awardCashExposure: controls.reduce((total, control) => total + control.awardCashExposure, 0),
+    remainingMatchRequirement: controls.reduce((total, control) => total + control.remainingMatchRequirement, 0),
+    staleForecasts: forecasts.filter((forecast) => forecast.status === "Stale" || forecastIsStale(forecast.forecastDate, asOfDate)).length,
+    crossProjectLaborRecordsRequiringReview: labor.filter(isCrossProjectLabor).length,
+    pendingMatchEligibilityReviews: matches.filter((match) => match.eligibilityStatus === "Pending").length,
+  };
+}
+
+export function portfolioFromSnapshotProjects(
+  snapshot: TrailSolutionsSnapshot,
+  projectDetails: Readonly<Record<string, ProjectDetail>> = {},
+): PortfolioSummary {
   const projects = snapshot.projects;
   const reliable = projects.filter((project) => project.forecastFinalCost !== null && project.forecastMargin !== null);
   const totalCurrentContractValue = projects.reduce((total, project) => total + project.currentContractValue, 0);
@@ -24,6 +59,7 @@ export function portfolioFromSnapshotProjects(snapshot: TrailSolutionsSnapshot):
   const forecastGrossMargin = reliable.reduce((total, project) => total + (project.forecastMargin ?? 0), 0);
   const healthCounts: Record<FinancialHealthStatus, number> = { "on-track": 0, watch: 0, "at-risk": 0, "data-incomplete": 0 };
   projects.forEach((project) => { healthCounts[project.healthStatus] += 1; });
+  const metrics = detailMetrics(snapshot, projectDetails);
   return Object.freeze({
     organizationId: snapshot.organizationId,
     chapterScope: "NATIONAL",
@@ -40,6 +76,21 @@ export function portfolioFromSnapshotProjects(snapshot: TrailSolutionsSnapshot):
     projectsWithDataExceptions: projects.filter((project) => project.unresolvedExceptionCount > 0).length,
     healthCounts,
     lastDataRefresh: projects.map((project) => project.lastDataRefresh).sort().at(-1) ?? snapshot.portfolio.lastDataRefresh,
+    ...metrics,
+  });
+}
+
+export function applyDetailMetricsToDataHealth(
+  dataHealth: DataHealthSummary,
+  snapshot: TrailSolutionsSnapshot,
+  projectDetails: Readonly<Record<string, ProjectDetail>>,
+): DataHealthSummary {
+  const metrics = detailMetrics(snapshot, projectDetails);
+  return Object.freeze({
+    ...dataHealth,
+    staleForecasts: metrics.staleForecasts,
+    crossProjectLaborRecordsRequiringReview: metrics.crossProjectLaborRecordsRequiringReview,
+    pendingMatchEligibilityReviews: metrics.pendingMatchEligibilityReviews,
   });
 }
 
@@ -47,6 +98,9 @@ export function mergeValidatedPackages(
   current: ValidatedImportPackage,
   incoming: ValidatedImportPackage,
 ): ValidatedImportPackage {
+  if (current.snapshot.organizationId !== incoming.snapshot.organizationId) {
+    throw new TypeError("Cannot merge packages from different organizations.");
+  }
   const projectCodes = new Set(current.snapshot.projects.map((project) => project.projectCode));
   const duplicate = incoming.snapshot.projects.find((project) => projectCodes.has(project.projectCode));
   if (duplicate) throw new TypeError(`Add mode cannot merge duplicate Project ID ${duplicate.projectCode}; use Replace instead.`);
@@ -78,7 +132,12 @@ export function mergeValidatedPackages(
       sourceControlTotals,
     }),
   });
-  const snapshot = Object.freeze({ ...snapshotBase, portfolio: portfolioFromSnapshotProjects(snapshotBase) });
+  const projectDetails = Object.freeze({ ...current.projectDetails, ...incoming.projectDetails });
+  const snapshotWithPortfolio = Object.freeze({ ...snapshotBase, portfolio: portfolioFromSnapshotProjects(snapshotBase, projectDetails) });
+  const snapshot = Object.freeze({
+    ...snapshotWithPortfolio,
+    dataHealth: applyDetailMetricsToDataHealth(snapshotWithPortfolio.dataHealth, snapshotWithPortfolio, projectDetails),
+  });
   const normalizedTables = new Set([...Object.keys(current.normalizedDataset.tables), ...Object.keys(incoming.normalizedDataset.tables)]);
   const normalizedDataset = Object.freeze({ tables: Object.freeze(Object.fromEntries([...normalizedTables].map((table) => [table, [...(current.normalizedDataset.tables[table] ?? []), ...(incoming.normalizedDataset.tables[table] ?? [])]]))) });
   const controls = new Map(current.preview.controlTotals.map((control) => [control.label, { ...control }]));
@@ -114,7 +173,7 @@ export function mergeValidatedPackages(
       return other?.available ? other : analysis;
     }),
     snapshot,
-    projectDetails: Object.freeze({ ...current.projectDetails, ...incoming.projectDetails }),
+    projectDetails,
     normalizedDataset,
   });
 }

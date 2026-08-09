@@ -29,6 +29,23 @@ quantities, confidence, and the estimate-accuracy note.
 Benchmark-derived **range**, not a quote; sharpens as more completed projects are loaded.
 Never fabricates: no benchmark → "not estimated"; physical rates stay as quantities.
 
-## Deferred (Phase 2, rides on Neon persistence)
+## Persistence and handoff
 Saving estimates and comparing predicted-vs-actual (`job_estimates` table + routes) —
 added once the Neon layer is provisioned and merged.
+## Current persistence status
+
+Saved estimates are now organization-scoped planning artifacts in the
+`job_estimates` table, with authenticated CEO/Finance access, audit events, and
+optional linkage to a project code. They are not approved quotes, invoices, ERP
+records, or general-ledger transactions. **Create project from estimate** only
+prefills the controlled manual-project form; the user must review and explicitly
+save the project through the same Trail Solutions workspace snapshot path used
+by imports.
+
+The estimate repository and routes require
+`drizzle/0001_manual_entry_job_estimates.sql`. Without `DATABASE_URL`, the UI
+returns a clear persistence-not-configured response and does not claim that the
+estimate was saved.
+
+The earlier deferred note in this document is superseded by the implemented
+Neon persistence and routes described above.

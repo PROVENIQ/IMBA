@@ -14,6 +14,13 @@ logic. It is not a browser database or a permanent system of record. The demo
 adapter transforms a controlled, synthetic JSON snapshot into typed source
 records and a normalized `ProjectFinancialSummary` read model.
 
+The revised mart shape is represented explicitly: labor and nonlabor actuals
+carry award/funding treatment and ADP charge-versus-work project controls;
+Grant Funding is an agreement read model; Match Activity Detail and Forecast
+Updates are first-class child records; Unmapped Exceptions remain quarantined;
+and Shared Cost Allocation Rules are reference-only policy metadata. No shared
+cost rule silently reallocates a transaction.
+
 IMBA-OS owns the management presentation, source crosswalks, validation
 exceptions, decision-support policy, immutable import/forecast events, and
 rebuildable projections. QuickBooks remains authoritative for the general
@@ -77,6 +84,11 @@ The adapter computes financial truth once, before rendering:
 - invoices, recognized revenue, cash receipts, receivables, and unbilled earned
   value remain separate;
 - labor hours and labor dollars remain separate;
+- award cost, cash match, unrestricted/non-award, and ineligible treatment are
+  distinct; eligible cost, match accumulated, outstanding reimbursement, and
+  award cash exposure are calculated from classified records;
+- forecast updates are immutable snapshots with date, owner, ETC source,
+  confidence, and required action; prior snapshots are never overwritten;
 - unresolved material mapping or forecast gaps force `data-incomplete` and null
   forecast outputs rather than false precision.
 
@@ -121,10 +133,27 @@ does not break working demonstrations or role access.
   entry into the controlled Data Import Lab.
 - Planning receives management summaries and supporting project evidence.
 - Employee compensation and named payroll detail are not exposed.
+- CEO access includes the complete IMBA-OS navigation and the Finance upload /
+  validation workspace; the executive brief is a default landing view only.
 
 Decision status changes in the demonstration are browser-local presentation
 state. They do not claim durable workflow completion or append production
 events.
+
+## Controlled manual management path
+
+The portfolio and project detail surfaces provide two explicit entry paths:
+bulk source-data import through the Data Import Lab, and controlled manual
+management entry through **New Project** / project-level **Add** actions. Manual
+projects, forecast snapshots, change orders, operational drivers, funding and
+agreement records, match activities, and decision/action items are folded into
+the same `ValidatedImportPackage` and workspace version path as imported data.
+Each write carries manual provenance and a precise audit action. Approved
+change orders are the only change-order status that changes contract and budget
+projections; pending or draft requests remain visible without changing current
+contract value. This path is intentionally limited to management, forecasting,
+estimating, award/match controls, and decisions—not general-ledger or source
+transaction editing.
 
 ## Replaceable adapter contract
 

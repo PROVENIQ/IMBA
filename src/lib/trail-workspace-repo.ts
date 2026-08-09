@@ -19,10 +19,10 @@ import {
   trailWorkspaces,
 } from "@/lib/db/schema";
 
-// The single seeded tenant for now. Multi-tenant schema, one organization in use;
-// all current users map here until Clerk Organizations are wired up. Seeded with
-// this exact id by scripts/db-seed.ts.
-export const IMBA_ORGANIZATION_ID = "00000000-0000-4000-8000-000000000001";
+// Re-exported from the client-safe constant module so the browser and server share
+// one source of truth. All current users map to this tenant until Clerk
+// Organizations are wired up; the DB self-seeds this id on first write.
+export { IMBA_ORGANIZATION_ID } from "@/lib/imba-organization";
 
 export class DbNotConfiguredError extends Error {
   constructor() {
@@ -147,8 +147,19 @@ export async function commitWorkspace(input: {
   validatedPackage: ValidatedImportPackage;
   mappingTemplateName?: string;
   mappingChangeCount: number;
+  // Optional precise audit for manual create/edit (§15). When omitted, the commit
+  // audits at workspace granularity exactly as an import does.
+  audit?: {
+    action: typeof auditEvents.$inferInsert.action;
+    entityType: string;
+    entityId?: string | null;
+    detail?: Record<string, unknown>;
+  };
 }): Promise<TrailSolutionsTestWorkspace> {
   if (input.validatedPackage.readiness === "blocked") throw new TypeError("Blocked imports cannot be committed.");
+  if (input.validatedPackage.snapshot.organizationId !== input.actor.organizationId) {
+    throw new TypeError("Workspace package organization does not match the authenticated actor.");
+  }
   const db = requireDb();
   const { actor } = input;
 
@@ -238,11 +249,11 @@ export async function commitWorkspace(input: {
       .where(and(eq(trailWorkspaces.id, workspaceId!), eq(trailWorkspaces.organizationId, actor.organizationId)));
 
     await writeAudit(tx, actor, {
-      action: input.mode === "create" ? "commit" : input.mode,
-      entityType: "trail_workspace",
-      entityId: workspaceId,
+      action: input.audit?.action ?? (input.mode === "create" ? "commit" : input.mode),
+      entityType: input.audit?.entityType ?? "trail_workspace",
+      entityId: input.audit?.entityId ?? workspaceId,
       workspaceName: input.name.trim(),
-      detail: {
+      detail: input.audit?.detail ?? {
         recordsAccepted: record.recordsAccepted,
         recordsRejected: record.recordsRejected,
         reconciliationDifferences: record.reconciliationDifferenceCount,

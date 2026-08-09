@@ -13,14 +13,19 @@ export const trailResponseHeaders = {
 // organization. Returns null when signed out (middleware also blocks this in
 // production; this is defense in depth for the API layer).
 export async function resolveTrailActor(): Promise<RepoActor | null> {
-  const { userId } = await auth();
+  const { userId, orgRole } = await auth();
   if (!userId) return null;
   const user = await currentUser();
   const email =
     user?.primaryEmailAddress?.emailAddress ??
     user?.emailAddresses?.[0]?.emailAddress ??
     null;
-  const role = resolveImbaRole({ email, publicMetadataRole: user?.publicMetadata?.role });
+  const role = resolveImbaRole({
+    email,
+    publicMetadataRole: user?.publicMetadata?.role,
+    organizationRole: orgRole,
+  });
+  if (!role) return null;
   return {
     organizationId: IMBA_ORGANIZATION_ID,
     userId,

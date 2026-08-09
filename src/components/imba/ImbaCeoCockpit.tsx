@@ -178,10 +178,13 @@ const metricDefinitions: Record<string, string> = {
     "The share of loaded labor cost recovered through billable projects or allowable grant funding.",
 };
 
-const intelligenceStorageKey = "imba-os-intelligence-layer-v1";
+// Role state is tied to the authenticated identity. Keep a new storage namespace
+// when that contract changes so a prior demo role (for example, Board) cannot
+// override a newly assigned Clerk role (for example, CEO).
+const intelligenceStorageKey = "imba-os-intelligence-layer-v2";
 
 interface ImbaIntelligenceStore {
-  version: 1;
+  version: 2;
   role: ImbaRoleKey;
   filters: ImbaFilterState;
   savedViews: ImbaSavedView[];
@@ -2108,7 +2111,7 @@ export function ImbaCeoCockpit({ initialRole }: { initialRole?: ImbaRoleKey } = 
       if (saved) {
         try {
           const parsed = JSON.parse(saved) as ImbaIntelligenceStore;
-          if (parsed.version === 1) {
+          if (parsed.version === 2) {
             setFilters(parsed.filters);
             setSavedViews(parsed.savedViews);
             setAlerts(parsed.alerts);
@@ -2143,7 +2146,7 @@ export function ImbaCeoCockpit({ initialRole }: { initialRole?: ImbaRoleKey } = 
   useEffect(() => {
     if (!intelligenceHydrated) return;
     const store: ImbaIntelligenceStore = {
-      version: 1,
+      version: 2,
       role,
       filters,
       savedViews,

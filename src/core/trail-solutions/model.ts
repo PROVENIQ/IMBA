@@ -8,7 +8,9 @@ import type {
   EstimateLineId,
   EstimateVersionId,
   GrantFundingRecordId,
+  ForecastUpdateId,
   LaborActualId,
+  MatchActivityId,
   LaborRateId,
   NonlaborActualId,
   OperationalDriverId,
@@ -16,6 +18,7 @@ import type {
   ProjectId,
   ProjectIdentifierCrosswalkId,
   RevenueBillingRecordId,
+  SharedCostAllocationRuleId,
 } from "@/core/primitives/identity";
 
 export const TRAIL_SOLUTIONS_SYNTHETIC_BANNER =
@@ -34,6 +37,20 @@ export type FinancialHealthStatus =
   | "watch"
   | "at-risk"
   | "data-incomplete";
+
+export type FundingTreatment =
+  | "Award Cost"
+  | "Cash Match"
+  | "Unrestricted / Non-Award"
+  | "Ineligible / Nonreimbursable"
+  | "To Be Determined";
+
+export type MatchType = "Cash" | "In-Kind" | "Volunteer Hours" | "Blended" | "Other";
+export type MatchEligibilityStatus = "Eligible" | "Pending" | "Ineligible";
+export type MatchSupportStatus = "Complete" | "Partial" | "Missing" | "Not Required";
+export type MatchApprovalStatus = "Approved" | "Pending" | "Rejected";
+export type GrantFundingRole = "Prime Recipient" | "Subrecipient" | "Contractor" | "Other";
+export type GrantAgreementStatus = "Active" | "Pending" | "Closed" | "Under Review";
 
 export type ProjectStage =
   | "Scoping"
@@ -66,6 +83,28 @@ export interface SourceEvidence {
   readonly sourceName: string;
   readonly sourceField?: string;
   readonly fingerprint: string;
+}
+
+// How a normalized record entered the workspace. Every record — whether produced by
+// a bulk import or created/edited by hand — carries this so imported and manual data
+// coexist in one snapshot while staying distinguishable. Optional on the record
+// interfaces so already-stored imported snapshots (which predate this field) still
+// parse; use provenanceOf() to read it with an import-derived default.
+export type RecordSourceType = "import" | "manual" | "system-calculated";
+
+export interface RecordProvenance {
+  readonly sourceType: RecordSourceType;
+  readonly createdBy: string;
+  readonly createdAt: string;
+  readonly updatedBy?: string;
+  readonly updatedAt?: string;
+  readonly sourceImportVersion?: string;
+}
+
+// Reads a record's provenance, defaulting a missing value to import-derived — the
+// only records lacking the field are those persisted before manual entry existed.
+export function provenanceOf(record: { readonly provenance?: RecordProvenance }): RecordProvenance {
+  return record.provenance ?? { sourceType: "import", createdBy: "import", createdAt: "" };
 }
 
 export interface Project extends TenantOwnedRecord {
@@ -133,6 +172,8 @@ export interface EstimateLine extends TenantOwnedRecord {
 export interface LaborActual extends TenantOwnedRecord {
   readonly laborActualId: LaborActualId;
   readonly projectId?: ProjectId;
+  readonly workPerformedProjectId?: ProjectId;
+  readonly employeeOrResource?: string;
   readonly suggestedProjectId?: ProjectId;
   readonly resourceRole: string;
   readonly seniority: "lead" | "senior" | "standard" | "crew";
@@ -146,6 +187,18 @@ export interface LaborActual extends TenantOwnedRecord {
   readonly projectPhase: string;
   readonly costCode: string;
   readonly source: SourceEvidence;
+  readonly baseRate?: number;
+  readonly employerTaxes?: number;
+  readonly benefits?: number;
+  readonly otherBurden?: number;
+  readonly adpJobCode?: string;
+  readonly homeBusinessLine?: ProjectBusinessLine;
+  readonly homeDepartmentOrTeam?: string;
+  readonly adpChargedProjectId?: ProjectId;
+  readonly crossProjectLabor?: boolean;
+  readonly grantAwardId?: string;
+  readonly fundingTreatment?: FundingTreatment;
+  readonly transferAllocationNotes?: string;
 }
 
 export interface NonlaborActual extends TenantOwnedRecord {
@@ -167,6 +220,9 @@ export interface NonlaborActual extends TenantOwnedRecord {
   readonly description: string;
   readonly supportStatus: "complete" | "partial" | "missing" | "not-required";
   readonly source: SourceEvidence;
+  readonly grantAwardId?: string;
+  readonly fundingTreatment?: FundingTreatment;
+  readonly fundingEligibilityNotes?: string;
 }
 
 export type RevenueBillingRecordType =
@@ -204,6 +260,8 @@ export interface ChangeOrder extends TenantOwnedRecord {
   readonly customerApproved: boolean;
   readonly approvalOwner: string;
   readonly sourceDocument: string;
+  readonly notes?: string;
+  readonly provenance?: RecordProvenance;
 }
 
 export interface OperationalDriver extends TenantOwnedRecord {
@@ -229,7 +287,11 @@ export interface OperationalDriver extends TenantOwnedRecord {
   readonly weatherDelayDays?: number;
   readonly customerDelayDays?: number;
   readonly projectDurationDays?: number;
+  readonly source?: string;
+  readonly owner?: string;
+  readonly notes?: string;
   readonly scopeChangeWithoutApproval?: boolean;
+  readonly provenance?: RecordProvenance;
 }
 
 export interface GrantFundingRecord extends TenantOwnedRecord {
@@ -252,6 +314,82 @@ export interface GrantFundingRecord extends TenantOwnedRecord {
   readonly indirectRate: number;
   readonly reportingFrequency: string;
   readonly nextReportDue: string;
+  readonly fundingRole?: GrantFundingRole;
+  readonly nonReimbursementAwardCashReceived?: number;
+  readonly cashMatch?: number;
+  readonly inKindActivityMatch?: number;
+  readonly totalMatchAccumulated?: number;
+  readonly remainingMatchRequirement?: number;
+  readonly indirectMethod?: string;
+  readonly outstandingReimbursement?: number;
+  readonly awardCashExposure?: number;
+  readonly agreementOwner?: string;
+  readonly documentationStatus?: string;
+  readonly agreementStatus?: GrantAgreementStatus;
+  readonly sourceSystem?: string;
+  readonly lastUpdated?: string;
+  readonly reviewException?: string;
+  readonly notes?: string;
+  readonly provenance?: RecordProvenance;
+}
+
+export interface MatchActivity extends TenantOwnedRecord {
+  readonly matchActivityId: MatchActivityId;
+  readonly projectId: ProjectId;
+  readonly grantAwardId: string;
+  readonly activityDate: string;
+  readonly matchType: MatchType;
+  readonly contributorOrResource: string;
+  readonly activityDescription: string;
+  readonly quantityHours?: number;
+  readonly unit?: string;
+  readonly valuationRate?: number;
+  readonly calculatedActivityValue: number;
+  readonly documentedCashMatch: number;
+  readonly eligibilityStatus: MatchEligibilityStatus;
+  readonly eligibleMatchValue: number;
+  readonly documentationSourceRecordId?: string;
+  readonly supportStatus: MatchSupportStatus;
+  readonly approvalStatus: MatchApprovalStatus;
+  readonly sourceSystem: string;
+  readonly notes?: string;
+  readonly provenance?: RecordProvenance;
+}
+
+export interface ForecastUpdate extends TenantOwnedRecord {
+  readonly forecastUpdateId: ForecastUpdateId;
+  readonly projectId: ProjectId;
+  readonly forecastDate: string;
+  readonly forecastOwner: string;
+  readonly etcSource: string;
+  readonly currentContractValueSnapshot: number;
+  readonly actualCostToDateSnapshot: number;
+  readonly estimateToComplete: number | null;
+  readonly forecastFinalCost: number | null;
+  readonly forecastMargin: number | null;
+  readonly forecastMarginPercent: number | null;
+  readonly forecastCompletionDate?: string;
+  readonly keyVarianceDriver?: string;
+  readonly requiredAction?: string;
+  readonly confidence: "Low" | "Moderate" | "High";
+  readonly status: "Current" | "Superseded" | "Stale" | "Incomplete";
+  readonly notes?: string;
+  readonly provenance?: RecordProvenance;
+}
+
+export interface SharedCostAllocationRule extends TenantOwnedRecord {
+  readonly sharedCostAllocationRuleId: SharedCostAllocationRuleId;
+  readonly costPool: string;
+  readonly appliesTo: string;
+  readonly allocationBasis: string;
+  readonly driverMeasure: string;
+  readonly methodRate: number;
+  readonly effectiveStart: string;
+  readonly effectiveEnd?: string;
+  readonly approvalStatus: "Draft" | "Pending" | "Approved" | "Rejected";
+  readonly approvedBy?: string;
+  readonly sourceSupport?: string;
+  readonly rationale?: string;
 }
 
 export interface LaborRate extends TenantOwnedRecord {
@@ -342,6 +480,8 @@ export interface DecisionItem extends TenantOwnedRecord {
   readonly dueDate: string;
   readonly status: "open" | "in-progress" | "complete";
   readonly supportingSection: "what-changed" | "labor" | "billing" | "data-health" | "grant";
+  readonly notes?: string;
+  readonly provenance?: RecordProvenance;
 }
 
 export interface CostBreakdownLine {
@@ -411,6 +551,9 @@ export interface ProjectFinancialSummary extends TenantOwnedRecord {
   readonly lastDataRefresh: string;
   readonly sourceLabel: string;
   readonly sourceSystemIds: readonly ProjectIdentifierCrosswalk[];
+  readonly contractReferenceId?: string;
+  readonly pricingNotes?: string;
+  readonly provenance?: RecordProvenance;
 }
 
 export interface ProjectDetail {
@@ -421,6 +564,9 @@ export interface ProjectDetail {
   readonly laborActuals: readonly LaborActual[];
   readonly nonlaborActuals: readonly NonlaborActual[];
   readonly billingRecords: readonly RevenueBillingRecord[];
+  readonly matchActivities?: readonly MatchActivity[];
+  readonly forecastUpdates?: readonly ForecastUpdate[];
+  readonly sharedCostAllocationRules?: readonly SharedCostAllocationRule[];
 }
 
 export interface Benchmark extends TenantOwnedRecord {
@@ -487,6 +633,12 @@ export interface PortfolioSummary extends TenantOwnedRecord {
   readonly projectsWithDataExceptions: number;
   readonly healthCounts: Readonly<Record<FinancialHealthStatus, number>>;
   readonly lastDataRefresh: string;
+  readonly outstandingReimbursement?: number;
+  readonly awardCashExposure?: number;
+  readonly remainingMatchRequirement?: number;
+  readonly staleForecasts?: number;
+  readonly crossProjectLaborRecordsRequiringReview?: number;
+  readonly pendingMatchEligibilityReviews?: number;
 }
 
 export interface DataHealthSummary extends TenantOwnedRecord {
@@ -502,6 +654,9 @@ export interface DataHealthSummary extends TenantOwnedRecord {
   readonly billingReconciliationIssues: number;
   readonly fundingClassificationsRequiringReview: number;
   readonly staleForecasts: number;
+  readonly crossProjectLaborRecordsRequiringReview?: number;
+  readonly pendingMatchEligibilityReviews?: number;
+  readonly awardCashExposureAboveThreshold?: number;
   readonly sourceControlTotals: readonly {
     source: string;
     recordType: string;

@@ -26,10 +26,14 @@ export type ImportTableName =
   | "Change Orders"
   | "Operational Drivers"
   | "Grant Funding"
+  | "Match Activity Detail"
+  | "Forecast Updates"
   | "Labor Rate Library"
   | "Cost Code Map"
+  | "Unmapped Exceptions"
   | "Project Summary"
-  | "Benchmark Library";
+  | "Benchmark Library"
+  | "Shared Cost Allocation Rules";
 
 export type ImportIssueSeverity = "error" | "warning" | "information";
 export type ImportReadiness = "ready" | "warnings" | "blocked";
@@ -93,13 +97,13 @@ export const IMPORT_TABLE_SPECS: readonly ImportTableSpec[] = Object.freeze([
     name: "Labor Actuals",
     requiredForAnalysis: false,
     fileAliases: ["labor", "labor-actuals", "time detail"],
-    fields: [field("Project ID", "identifier", true), field("Employee / Resource", "identifier"), field("Role", "text"), field("Region", "text"), field("Work Date", "date"), field("Pay Period End", "date"), field("Hours", "number"), field("Base Rate ($/hr)", "number"), field("Direct Wages ($)", "number"), field("Employer Taxes ($)", "number"), field("Benefits ($)", "number"), field("Other Burden ($)", "number"), field("Fully Burdened Labor Cost ($)", "number", true, ["labor cost"]), field("ADP Job Code", "identifier"), field("Project Phase", "text"), field("Cost Code", "identifier"), field("Source Record ID", "identifier"), field("Notes", "text")],
+    fields: [field("Project ID", "identifier", true, ["work performed project id"]), field("Work Performed Project ID", "identifier", false, ["performed project", "work project"]), field("ADP Charged Project ID", "identifier", false, ["charged project", "payroll project"]), field("Employee / Resource", "identifier"), field("Role", "text"), field("Region", "text"), field("Work Date", "date"), field("Pay Period End", "date"), field("Hours", "number"), field("Base Rate ($/hr)", "number"), field("Direct Wages ($)", "number"), field("Employer Taxes ($)", "number"), field("Benefits ($)", "number"), field("Other Burden ($)", "number"), field("Fully Burdened Labor Cost ($)", "number", true, ["labor cost"]), field("ADP Job Code", "identifier"), field("Project Phase", "text"), field("Cost Code", "identifier"), field("Source Record ID", "identifier"), field("Home Business Line", "text"), field("Home Department / Team", "text"), field("Grant / Award ID", "identifier"), field("Funding Treatment", "text"), field("Transfer / Allocation Notes", "text"), field("Notes", "text")],
   },
   {
     name: "Nonlabor Actuals",
     requiredForAnalysis: false,
     fileAliases: ["nonlabor", "non-labor", "expenses", "nonlabor-actuals"],
-    fields: [field("Project ID", "identifier", true), field("Vendor / Payee", "text"), field("Business Date", "date"), field("Accounting Date", "date"), field("Document No.", "identifier"), field("Source System", "text"), field("GL Account", "identifier"), field("Cost Type", "text", true, ["cost category"]), field("Direct / Indirect", "text"), field("Project Phase", "text"), field("Cost Code", "identifier"), field("Quantity", "number"), field("Unit", "text"), field("Unit Cost ($)", "number"), field("Amount ($)", "number", true, ["amount"]), field("Description", "text"), field("Source Record ID", "identifier"), field("Support Status", "text"), field("Notes", "text")],
+    fields: [field("Project ID", "identifier", true), field("Vendor / Payee", "text"), field("Business Date", "date"), field("Accounting Date", "date"), field("Document No.", "identifier"), field("Source System", "text"), field("GL Account", "identifier"), field("Cost Type", "text", true, ["cost category"]), field("Direct / Indirect", "text"), field("Project Phase", "text"), field("Cost Code", "identifier"), field("Quantity", "number"), field("Unit", "text"), field("Unit Cost ($)", "number"), field("Amount ($)", "number", true, ["amount"]), field("Description", "text"), field("Source Record ID", "identifier"), field("Grant / Award ID", "identifier"), field("Funding Treatment", "text"), field("Funding Eligibility Notes", "text"), field("Support Status", "text"), field("Notes", "text")],
   },
   {
     name: "Revenue & Billing",
@@ -123,7 +127,31 @@ export const IMPORT_TABLE_SPECS: readonly ImportTableSpec[] = Object.freeze([
     name: "Grant Funding",
     requiredForAnalysis: false,
     fileAliases: ["grants", "grant-funding", "awards"],
-    fields: [field("Project ID", "identifier", true), field("Grant / Award ID", "identifier"), field("Funder", "text"), field("Grant Type", "text"), field("Restricted?", "boolean"), field("Award Amount ($)", "number"), field("Start Date", "date"), field("End Date", "date"), field("Reimbursement Basis", "text"), field("Match Type", "text"), field("Match Requirement ($)", "number"), field("Eligible Cost to Date ($)", "number"), field("Reimbursements Requested ($)", "number"), field("Reimbursements Received ($)", "number"), field("Remaining Award ($)", "number"), field("Match Documented ($)", "number"), field("Indirect Rate", "number"), field("Reporting Frequency", "text"), field("Next Report Due", "date"), field("Notes", "text")],
+    fields: [field("Project ID", "identifier", true), field("Grant / Award ID", "identifier"), field("Funder", "text"), field("Grant Type", "text"), field("Restricted?", "boolean"), field("Award Amount ($)", "number"), field("Start Date", "date"), field("End Date", "date"), field("Reimbursement Basis", "text"), field("Match Type", "text"), field("Match Requirement ($)", "number"), field("Eligible Cost to Date ($)", "number"), field("Reimbursements Requested ($)", "number"), field("Reimbursements Received ($)", "number"), field("Remaining Award ($)", "number"), field("Match Documented ($)", "number"), field("Indirect Rate", "number"), field("Reporting Frequency", "text"), field("Next Report Due", "date"), field("Funding Role", "text"), field("Non-Reimbursement Award Cash Received ($)", "number"), field("Cash Match ($)", "number"), field("In-Kind Activity Match ($)", "number"), field("Total Match Accumulated ($)", "number"), field("Remaining Match Requirement ($)", "number"), field("Indirect Method", "text"), field("Outstanding Reimbursement ($)", "number"), field("Award Cash Exposure ($)", "number"), field("Agreement Owner", "text"), field("Documentation Status", "text"), field("Agreement Status", "text"), field("Source System", "text"), field("Last Updated", "date"), field("Review / Exception", "text"), field("Notes", "text")],
+  },
+  {
+    name: "Match Activity Detail",
+    requiredForAnalysis: false,
+    fileAliases: ["match activity", "match-activity-detail", "match detail"],
+    fields: [field("Project ID", "identifier", true), field("Grant / Award ID", "identifier", true), field("Activity Date", "date"), field("Match Type", "text"), field("Contributor / Resource", "text"), field("Activity Description", "text"), field("Quantity Hours", "number"), field("Unit", "text"), field("Valuation Rate ($/hr)", "number"), field("Calculated Activity Value ($)", "number"), field("Documented Cash Match ($)", "number"), field("Eligibility Status", "text"), field("Eligible Match Value ($)", "number"), field("Documentation Source Record ID", "identifier"), field("Support Status", "text"), field("Approval Status", "text"), field("Source System", "text"), field("Notes", "text")],
+  },
+  {
+    name: "Forecast Updates",
+    requiredForAnalysis: false,
+    fileAliases: ["forecast-updates", "forecast history", "forecast snapshots"],
+    fields: [field("Project ID", "identifier", true), field("Forecast Date", "date", true), field("Forecast Owner", "text"), field("ETC Source", "text"), field("Current Contract Value Snapshot ($)", "number"), field("Actual Cost to Date Snapshot ($)", "number"), field("Estimate to Complete ($)", "number"), field("Forecast Final Cost ($)", "number"), field("Forecast Margin ($)", "number"), field("Forecast Margin %", "number"), field("Forecast Completion Date", "date"), field("Key Variance Driver", "text"), field("Required Action", "text"), field("Confidence", "text"), field("Status", "text"), field("Notes", "text")],
+  },
+  {
+    name: "Unmapped Exceptions",
+    requiredForAnalysis: false,
+    fileAliases: ["unmapped", "unmapped-exceptions", "exceptions"],
+    fields: [field("Project ID", "identifier"), field("Source System", "text"), field("Source Record ID", "identifier"), field("Exception Type", "text"), field("Description", "text"), field("Severity", "text"), field("Owner", "text"), field("Record Date", "date"), field("Resolution", "text"), field("Status", "text")],
+  },
+  {
+    name: "Shared Cost Allocation Rules",
+    requiredForAnalysis: false,
+    fileAliases: ["shared cost allocation", "allocation rules", "shared-cost-allocation-rules"],
+    fields: [field("Cost Pool", "text", true), field("Applies To", "text"), field("Allocation Basis", "text"), field("Driver Measure", "text"), field("Method Rate", "number"), field("Effective Start", "date"), field("Effective End", "date"), field("Approval Status", "text"), field("Approved By", "text"), field("Source Support", "text"), field("Rationale", "text")],
   },
   {
     name: "Labor Rate Library",

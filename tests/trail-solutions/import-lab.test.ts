@@ -28,8 +28,10 @@ import {
   inspectParsedImport,
   parseImportFiles,
 } from "@/integrations/trail-solutions/import-parser";
+import { detectImportTableName } from "@/core/trail-solutions/import-lab";
 import { transformMappedImport } from "@/integrations/trail-solutions/import-transformer";
 import { buildVersionRecord, mergeValidatedPackages } from "@/core/trail-solutions/workspace-transforms";
+import { asOrganizationId } from "@/core/primitives/identity";
 import { POST } from "@/app/api/trail-solutions/import/route";
 
 const serverTime = "2026-08-06T14:00:00.000Z";
@@ -72,6 +74,13 @@ async function validPackage(projectId = "TS-100") {
 }
 
 describe("Trail Solutions Data Import Lab", () => {
+  it("recognizes revised mart child sheets", () => {
+    expect(detectImportTableName("Match Activity Detail")).toBe("Match Activity Detail");
+    expect(detectImportTableName("Forecast Updates.csv")).toBe("Forecast Updates");
+    expect(detectImportTableName("Unmapped Exceptions")).toBe("Unmapped Exceptions");
+    expect(detectImportTableName("Shared Cost Allocation Rules")).toBe("Shared Cost Allocation Rules");
+  });
+
   it("reads the standardized workbook shape with headers below title rows", async () => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Project Master");
@@ -98,6 +107,12 @@ describe("Trail Solutions Data Import Lab", () => {
     clerkState.role = null;
     const anonymous = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
     expect(anonymous.status).toBe(401);
+
+    // Signed in with no assigned IMBA role → 403 (never inherit Board access).
+    clerkState.userId = "user_unassigned";
+    clerkState.role = null;
+    const unassigned = await POST(new Request("http://localhost/api/trail-solutions/import", { method: "POST" }));
+    expect(unassigned.status).toBe(403);
 
     // Signed in but under-privileged role → 403.
     clerkState.userId = "user_board";
@@ -197,5 +212,12 @@ describe("Trail Solutions Data Import Lab", () => {
     expect(record.mode).toBe("create");
     expect(record.mappingChangeCount).toBe(2);
     expect(record.recordsAccepted).toBe(first.preview.projectCount + first.preview.transactionCount);
+  });
+
+  it("rejects a package from another organization before merging", async () => {
+    const first = await validPackage("TS-TENANT-1");
+    const other = await validPackage("TS-TENANT-2");
+    const crossTenant = { ...other, snapshot: { ...other.snapshot, organizationId: asOrganizationId("00000000-0000-4000-8000-000000000099") } };
+    expect(() => mergeValidatedPackages(first, crossTenant)).toThrow(/different organizations/);
   });
 });
