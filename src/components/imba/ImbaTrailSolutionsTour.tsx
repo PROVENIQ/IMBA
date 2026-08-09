@@ -57,13 +57,13 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
     body: "The tabs hold validated benchmarks from past projects, the exception queue, and — for Finance and the CEO — Data health and the Data Import Lab for loading your own project data.",
   },
   {
-    anchor: "new-project",
+    anchor: null,
     eyebrow: "Create without a workbook",
     title: "Start a project directly in IMBA-OS",
     body: "New Project creates a normalized project in the active workspace. It captures identity, contract assumptions, business-line drivers, and optional funding details. Manual and imported projects appear together in the same portfolio.",
   },
   {
-    anchor: "upload-data",
+    anchor: null,
     eyebrow: "Bring in source data",
     title: "Import historical or source-system data",
     body: "Upload Project Data opens the controlled Data Import Lab for bulk historical/source data, validation, mapping, control totals, and exception review. Both entry paths use the same normalized model.",
@@ -75,7 +75,7 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
     body: "Open any project and use + Add to record a forecast update, change order, operational driver, funding/agreement, match activity, or decision/action. Forecast history is preserved; only approved change orders affect contract value; eligible match activity rolls into grant controls.",
   },
   {
-    anchor: "estimator",
+    anchor: null,
     eyebrow: "Plan before you commit",
     title: "Benchmark-grounded planning estimates",
     body: "The Estimator compares business-line benchmarks, records assumptions and confidence, and can save an estimate or prefill a New Project form. An estimate is planning evidence, not an approved quote.",
