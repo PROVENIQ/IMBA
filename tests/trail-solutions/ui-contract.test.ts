@@ -101,13 +101,28 @@ describe("Trail Solutions primary demonstration path", () => {
       expect(workspace).toContain(`data-tour-ts="${anchor}"`);
     }
     expect(workspace).toContain('dataTour="decisions"');
-    expect(workspace).toContain('dataTour="portfolio"');
+    // The portfolio TABLE carries a distinct anchor so the "diagnose" step targets
+    // the table, not the Portfolio tab button (which also renders data-tour-ts).
+    expect(workspace).toContain('dataTour="portfolio-table"');
     expect(workspace).toContain("data-tour-ts={dataTour}");
+    // The management entry points the tour spotlights are present in the workspace.
+    for (const anchor of ["new-project", "upload-data"]) {
+      expect(workspace).toContain(`data-tour-ts="${anchor}"`);
+    }
     // The tour walks the leadership questions in order and self-filters steps
     // whose anchor is absent (for example, the decisions card with none open).
     expect(tour).toContain('anchor: "kpis"');
     expect(tour).toContain('anchor: "decisions"');
-    expect(tour).toContain('anchor: "portfolio"');
+    expect(tour).toContain('anchor: "portfolio-table"');
+    // New Project / Upload steps anchor on their button so they self-filter (and
+    // spotlight) — a card never points at a control that isn't rendered.
+    for (const anchor of ["new-project", "upload-data"]) {
+      expect(tour).toContain(`anchor: "${anchor}"`);
+    }
+    // Tab-hosted steps spotlight a specific tab while anchoring on the tab bar.
+    for (const spotlight of ["estimator", "benchmarks"]) {
+      expect(tour).toContain(`spotlightAnchor: "${spotlight}"`);
+    }
     expect(tour).toContain("Take the tour");
     expect(tour).toContain("step.anchor === null || document.querySelector");
   });

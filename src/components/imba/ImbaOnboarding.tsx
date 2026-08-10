@@ -8,6 +8,7 @@ import {
   Calculator,
   CheckCircle2,
   CircleHelp,
+  Compass,
   Database,
   Gauge,
   Layers3,
@@ -168,15 +169,9 @@ export function ImbaOnboarding({
   );
   const step = steps[Math.min(stepIndex, steps.length - 1)];
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!window.localStorage.getItem(TOUR_STORAGE_KEY)) {
-        setStepIndex(0);
-        setTourOpen(true);
-      }
-    }, 650);
-    return () => window.clearTimeout(timer);
-  }, []);
+  // The guided tour no longer auto-launches on login. It opens only when the user
+  // explicitly starts it from the header "Guided Tour" button (available on every
+  // module) or the "Replay guided tour" action in Help.
 
   // Track the target on every frame rather than only on resize/scroll. The
   // scrim cuts a hole over this rect for action steps, so a stale measurement
@@ -297,6 +292,18 @@ export function ImbaOnboarding({
 
   return (
     <>
+      <button
+        type="button"
+        onClick={replayTour}
+        aria-label="Start the guided tour"
+        title="Guided tour"
+        data-tour="guided-tour-button"
+        className="flex h-9 items-center justify-center gap-2 rounded-full border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--line)/0.03)] px-2.5 text-[rgb(var(--text-2))] transition hover:bg-[rgb(var(--line)/0.07)] hover:text-[rgb(var(--text))]"
+      >
+        <Compass className="h-4 w-4" />
+        <span className="hidden text-[11px] font-bold xl:inline">Guided Tour</span>
+      </button>
+
       <button
         type="button"
         onClick={() => setHelpOpen(true)}

@@ -360,7 +360,7 @@ function PortfolioView({ snapshot, onOpenProject, decisionStatuses, onDecisionSt
         </div>
       </Card>
 
-      <Card dataTour="portfolio">
+      <Card dataTour="portfolio-table">
         <SectionHeading eyebrow="Portfolio" title="Which projects need attention?" note="Open a project only when you need the explanation behind its status." action={<button type="button" onClick={() => setAdvanced((current) => !current)} aria-expanded={advanced} className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--line)/0.1)] px-3 py-2 text-[11px] font-bold text-[rgb(var(--text-2))]"><Filter className="h-3.5 w-3.5" />{advanced ? "Fewer filters" : "More filters"}</button>} />
         <div className="border-b border-[rgb(var(--line)/0.07)] p-4">
           <div className="grid gap-2 md:grid-cols-[1.5fr_1fr_1fr_1fr]">

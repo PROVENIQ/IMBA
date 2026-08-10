@@ -40,16 +40,16 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
     body: "Each card names what changed, the financial effect, the owner, and the recommended action — so a decision is one read away. Mark it started or complete, or open the supporting evidence.",
   },
   {
-    anchor: "portfolio",
-    eyebrow: "Diagnose",
-    title: "Which projects are drifting — and why",
-    body: "The table flags each project's financial health and shows a plain-language management signal explaining the main variance. Open a project only when you want the full explanation behind its status.",
-  },
-  {
     anchor: "billing",
     eyebrow: "Cash + confidence",
     title: "Is billing keeping pace, and can you trust the numbers?",
     body: "Secondary metrics track actual cost, billing and receivables, open decisions, and data exceptions. Projects with unresolved data show “Data incomplete” instead of a falsely precise margin.",
+  },
+  {
+    anchor: "portfolio-table",
+    eyebrow: "Diagnose",
+    title: "Which projects are drifting — and why",
+    body: "The table flags each project's financial health and shows a plain-language management signal explaining the main variance. Open a project only when you want the full explanation behind its status.",
   },
   {
     anchor: "tabs",
@@ -59,15 +59,13 @@ const TRAIL_TOUR_STEPS: readonly TrailTourStep[] = [
     body: "The tabs hold validated benchmarks from past projects, the exception queue, and — for Finance and the CEO — Data health and the Data Import Lab for loading your own project data.",
   },
   {
-    anchor: null,
-    spotlightAnchor: "new-project",
+    anchor: "new-project",
     eyebrow: "Create without a workbook",
     title: "Start a project directly in IMBA-OS",
     body: "New Project creates a normalized project in the active workspace. It captures identity, contract assumptions, business-line drivers, and optional funding details. Manual and imported projects appear together in the same portfolio.",
   },
   {
-    anchor: null,
-    spotlightAnchor: "upload-data",
+    anchor: "upload-data",
     eyebrow: "Bring in source data",
     title: "Import historical or source-system data",
     body: "Upload Project Data opens the controlled Data Import Lab for bulk historical/source data, validation, mapping, control totals, and exception review. Both entry paths use the same normalized model.",
