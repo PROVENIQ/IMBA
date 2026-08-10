@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   AlertTriangle,
@@ -209,6 +209,17 @@ export function ImbaTrailSolutionsWorkspace({
     setProjectDetail(null);
   };
 
+  // Opening a project should start the reader at the top of the detail, not wherever
+  // they were scrolled in the portfolio. Scroll the module's top into view whenever
+  // the project view is shown (works whether the window or a container is the scroller).
+  const topRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (view === "project") {
+      topRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [view, selectedProjectId]);
+
   const openProject = (project: ProjectFinancialSummary) => {
     setSelectedProjectId(project.projectId);
     setView("project");
@@ -262,7 +273,7 @@ export function ImbaTrailSolutionsWorkspace({
   if (!snapshot) return <LoadingState />;
 
   return (
-    <div className="space-y-5">
+    <div ref={topRef} className="space-y-5 scroll-mt-4">
       <section className="overflow-hidden rounded-[24px] border border-blue-300/20 bg-gradient-to-br from-blue-300/[0.09] via-[rgb(var(--card))] to-emerald-300/[0.06] elev">
         {view === "portfolio" ? <div className="grid gap-5 p-5 lg:grid-cols-[1.45fr_.75fr] lg:p-6">
           <div>
@@ -444,7 +455,7 @@ function ProjectView({ detail, role, onBack, decisionStatuses, onDecisionStatus,
       <Card>
         <div className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-[11px] font-bold text-blue-800 dark:text-blue-100"><ArrowLeft className="h-3.5 w-3.5" />Back to portfolio</button>
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-xl border border-blue-300/30 bg-blue-300/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-blue-800 shadow-sm transition hover:bg-blue-300/20 dark:text-blue-100"><ArrowLeft className="h-4 w-4" />Back to projects</button>
             {onAddRecord ? <details className="relative"><summary data-tour-ts="project-add-menu" className="cursor-pointer list-none rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card-2))] px-3 py-1.5 text-[11px] font-bold text-[rgb(var(--text-2))]">+ Add</summary><div className="absolute right-0 z-10 mt-2 grid min-w-52 gap-1 rounded-xl border border-[rgb(var(--line)/0.12)] bg-[rgb(var(--card))] p-2 shadow-xl"><button type="button" onClick={() => onAddRecord("forecast")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Forecast update</button><button type="button" onClick={() => onAddRecord("change-order")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Change order</button><button type="button" onClick={() => onAddRecord("operational-driver")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Operational driver</button><button type="button" onClick={() => onAddRecord("funding")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Funding / agreement</button><button type="button" onClick={() => onAddRecord("match")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Match activity</button><button type="button" onClick={() => onAddRecord("decision")} className="rounded-lg px-3 py-2 text-left text-[11px] hover:bg-[rgb(var(--line)/0.06)]">Decision / action</button></div></details> : null}
           </div>
           {openDecisions.length ? <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-900 dark:text-amber-100"><AlertTriangle className="h-3.5 w-3.5" />{openDecisions.length} unresolved {openDecisions.length === 1 ? "decision" : "decisions"} require attention</p> : null}
